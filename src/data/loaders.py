@@ -73,6 +73,23 @@ def _load_triples(
     return triples, entity_to_id, relation_to_id
 
 
+def _download_fb15k237(data_dir: Path):
+    """Download FB15k-237 dataset."""
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    base_url = "https://raw.githubusercontent.com/villmow/datasets_knowledge_embedding/master/FB15k-237"
+
+    for split in ["train", "valid", "test"]:
+        url = f"{base_url}/{split}.txt"
+        dest = data_dir / f"{split}.txt"
+
+        if not dest.exists():
+            print(f"Downloading {split}.txt...")
+            _download_file(url, dest, f"Downloading {split}")
+
+    print("FB15k-237 download complete!")
+
+
 def load_fb15k237(data_dir: Optional[Path] = None) -> Tuple[KGDataset, KGDataset, KGDataset]:
     """
     Load FB15k-237 dataset.
@@ -88,21 +105,14 @@ def load_fb15k237(data_dir: Optional[Path] = None) -> Tuple[KGDataset, KGDataset
     else:
         data_dir = Path(data_dir)
 
-    # Download if needed
-    url = "https://raw.githubusercontent.com/villmow/datasets_knowledge_embedding/master/FB15k-237/train.txt"
-    # Note: In practice, you'd download from official source
-
     train_path = data_dir / "train.txt"
     valid_path = data_dir / "valid.txt"
     test_path = data_dir / "test.txt"
 
+    # Download if needed
     if not train_path.exists():
-        print(f"Please download FB15k-237 to {data_dir}")
-        print("Expected files: train.txt, valid.txt, test.txt")
-        print("Download from: https://github.com/villmow/datasets_knowledge_embedding")
-
-        # Create sample data for testing
-        _create_sample_data(data_dir)
+        print("FB15k-237 not found. Downloading...")
+        _download_fb15k237(data_dir)
 
     # Load all splits
     train_triples, entity_to_id, relation_to_id = _load_triples(train_path)
