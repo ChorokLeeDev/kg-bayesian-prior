@@ -167,7 +167,8 @@ class RelationAwareKernel(BaseGraphKernel):
         """Compute kernel matrix for a single relation."""
         if r not in self.relation_laplacians:
             # Return identity for missing relations
-            return torch.eye(self.num_entities)
+            device = self.log_variance.device
+            return torch.eye(self.num_entities, device=device)
 
         laplacian = self.relation_laplacians[r]
 
@@ -178,13 +179,18 @@ class RelationAwareKernel(BaseGraphKernel):
             ell = self.lengthscale[r]
         sigma_sq = self.variance[r]
 
+        # Get device from parameters
+        device = sigma_sq.device
+
         if self.kernel_type == "diffusion":
             # K_r = σ_r² · exp(-L_r / ℓ_r²)
             def kernel_func(eigenvalues):
+                eigenvalues = eigenvalues.to(device)
                 return sigma_sq * torch.exp(-eigenvalues / (ell ** 2))
         else:
             # Matérn: K_r = σ_r² · (2ν/ℓ_r² + L_r)^{-ν}
             def kernel_func(eigenvalues):
+                eigenvalues = eigenvalues.to(device)
                 S = torch.pow(2 * self.nu / (ell ** 2) + eigenvalues, -self.nu)
                 S = S / S[0]  # Normalize
                 return sigma_sq * S
@@ -194,13 +200,15 @@ class RelationAwareKernel(BaseGraphKernel):
 
     def _compute_full_kernel(self) -> torch.Tensor:
         """Compute the full aggregated kernel matrix."""
+        device = self.log_variance.device
+
         # Compute all relation kernels
         relation_kernels = []
         for r in range(self.num_relations):
             if r in self.relation_laplacians:
                 K_r = self._compute_relation_kernel(r)
             else:
-                K_r = torch.zeros(self.num_entities, self.num_entities)
+                K_r = torch.zeros(self.num_entities, self.num_entities, device=device)
             relation_kernels.append(K_r)
 
         # Stack: (num_relations, num_entities, num_entities)

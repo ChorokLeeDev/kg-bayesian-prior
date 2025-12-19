@@ -335,12 +335,13 @@ class GPKGE(nn.Module):
         For scalability, we compute this at inducing points only.
         """
         # Get inducing point distributions
-        u_idx = self.inducing_indices
+        device = self.entity_mean.device
+        u_idx = self.inducing_indices.to(device)
         mu_u = self.entity_mean[u_idx]  # (M, D)
 
         # Compute prior covariance at inducing points
         K_uu = self.kernel(u_idx, u_idx)
-        K_uu = K_uu + self.jitter * torch.eye(len(u_idx), device=K_uu.device)
+        K_uu = K_uu + self.jitter * torch.eye(len(u_idx), device=device)
 
         # Variational covariance at inducing points (diagonal approximation)
         _, var_u = self.get_entity_distribution(u_idx)

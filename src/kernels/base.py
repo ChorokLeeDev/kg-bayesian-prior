@@ -148,16 +148,20 @@ class GraphLaplacian(nn.Module):
         if self.eigenvalues is None:
             raise RuntimeError("Graph not set. Call set_graph first.")
 
-        # Apply function to eigenvalues
+        # Apply function to eigenvalues (func handles device transfer)
         f_eigenvalues = func(self.eigenvalues)
+
+        # Move eigenvectors to same device as f_eigenvalues
+        device = f_eigenvalues.device
+        eigenvectors = self.eigenvectors.to(device)
 
         # Reconstruct: f(L) = U f(Λ) U^T
         if node_indices is None:
             # Full matrix
-            result = self.eigenvectors @ torch.diag(f_eigenvalues) @ self.eigenvectors.T
+            result = eigenvectors @ torch.diag(f_eigenvalues) @ eigenvectors.T
         else:
             # Subset of nodes
-            U_subset = self.eigenvectors[node_indices]
+            U_subset = eigenvectors[node_indices]
             result = U_subset @ torch.diag(f_eigenvalues) @ U_subset.T
 
         return result
