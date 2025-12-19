@@ -27,17 +27,15 @@
 
 ---
 
-## ⚠️ Remaining Issues
+## ✅ Also Fixed
 
-### 1. GGPN Parameter Mismatch
+### 3. ~~GGPN Parameter Mismatch~~ ✅ FIXED
 - **Problem:** GGPN uses 50 dim (memory constraints), others use 200 dim
-- **Impact:** GGPN's lower MRR (0.1205) may be due to smaller model, not method
-- **Solution:** Note limitation in paper, or try 100 dim if memory allows
+- **Solution:** Increased to 100 dim in `exp_ggpn.ipynb`
 
-### 2. Single Seed
+### 4. ~~Single Seed~~ ✅ FIXED
 - **Problem:** All results from seed=42 only
-- **Impact:** No statistical significance, results may be lucky/unlucky
-- **Solution:** Run 3-5 seeds, report mean ± std
+- **Solution:** All notebooks now run 3 seeds (42, 123, 456) and report mean ± std
 
 ---
 
