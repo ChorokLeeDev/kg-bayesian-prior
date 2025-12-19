@@ -1,0 +1,39 @@
+# Core ML
+torch>=2.0.0
+numpy>=1.24.0
+scipy>=1.10.0
+
+# Graph and GP libraries
+torch-geometric>=2.3.0
+gpytorch>=1.10.0
+networkx>=3.0
+
+# Knowledge Graph
+pykeen>=1.10.0
+
+# Data processing
+pandas>=2.0.0
+tqdm>=4.65.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+
+# Experiment tracking
+wandb>=0.15.0
+hydra-core>=1.3.0
+omegaconf>=2.3.0
+
+# Evaluation
+scikit-learn>=1.2.0
+
+# Development
+pytest>=7.3.0
+black>=23.3.0
+isort>=5.12.0
+mypy>=1.3.0
+
+# Jupyter
+jupyter>=1.0.0
+ipykernel>=6.23.0

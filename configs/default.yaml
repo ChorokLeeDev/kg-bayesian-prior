@@ -1,0 +1,50 @@
+# Default configuration for KG-Bayesian-Prior experiments
+
+# Dataset
+dataset:
+  name: "fb15k237"  # fb15k237, wn18rr, cn15k
+  data_dir: null  # Use default path if null
+
+# Model
+model:
+  name: "gp_kge"  # gp_kge, transe, distmult, complex, mc_dropout, ensemble
+  embedding_dim: 100
+  scoring_function: "distmult"  # distmult, complex, transe
+
+  # GP-specific
+  kernel_type: "relation_aware"  # relation_aware, matern, diffusion
+  num_inducing: 500
+  init_lengthscale: 1.0
+  init_variance: 1.0
+  jitter: 1e-4
+
+  # Uncertainty methods (for baselines)
+  dropout_rate: 0.1
+  num_mc_samples: 10
+  num_ensemble: 5
+
+# Training
+training:
+  num_epochs: 100
+  batch_size: 128
+  learning_rate: 0.001
+  num_negatives: 10
+  patience: 10
+  eval_every: 5
+
+  # Loss weights
+  kl_weight: 0.001
+  regularization: 0.0001
+
+# Evaluation
+evaluation:
+  batch_size: 128
+  num_calibration_bins: 10
+
+# Experiment
+experiment:
+  seed: 42
+  device: "cuda"  # cuda or cpu
+  save_dir: "outputs"
+  name: "experiment"
+  wandb: false
