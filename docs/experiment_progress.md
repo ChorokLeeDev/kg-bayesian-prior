@@ -193,11 +193,51 @@ Expected runtime: ~15-20 minutes on T4 GPU
 
 ## Next Steps
 
-1. [ ] Wait for full FB15k-237 experiment to complete
-2. [ ] Analyze results on real benchmark
-3. [ ] Compare with reported numbers in GGPN paper
-4. [ ] Run ablation studies if needed
-5. [ ] Document final results for thesis/paper
+1. [x] Reorganize notebook for smooth end-to-end run
+2. [x] Add progress bars and stage logging
+3. [ ] Run full FB15k-237 experiment
+4. [ ] Analyze results on real benchmark
+5. [ ] Compare with reported numbers in GGPN paper
+6. [ ] Run ablation studies if needed
+7. [ ] Document final results for thesis/paper
+
+---
+
+## Notebook Reorganization (2024-12-19)
+
+### Changes Made
+
+Completely rewrote `notebooks/gpu_experiment_colab.ipynb` with:
+
+1. **Clear Stage Structure:**
+   - Stage 1: Environment Setup
+   - Stage 2: Load Data & Imports
+   - Stage 3: Define Training & Evaluation Functions
+   - Stage 4: Run Experiments (4 models)
+   - Stage 5: Results Summary
+   - Stage 6: Save Results
+
+2. **Logging Functions:**
+   ```python
+   log_stage(name)   # [HH:MM:SS] ========== STAGE NAME ==========
+   log_step(name)    # [HH:MM:SS] >>> Step name
+   log_done(msg)     # [HH:MM:SS] ✓ Done message
+   ```
+
+3. **Progress Bars:**
+   - Training: `tqdm` progress bar per epoch with loss display
+   - Evaluation: Separate progress bars for Link Prediction, Calibration, OOD
+
+4. **Memory Management:**
+   - `clear_memory()` function called between models
+   - Explicit `del model` after each experiment
+
+5. **Model Configuration for T4 GPU:**
+   - GGPN: Reduced params (embedding_dim=50, hidden_dim=50, num_layers=1, num_rff=20)
+   - GP-KGE: Using `kernel_type="rbf"` to avoid slow eigendecomposition
+
+6. **Separate Cells per Model:**
+   Each model has its own cell, allowing restart from any point if interrupted
 
 ---
 
