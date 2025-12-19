@@ -33,13 +33,23 @@ kg-bayesian-prior/
 │   ├── utils/           # Utility functions
 │   └── evaluation/      # Metrics and evaluation
 ├── experiments/         # Experiment scripts
-├── configs/             # Configuration files
-├── tests/               # Unit tests
-├── docs/                # Documentation and literature review
-├── notebooks/           # Jupyter notebooks
-├── data/                # Data storage
-└── outputs/             # Results and saved models
+├── notebooks/           # Experiment notebooks
+│   ├── exp_distmult.ipynb   # DistMult baseline
+│   ├── exp_ggpn.ipynb       # GGPN baseline
+│   ├── exp_gpkge.ipynb      # GP-KGE (ours)
+│   └── kernel_ablation.ipynb
+├── results/             # Experiment results (JSON)
+├── docs/                # Documentation
+└── data/                # Data storage
 ```
+
+## Baselines
+
+| Model | Role |
+|-------|------|
+| DistMult | Deterministic baseline |
+| GGPN | GP-based baseline (prior work) |
+| **GP-KGE** | **Ours** |
 
 ## Installation
 
@@ -50,26 +60,23 @@ pip install -e .
 ## Datasets
 
 - **FB15k-237**: Standard KG benchmark (14K entities, 237 relations)
-- **CN15k**: ConceptNet with confidence scores
-- **YAGO3-10**: Large-scale KG (123K entities)
+- **WN18RR**: WordNet subset (41K entities, 11 relations)
 
 ## Results (FB15k-237)
 
-| Model | MRR | H@1 | H@10 | ECE ↓ | Brier ↓ |
-|-------|-----|-----|------|-------|---------|
-| DistMult | 0.2411 | 0.1707 | 0.3817 | 0.2118 | 0.1417 |
-| MCDropout | 0.2351 | 0.1621 | 0.3842 | 0.2119 | 0.1385 |
-| GGPN | 0.1205 | 0.0540 | 0.2527 | 0.1965 | 0.1519 |
-| **GP-KGE (Ours)** | **0.2545** | **0.1761** | **0.4171** | **0.1171** | **0.1013** |
+*Results pending - experiments running with 3 seeds (42, 123, 456)*
 
-**Key Finding:** GP-KGE achieves **40.4% better calibration (ECE)** compared to GGPN, validating that relation-aware kernels with proper Bayesian treatment yield well-calibrated uncertainty estimates.
+| Model | MRR | H@1 | H@10 | ECE ↓ | Brier ↓ | AUROC |
+|-------|-----|-----|------|-------|---------|-------|
+| DistMult | - | - | - | - | - | - |
+| GGPN | - | - | - | - | - | - |
+| **GP-KGE (Ours)** | - | - | - | - | - | - |
 
 ## Evaluation Metrics
 
-- **Link Prediction**: MRR, Hits@1/3/10
+- **Link Prediction**: MRR, Hits@1/10
 - **Calibration**: ECE, Brier Score
-- **OOD Detection**: AUROC, AUPR
-- **Selective Prediction**: Risk-Coverage curves
+- **OOD Detection**: AUROC
 
 ## References
 

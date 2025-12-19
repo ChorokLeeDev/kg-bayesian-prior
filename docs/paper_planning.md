@@ -28,7 +28,6 @@
 | DistMult baseline | ✅ Complete | `src/models/distmult.py` |
 | TransE baseline | ✅ Complete | `src/models/transe.py` |
 | ComplEx baseline | ✅ Complete | `src/models/complex.py` |
-| MC Dropout wrapper | ✅ Complete | `src/models/uncertain_kge.py` |
 | GGPN (competitor) | ✅ Complete | `src/models/ggpn.py` |
 | **GP-KGE (Ours)** | ✅ Complete | `src/models/gp_kge.py` |
 | Relation-aware kernel | ✅ Complete | `src/kernels/relation_aware.py` |
@@ -280,7 +279,7 @@ the gap between principled Bayesian uncertainty and knowledge graph embeddings.
 
 **5.6.1 Experimental Setup**
 - Datasets: FB15k-237, WN18RR, CN15k
-- Baselines: DistMult, MC Dropout, GGPN
+- Baselines: DistMult, GGPN
 - Metrics: MRR, Hits@k, ECE, Brier, AUROC
 - Implementation details
 
@@ -424,10 +423,9 @@ q(\mathbf{F}) = \mathcal{N}(\mathbf{M}, \mathbf{S})
 
 | Experiment | Purpose | Metrics | Baselines |
 |------------|---------|---------|-----------|
-| Link Prediction | Show accuracy | MRR, Hits@k | TransE, DistMult, ComplEx, GGPN |
-| Calibration | **Main result** | ECE, Brier | All baselines |
-| OOD Detection | Uncertainty quality | AUROC | MC Dropout, Ensemble, GGPN |
-| Selective Prediction | Practical utility | AURC | All baselines |
+| Link Prediction | Show accuracy | MRR, Hits@k | DistMult, GGPN |
+| Calibration | **Main result** | ECE, Brier | DistMult, GGPN |
+| OOD Detection | Uncertainty quality | AUROC | DistMult, GGPN |
 
 ### 8.2 Ablation Studies
 
@@ -459,7 +457,6 @@ q(\mathbf{F}) = \mathcal{N}(\mathbf{M}, \mathbf{S})
 | Method | Type | Entity UQ | Calibration Eval | Relation-Aware |
 |--------|------|-----------|------------------|----------------|
 | TransE/DistMult | KGE | ❌ | ❌ | ❌ |
-| MC Dropout | Post-hoc | ✓ (approx) | ❌ | ❌ |
 | UKGE | Uncertain KGE | Triple-level | ❌ | ❌ |
 | BEUrRE | Box embedding | ✓ (geometric) | ❌ | ❌ |
 | GPN | Bayesian GNN | ✓ | ✓ | ❌ (homogeneous) |
@@ -492,10 +489,10 @@ q(\mathbf{F}) = \mathcal{N}(\mathbf{M}, \mathbf{S})
 **Answer:**
 GGPN focuses on link prediction accuracy and proposes a GP architecture for KGs, but they never evaluate whether the GP actually provides meaningful uncertainty. We show empirically that GGPN is poorly calibrated (ECE=0.42). Our GP-KGE achieves excellent calibration (ECE=0.01) while maintaining competitive accuracy. The key difference is in the research question: GGPN asks "can GP improve accuracy?", we ask "can GP provide calibrated uncertainty?"
 
-### Q2: "Why not just use MC Dropout or ensembles?"
+### Q2: "Why not just use ensembles?"
 
 **Answer:**
-MC Dropout and ensembles provide weight-space uncertainty, not function-space uncertainty. They don't incorporate the graph structure into the uncertainty model. Our GP prior explicitly encodes that entities connected via certain relations should have similar embeddings, leading to more meaningful uncertainty estimates. We show this empirically: GP-KGE has better OOD detection than MC Dropout.
+Ensembles provide weight-space uncertainty, not function-space uncertainty. They don't incorporate the graph structure into the uncertainty model. Our GP prior explicitly encodes that entities connected via certain relations should have similar embeddings, leading to more meaningful uncertainty estimates.
 
 ### Q3: "Does the computational overhead justify the uncertainty?"
 
