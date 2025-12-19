@@ -142,6 +142,9 @@ class RelationAwareKernel(BaseGraphKernel):
         self,
         relation_adjacencies: Dict[int, sparse.csr_matrix],
         num_entities: int,
+        num_eigenvectors: int = 100,
+        min_edges: int = 10,
+        show_progress: bool = True,
     ):
         """
         Set the Knowledge Graph structure.
@@ -149,19 +152,40 @@ class RelationAwareKernel(BaseGraphKernel):
         Args:
             relation_adjacencies: Dict mapping relation_id -> adjacency matrix
             num_entities: Total number of entities
+            num_eigenvectors: Number of eigenvectors for spectral decomposition (default: 100)
+            min_edges: Skip relations with fewer edges than this (default: 10)
+            show_progress: Show progress bar during eigendecomposition
         """
+        from tqdm import tqdm
+
         self.num_entities = num_entities
         self.relation_laplacians = {}
         self._relation_kernels = {}
 
-        for r, adj in relation_adjacencies.items():
+        # Filter relations with enough edges
+        valid_relations = {
+            r: adj for r, adj in relation_adjacencies.items()
+            if adj.nnz >= min_edges
+        }
+
+        if show_progress:
+            print(f"Computing spectral decomposition for {len(valid_relations)}/{len(relation_adjacencies)} relations...")
+            print(f"  (skipping {len(relation_adjacencies) - len(valid_relations)} sparse relations with <{min_edges} edges)")
+            iterator = tqdm(valid_relations.items(), desc="Eigendecomp", unit="rel")
+        else:
+            iterator = valid_relations.items()
+
+        for r, adj in iterator:
             # Make symmetric (undirected)
             adj_sym = adj + adj.T
             adj_sym.data = np.clip(adj_sym.data, 0, 1)
 
             laplacian = GraphLaplacian(normalized=True)
-            laplacian.set_graph(adj_sym)
+            laplacian.set_graph(adj_sym, num_eigenvectors=num_eigenvectors)
             self.relation_laplacians[r] = laplacian
+
+        if show_progress:
+            print(f"Spectral decomposition complete: {len(self.relation_laplacians)} relations processed")
 
     def _compute_relation_kernel(self, r: int) -> torch.Tensor:
         """Compute kernel matrix for a single relation."""

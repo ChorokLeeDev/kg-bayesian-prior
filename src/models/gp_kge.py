@@ -147,17 +147,33 @@ class GPKGE(nn.Module):
     def noise(self) -> torch.Tensor:
         return torch.exp(self.log_noise)
 
-    def set_graph(self, kg_dataset):
+    def set_graph(self, kg_dataset, num_eigenvectors: int = 100, min_edges: int = 10, show_progress: bool = True):
         """
         Set the KG structure for the GP prior.
 
         Args:
             kg_dataset: KGDataset object
+            num_eigenvectors: Number of eigenvectors for spectral decomposition (default: 100)
+            min_edges: Skip relations with fewer edges (default: 10)
+            show_progress: Show progress bar during eigendecomposition
         """
-        self.kernel.set_graph(
-            kg_dataset.relation_adjacencies,
-            kg_dataset.num_entities,
-        )
+        if hasattr(self.kernel, 'set_graph'):
+            # RelationAwareKernel has the new signature
+            import inspect
+            sig = inspect.signature(self.kernel.set_graph)
+            if 'num_eigenvectors' in sig.parameters:
+                self.kernel.set_graph(
+                    kg_dataset.relation_adjacencies,
+                    kg_dataset.num_entities,
+                    num_eigenvectors=num_eigenvectors,
+                    min_edges=min_edges,
+                    show_progress=show_progress,
+                )
+            else:
+                self.kernel.set_graph(
+                    kg_dataset.relation_adjacencies,
+                    kg_dataset.num_entities,
+                )
         self._K_uu = None
         self._L_uu = None
 
