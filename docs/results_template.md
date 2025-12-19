@@ -1,100 +1,70 @@
 # Experiment Results - FB15k-237
 
-**Date:** 2024-12-19
-**GPU:** Tesla T4 (Colab Free Tier)
+**Date:** 2024-12-20
+**GPU:** NVIDIA A100-SXM4-40GB (Colab Pro Education)
+**Test Set:** Full (20,466 triples)
+**Seeds:** 42, 123, 456 (mean ± std)
 
 ---
 
-## Results Table
+## Baselines
 
-| Model | MRR | H@1 | H@3 | H@10 | ECE | Brier | AUROC |
-|-------|-----|-----|-----|------|-----|-------|-------|
-| DistMult | 0.0832 | 0.0255 | 0.0720 | 0.2015 | 0.3165 | 0.2875 | 0.1038 |
-| DistMult+MCDropout | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ |
-| GGPN | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ |
-| GP-KGE (Ours) | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ | _PENDING_ |
+| Model | Role | Embedding Dim |
+|-------|------|---------------|
+| DistMult | Deterministic baseline | 200 |
+| GGPN | GP-based baseline | 100 |
+| **GP-KGE** | **Ours** | 200 |
 
----
-
-## Key Comparisons
-
-### Calibration (ECE) - Lower is Better
-```
-DistMult:           0.3165  ████████████████████████████████
-DistMult+MCDropout: ?.????
-GGPN:               ?.????
-GP-KGE (Ours):      ?.????
-```
-
-### ECE Improvement over GGPN
-```
-Improvement = (GGPN_ECE - GPKGE_ECE) / GGPN_ECE × 100%
-            = (?.???? - ?.????) / ?.???? × 100%
-            = ?.?%
-```
+> MC Dropout removed: AUROC=0.4373 (< 0.5) indicates inability to detect OOD samples.
 
 ---
 
-## Analysis (To Fill)
+## Results Table (Pending)
 
-### 1. Link Prediction
-- Best MRR: _MODEL_ (?.????)
-- GP-KGE vs DistMult: _COMPARISON_
+| Model | MRR | H@1 | H@10 | ECE ↓ | Brier ↓ | AUROC |
+|-------|-----|-----|------|-------|---------|-------|
+| DistMult | - | - | - | - | - | - |
+| GGPN | - | - | - | - | - | - |
+| **GP-KGE** | - | - | - | - | - | - |
 
-### 2. Calibration (Main Result)
-- Best ECE: _MODEL_ (?.????)
-- GGPN ECE: ?.???? (confirms poor calibration)
-- GP-KGE ECE: ?.???? (confirms good calibration)
-- **Improvement: ?.?%**
+*Results will be populated from `results/*.json` after experiments complete.*
 
-### 3. OOD Detection
-- Best AUROC: _MODEL_ (?.????)
-- GP-KGE provides meaningful uncertainty: _YES/NO_
+---
+
+## Model Configurations
+
+| Model | Embedding Dim | Other Params |
+|-------|---------------|--------------|
+| DistMult | 200 | BCE loss |
+| GGPN | 100 | hidden=100, layers=1, rff=20 |
+| GP-KGE | 200 | kernel=relation_aware, inducing=500 |
 
 ---
 
 ## For Paper
 
-### Table 2: Calibration Results (Main Table)
+### Table 1: Main Results on FB15k-237
+
 ```latex
 \begin{table}[h]
 \centering
-\caption{Calibration comparison on FB15k-237. Lower ECE is better.}
-\begin{tabular}{lcccc}
+\caption{Experimental results on FB15k-237 (mean $\pm$ std over 3 seeds). Best results in \textbf{bold}.}
+\begin{tabular}{lcccccc}
 \toprule
-Model & ECE $\downarrow$ & Brier $\downarrow$ & AUROC $\uparrow$ \\
+Model & MRR $\uparrow$ & H@1 $\uparrow$ & H@10 $\uparrow$ & ECE $\downarrow$ & Brier $\downarrow$ & AUROC $\uparrow$ \\
 \midrule
-DistMult & 0.3165 & 0.2875 & 0.1038 \\
-DistMult+MCDropout & ?.???? & ?.???? & ?.???? \\
-GGPN & ?.???? & ?.???? & ?.???? \\
-\textbf{GP-KGE (Ours)} & \textbf{?.????} & \textbf{?.????} & \textbf{?.????} \\
+DistMult & - & - & - & - & - & - \\
+GGPN & - & - & - & - & - & - \\
+\textbf{GP-KGE (Ours)} & - & - & - & - & - & - \\
 \bottomrule
 \end{tabular}
 \end{table}
 ```
 
-### Key Finding Statement
-> GP-KGE achieves **?.?%** better calibration (ECE) compared to GGPN,
-> validating that relation-aware kernels with proper Bayesian treatment
-> yield well-calibrated uncertainty estimates.
-
 ---
 
-## Runtime
+## Notes
 
-| Model | Training Time | Eval Time | Total |
-|-------|--------------|-----------|-------|
-| DistMult | ~12 min | ~1 min | ~13 min |
-| DistMult+MCDropout | ~?? min | ~?? min | ~?? min |
-| GGPN | ~?? min | ~?? min | ~?? min |
-| GP-KGE (Ours) | ~?? min | ~?? min | ~?? min |
-
-**Total Experiment Time:** ~?? minutes
-
----
-
-## Raw Output (Paste Here)
-
-```
-[PASTE COLAB OUTPUT HERE]
-```
+- All models use BCE loss for fair calibration comparison
+- GGPN uses 100 dim (vs 200) due to memory constraints
+- Results auto-saved to `results/` folder via Colab

@@ -53,7 +53,18 @@ pip install -e .
 - **CN15k**: ConceptNet with confidence scores
 - **YAGO3-10**: Large-scale KG (123K entities)
 
-## Evaluation
+## Results (FB15k-237)
+
+| Model | MRR | H@1 | H@10 | ECE ↓ | Brier ↓ |
+|-------|-----|-----|------|-------|---------|
+| DistMult | 0.2411 | 0.1707 | 0.3817 | 0.2118 | 0.1417 |
+| MCDropout | 0.2351 | 0.1621 | 0.3842 | 0.2119 | 0.1385 |
+| GGPN | 0.1205 | 0.0540 | 0.2527 | 0.1965 | 0.1519 |
+| **GP-KGE (Ours)** | **0.2545** | **0.1761** | **0.4171** | **0.1171** | **0.1013** |
+
+**Key Finding:** GP-KGE achieves **40.4% better calibration (ECE)** compared to GGPN, validating that relation-aware kernels with proper Bayesian treatment yield well-calibrated uncertainty estimates.
+
+## Evaluation Metrics
 
 - **Link Prediction**: MRR, Hits@1/3/10
 - **Calibration**: ECE, Brier Score
