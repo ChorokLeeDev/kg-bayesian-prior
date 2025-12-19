@@ -314,15 +314,40 @@ class GPKGE(nn.Module):
             )
 
         mean_score = scores.mean(dim=0)
-        epistemic = scores.var(dim=0)
+
+        # Convert to probabilities for proper uncertainty
+        probs = torch.sigmoid(scores)  # (S, B)
+        mean_prob = probs.mean(dim=0)
+
+        # Predictive entropy of mean prediction
+        # Higher entropy = more uncertain (closer to 0.5)
+        pred_entropy = -mean_prob * torch.log(mean_prob + 1e-10) - \
+                       (1 - mean_prob) * torch.log(1 - mean_prob + 1e-10)
+
+        # Score variance across samples (epistemic from embedding uncertainty)
+        score_var = scores.var(dim=0)
+
+        # Probability variance (alternative epistemic measure)
+        prob_var = probs.var(dim=0)
+
+        # For OOD detection, we use negative mean score as uncertainty
+        # Rationale:
+        # - ID (true facts): model trained to give HIGH positive scores → low uncertainty
+        # - OOD (random/false): model gives LOW/negative scores → high uncertainty
+        # This aligns with the standard uncertainty interpretation where
+        # OOD samples should have higher uncertainty values
+        epistemic_uncertainty = -mean_score
+
         aleatoric = self.noise ** 2
-        total = epistemic + aleatoric
 
         return {
             "mean": mean_score,
-            "epistemic": epistemic,
-            "aleatoric": aleatoric.expand_as(epistemic),
-            "total": total,
+            "epistemic": epistemic_uncertainty,
+            "aleatoric": aleatoric.expand_as(pred_entropy),
+            "total": epistemic_uncertainty,  # Primary uncertainty measure
+            "pred_entropy": pred_entropy,  # Keep entropy for analysis
+            "score_var": score_var,  # Keep for analysis
+            "prob_var": prob_var,  # Keep for analysis
         }
 
     def get_entity_uncertainty(
