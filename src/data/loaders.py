@@ -153,6 +153,23 @@ def load_fb15k237(data_dir: Optional[Path] = None) -> Tuple[KGDataset, KGDataset
     return train_dataset, valid_dataset, test_dataset
 
 
+def _download_wn18rr(data_dir: Path):
+    """Download WN18RR dataset."""
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    base_url = "https://raw.githubusercontent.com/villmow/datasets_knowledge_embedding/master/WN18RR"
+
+    for split in ["train", "valid", "test"]:
+        url = f"{base_url}/{split}.txt"
+        dest = data_dir / f"{split}.txt"
+
+        if not dest.exists():
+            print(f"Downloading {split}.txt...")
+            _download_file(url, dest, f"Downloading {split}")
+
+    print("WN18RR download complete!")
+
+
 def load_wn18rr(data_dir: Optional[Path] = None) -> Tuple[KGDataset, KGDataset, KGDataset]:
     """
     Load WN18RR dataset.
@@ -172,8 +189,8 @@ def load_wn18rr(data_dir: Optional[Path] = None) -> Tuple[KGDataset, KGDataset, 
     test_path = data_dir / "test.txt"
 
     if not train_path.exists():
-        print(f"Please download WN18RR to {data_dir}")
-        _create_sample_data(data_dir)
+        print("WN18RR not found. Downloading...")
+        _download_wn18rr(data_dir)
 
     train_triples, entity_to_id, relation_to_id = _load_triples(train_path)
     valid_triples, entity_to_id, relation_to_id = _load_triples(
