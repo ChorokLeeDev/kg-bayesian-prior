@@ -355,9 +355,23 @@ class GPKGE(nn.Module):
         u_idx = self.inducing_indices.to(device)
         mu_u = self.entity_mean[u_idx]  # (M, D)
 
-        # Compute prior covariance at inducing points
-        K_uu = self.kernel(u_idx, u_idx)
-        K_uu = K_uu + self.jitter * torch.eye(len(u_idx), device=device)
+        # Check if kernel has proper eigenvectors (relation-aware kernel)
+        # For RBF/Matern kernels without graph structure, use identity prior
+        has_spectral_kernel = (
+            hasattr(self.kernel, 'laplacian') and
+            self.kernel.laplacian is not None and
+            hasattr(self.kernel.laplacian, 'eigenvectors') and
+            self.kernel.laplacian.eigenvectors is not None
+        )
+
+        if has_spectral_kernel:
+            # Compute prior covariance at inducing points using spectral kernel
+            K_uu = self.kernel(u_idx, u_idx)
+            K_uu = K_uu + self.jitter * torch.eye(len(u_idx), device=device)
+        else:
+            # Fallback: use identity prior (standard Gaussian regularization)
+            # This is equivalent to L2 regularization on embeddings
+            K_uu = torch.eye(len(u_idx), device=device)
 
         # Variational covariance at inducing points (diagonal approximation)
         _, var_u = self.get_entity_distribution(u_idx)
