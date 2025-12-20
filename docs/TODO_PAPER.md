@@ -9,11 +9,13 @@
 - [x] Results documentation
 
 ### 🔄 In Progress
-- [x] **WN18RR 문제 해결: Global Kernel 추가** ✅ IMPLEMENTED
+- [x] **WN18RR 문제 해결: Global Kernel 추가** ✅ TESTED
   - 문제: WN18RR은 11개 relation만 있어 eigendecomp 5/11만 성공
   - 해결: `use_global_kernel=True` 옵션 추가
-  - 구현: `src/kernels/relation_aware.py` - 모든 edge 통합한 global Laplacian 추가
-  - 테스트: `notebooks/exp_wn18rr_global_kernel.ipynb`
+  - 결과:
+    - ECE: **+64% 개선** (0.144 → 0.051) ✅
+    - AUROC: +4% 개선 (0.605 → 0.629) - 여전히 DistMult(0.860)보다 낮음
+  - 결론: Global kernel은 calibration에 효과적, OOD detection은 relation-rich KG에서만 유효
 
 ### 📋 TODO (NeurIPS 수준)
 - [ ] 추가 데이터셋: YAGO3-10, CoDEx-L/M
@@ -43,12 +45,15 @@
 | GGPN | 0.249 | 0.416 | **0.079** | 0.221 |
 | **GP-KGE** | 0.255 | 0.413 | 0.118 | **0.854** |
 
-### WN18RR (1 seed, quick validation)
+### WN18RR (1 seed, with Global Kernel)
 
-| Model | MRR | AUROC ↑ | Note |
-|-------|-----|---------|------|
-| DistMult | 0.236 | **0.865** | Winner |
-| GP-KGE | 0.167 | 0.598 | Fails (sparse relations) |
+| Model | MRR | ECE ↓ | AUROC ↑ |
+|-------|-----|-------|---------|
+| DistMult | **0.205** | 0.133 | **0.860** |
+| GP-KGE (no global) | 0.164 | 0.144 | 0.605 |
+| GP-KGE (global) | 0.171 | **0.051** | 0.629 |
+
+**Finding:** Global kernel helps calibration (+64% ECE) but not OOD detection (+4% AUROC).
 
 ### Ablation: Init Method (FB15k-237)
 
