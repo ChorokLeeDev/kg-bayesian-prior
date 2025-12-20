@@ -1,0 +1,150 @@
+\begin{thebibliography}{22}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Bordes et~al.(2013)Bordes, Usunier, Garcia-Duran, Weston, and
+  Yakhnenko]{bordes2013translating}
+Antoine Bordes, Nicolas Usunier, Alberto Garcia-Duran, Jason Weston, and Oksana
+  Yakhnenko.
+\newblock Translating embeddings for modeling multi-relational data.
+\newblock In \emph{Advances in Neural Information Processing Systems}, pages
+  2787--2795, 2013.
+
+\bibitem[Borovitskiy et~al.(2021)Borovitskiy, Azangulov, Terenin, Mostowsky,
+  Deisenroth, and Cunningham]{borovitskiy2021matern}
+Viacheslav Borovitskiy, Iskander Azangulov, Alexander Terenin, Peter Mostowsky,
+  Marc Deisenroth, and John Cunningham.
+\newblock Mat{\'e}rn {G}aussian processes on graphs.
+\newblock In \emph{International Conference on Artificial Intelligence and
+  Statistics}, pages 2593--2601, 2021.
+
+\bibitem[Chen et~al.(2022)]{chen2022graph}
+Hao Chen et~al.
+\newblock Graph gaussian processes for multi-relational knowledge graph
+  completion.
+\newblock In \emph{AAAI Conference on Artificial Intelligence}, 2022.
+
+\bibitem[Chen et~al.(2019)Chen, Chen, Shi, Sun, and Zaniolo]{chen2019embedding}
+Xuelu Chen, Muhao Chen, Weijia Shi, Yizhou Sun, and Carlo Zaniolo.
+\newblock Embedding uncertain knowledge graphs.
+\newblock In \emph{AAAI Conference on Artificial Intelligence}, pages
+  3363--3370, 2019.
+
+\bibitem[Chen et~al.(2021)Chen, Chen, Fan, Ramnath, and
+  Ren]{chen2021probabilistic}
+Xuelu Chen, Muhao Chen, Changjun Fan, Ankur Ramnath, and Kai Ren.
+\newblock Probabilistic box embeddings for uncertain knowledge graph reasoning.
+\newblock In \emph{Annual Conference of the North American Chapter of the ACL},
+  pages 882--893, 2021.
+
+\bibitem[Dettmers et~al.(2018)Dettmers, Minervini, Stenetorp, and
+  Riedel]{dettmers2018convolutional}
+Tim Dettmers, Pasquale Minervini, Pontus Stenetorp, and Sebastian Riedel.
+\newblock Convolutional 2d knowledge graph embeddings.
+\newblock In \emph{AAAI Conference on Artificial Intelligence}, 2018.
+
+\bibitem[Gal and Ghahramani(2016)]{gal2016dropout}
+Yarin Gal and Zoubin Ghahramani.
+\newblock Dropout as a {B}ayesian approximation: Representing model uncertainty
+  in deep learning.
+\newblock In \emph{International Conference on Machine Learning}, pages
+  1050--1059, 2016.
+
+\bibitem[Guo et~al.(2017)Guo, Pleiss, Sun, and Weinberger]{guo2017calibration}
+Chuan Guo, Geoff Pleiss, Yu~Sun, and Kilian~Q Weinberger.
+\newblock On calibration of modern neural networks.
+\newblock In \emph{International Conference on Machine Learning}, pages
+  1321--1330, 2017.
+
+\bibitem[Huang et~al.(2019)Huang, Zhang, Li, and Li]{huang2019knowledge}
+Xiao Huang, Jingyuan Zhang, Dingcheng Li, and Ping Li.
+\newblock Knowledge graph embedding based question answering.
+\newblock In \emph{ACM International Conference on Web Search and Data Mining},
+  pages 105--113, 2019.
+
+\bibitem[Kondor and Lafferty(2002)]{kondor2002diffusion}
+Risi Kondor and John Lafferty.
+\newblock Diffusion kernels on graphs and other discrete structures.
+\newblock In \emph{International Conference on Machine Learning}, pages
+  315--322, 2002.
+
+\bibitem[Lakshminarayanan et~al.(2017)Lakshminarayanan, Pritzel, and
+  Blundell]{lakshminarayanan2017simple}
+Balaji Lakshminarayanan, Alexander Pritzel, and Charles Blundell.
+\newblock Simple and scalable predictive uncertainty estimation using deep
+  ensembles.
+\newblock In \emph{Advances in Neural Information Processing Systems}, pages
+  6402--6413, 2017.
+
+\bibitem[Mahdisoltani et~al.(2015)Mahdisoltani, Biega, and
+  Suchanek]{mahdisoltani2015yago3}
+Farzaneh Mahdisoltani, Joanna Biega, and Fabian Suchanek.
+\newblock Yago3: A knowledge base from multilingual wikipedias.
+\newblock In \emph{Conference on Innovative Data Systems Research}, 2015.
+
+\bibitem[Mohamed et~al.(2020)Mohamed, Nov{\'a}{\v{c}}ek, and
+  Nounu]{mohamed2020discovering}
+Sameh~K Mohamed, V{\'\i}t Nov{\'a}{\v{c}}ek, and Aayah Nounu.
+\newblock Discovering protein drug targets using knowledge graph embeddings.
+\newblock \emph{Bioinformatics}, 36\penalty0 (2):\penalty0 603--610, 2020.
+
+\bibitem[Rao et~al.(2024)]{rao2024knowledge}
+Shijie Rao et~al.
+\newblock On the calibration of knowledge graph link prediction.
+\newblock In \emph{The Web Conference}, 2024.
+
+\bibitem[Singhal(2012)]{singhal2012knowledge}
+Amit Singhal.
+\newblock Introducing the knowledge graph: things, not strings.
+\newblock \emph{Google Blog}, 2012.
+
+\bibitem[Stadler et~al.(2021)Stadler, Charpentier, and
+  G{\"u}nnemann]{stadler2021graph}
+Maximilian Stadler, Bertrand Charpentier, and Stephan G{\"u}nnemann.
+\newblock Graph posterior network: Bayesian predictive uncertainty for node
+  classification.
+\newblock In \emph{Advances in Neural Information Processing Systems}, pages
+  18033--18048, 2021.
+
+\bibitem[Sun et~al.(2019)Sun, Deng, Nie, and Tang]{sun2019rotate}
+Zhiqing Sun, Zhi-Hong Deng, Jian-Yun Nie, and Jian Tang.
+\newblock Rotate: Knowledge graph embedding by relational rotation in complex
+  space.
+\newblock In \emph{International Conference on Learning Representations}, 2019.
+
+\bibitem[Toutanova and Chen(2015)]{toutanova2015observed}
+Kristina Toutanova and Danqi Chen.
+\newblock Observed versus latent features for knowledge base and text
+  inference.
+\newblock In \emph{Workshop on Continuous Vector Space Models and their
+  Compositionality}, pages 57--66, 2015.
+
+\bibitem[Trouillon et~al.(2016)Trouillon, Welbl, Riedel, Gaussier, and
+  Bouchard]{trouillon2016complex}
+Th{\'e}o Trouillon, Johannes Welbl, Sebastian Riedel, {\'E}ric Gaussier, and
+  Guillaume Bouchard.
+\newblock Complex embeddings for simple link prediction.
+\newblock In \emph{International Conference on Machine Learning}, pages
+  2071--2080, 2016.
+
+\bibitem[Wang et~al.(2019)Wang, He, Cao, Liu, and Chua]{wang2019kgat}
+Xiang Wang, Xiangnan He, Yixin Cao, Meng Liu, and Tat-Seng Chua.
+\newblock Kgat: Knowledge graph attention network for recommendation.
+\newblock In \emph{ACM SIGKDD International Conference on Knowledge Discovery
+  \& Data Mining}, pages 950--958, 2019.
+
+\bibitem[Yang et~al.(2015)Yang, Yih, He, Gao, and Deng]{yang2015embedding}
+Bishan Yang, Wen-tau Yih, Xiaodong He, Jianfeng Gao, and Li~Deng.
+\newblock Embedding entities and relations for learning and inference in
+  knowledge bases.
+\newblock In \emph{International Conference on Learning Representations}, 2015.
+
+\bibitem[Zhang et~al.(2024)Zhang, Chen, Guo, et~al.]{zhang2024ufkgc}
+Yichi Zhang, Zhuo Chen, Lei Guo, et~al.
+\newblock Uncertain few-shot knowledge graph completion.
+\newblock \emph{arXiv preprint arXiv:2404.xxxxx}, 2024.
+
+\end{thebibliography}

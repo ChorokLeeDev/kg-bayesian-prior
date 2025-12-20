@@ -1,0 +1,30 @@
+% Appendix - Minimal
+
+\section{Implementation Details}
+\label{app:implementation}
+
+\paragraph{Hyperparameters.}
+Embedding dimension $d=200$ (FB15k-237) or $d=100$ (others).
+Inducing points $P=500$, eigenvectors per relation $k=50$.
+Adam optimizer, learning rate $10^{-3}$, batch size 1024, KL weight $\beta=10^{-3}$.
+All experiments averaged over 3 seeds.
+
+\paragraph{Eigendecomposition.}
+We compute top-$k$ eigenvectors of each $\mat{L}_r$ using \texttt{scipy.sparse.linalg.eigsh}.
+Relations with $<$100 edges use a global kernel fallback.
+
+\section{Extended Results}
+
+\begin{table}[h]
+\centering
+\caption{Full link prediction metrics on FB15k-237.}
+\begin{tabular}{lcccc}
+\toprule
+Model & MRR & Hits@1 & Hits@3 & Hits@10 \\
+\midrule
+DistMult & 0.264 & 0.184 & 0.290 & 0.433 \\
+GGPN & 0.249 & 0.169 & 0.275 & 0.416 \\
+\ours{} & 0.255 & 0.178 & 0.280 & 0.413 \\
+\bottomrule
+\end{tabular}
+\end{table}

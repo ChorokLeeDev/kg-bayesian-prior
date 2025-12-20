@@ -1,0 +1,17 @@
+% Background Section for GP-KGE Paper
+
+\paragraph{Knowledge Graph Embeddings.}
+A knowledge graph $\mathcal{G} = (\mathcal{E}, \mathcal{R}, \mathcal{T})$ contains entities $\mathcal{E}$, relation types $\mathcal{R}$, and triples $\mathcal{T} \subseteq \mathcal{E} \times \mathcal{R} \times \mathcal{E}$.
+KGE methods learn embeddings $\vect{e} \in \R^d$ for each entity and $\vect{r} \in \R^d$ for each relation.
+A scoring function $s(h, r, t)$ assigns higher scores to valid triples.
+Common choices include TransE: $s = -\|\vect{h} + \vect{r} - \vect{t}\|$, and DistMult: $s = \langle \vect{h}, \vect{r}, \vect{t} \rangle = \sum_i h_i r_i t_i$.
+
+\paragraph{Gaussian Processes.}
+A GP defines a distribution over functions: $f \sim \GP(m, k)$ where $m: \mathcal{X} \to \R$ is the mean function and $k: \mathcal{X} \times \mathcal{X} \to \R$ is the covariance (kernel) function.
+Any finite collection of function values is jointly Gaussian: $[f(x_1), \ldots, f(x_n)]^\top \sim \N(\vect{\mu}, \mat{K})$ where $K_{ij} = k(x_i, x_j)$.
+The kernel encodes prior assumptions about function smoothness.
+
+\paragraph{Graph Laplacian and Diffusion Kernels.}
+For a graph with adjacency matrix $\mat{A}$ and degree matrix $\mat{D}$, the normalized Laplacian is $\mat{L} = \mat{I} - \mat{D}^{-1/2}\mat{A}\mat{D}^{-1/2}$.
+The diffusion kernel~\cite{kondor2002diffusion} is $\mat{K} = \exp(-\beta\mat{L})$, which can be computed via eigendecomposition: if $\mat{L} = \mat{U}\mat{\Lambda}\mat{U}^\top$, then $\mat{K} = \mat{U}\exp(-\beta\mat{\Lambda})\mat{U}^\top$.
+This kernel encodes that nearby nodes (in graph distance) should have similar function values.

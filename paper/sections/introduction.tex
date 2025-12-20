@@ -1,0 +1,27 @@
+% Introduction - Concise NeurIPS style
+
+Knowledge Graph Embedding (KGE) methods achieve impressive link prediction accuracy but provide only point estimates.
+For safety-critical applications---medical KGs predicting drug interactions, financial KGs for fraud detection---knowing \emph{when predictions are unreliable} is essential.
+
+Existing uncertainty approaches fall short.
+Triple-level methods~\citep{chen2019embedding} cannot identify which entities are poorly understood.
+Post-hoc methods like MC Dropout often yield poorly calibrated uncertainties.
+GP-based methods~\citep{chen2022graph} incorporate graph structure but have not evaluated whether their uncertainties are meaningful.
+
+A key observation motivates our approach: existing GP methods treat all relations identically.
+But knowledge graphs are heterogeneous---\texttt{born\_in} implies different similarity patterns than \texttt{similar\_to}.
+Entities sharing a birthplace may otherwise be unrelated, while \texttt{similar\_to} suggests global similarity.
+
+We propose \ours{}, a Gaussian Process prior with a \textbf{relation-aware kernel} that assigns learnable parameters per relation type:
+\begin{itemize}
+    \item \textbf{Lengthscale} $\ell_r$: how far information propagates along relation $r$
+    \item \textbf{Variance} $\sigma_r^2$: how much relation $r$ contributes to similarity
+\end{itemize}
+
+Our contributions:
+\begin{enumerate}
+    \item \textbf{Relation-aware GP kernel} capturing heterogeneous KG structure
+    \item \textbf{+55\% OOD detection} on FB15k-237, +34\% on YAGO3-10 vs deterministic baselines
+    \item \textbf{Relation density threshold}: \ours{} requires $\geq$30 relation types to be effective
+    \item \textbf{Discovery}: GGPN~\citep{chen2022graph} is miscalibrated (AUROC$<$0.5)
+\end{enumerate}

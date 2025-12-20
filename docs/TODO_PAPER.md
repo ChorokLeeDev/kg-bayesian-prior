@@ -2,6 +2,17 @@
 
 ## Current Status: 2024-12-20
 
+### 🎯 NEW DIRECTION: Theoretical Contribution
+
+**Core Claim:** Relation diversity is a *necessary condition* for entity-level uncertainty estimation.
+
+**Key Theorems (see `docs/theoretical_contribution.md`):**
+1. Posterior Variance-Coverage Relationship
+2. OOD Detection Gap ∝ Relation Diversity
+3. Threshold Condition: D_min ≈ 30
+
+---
+
 ### ✅ Completed
 - [x] FB15k-237 main experiments (3 seeds) - GP-KGE AUROC 0.854
 - [x] WN18RR quick validation - GP-KGE fails (AUROC 0.598 vs DistMult 0.865)

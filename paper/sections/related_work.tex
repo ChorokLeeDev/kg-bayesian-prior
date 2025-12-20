@@ -1,0 +1,18 @@
+% Related Work Section - Concise NeurIPS style
+
+\paragraph{Knowledge Graph Embeddings.}
+TransE~\citep{bordes2013translating}, DistMult~\citep{yang2015embedding}, and ComplEx~\citep{trouillon2016complex} learn entity representations for link prediction but provide only point estimates.
+
+\paragraph{Uncertainty in KGE.}
+UKGE~\citep{chen2019embedding} models triple-level confidence scores but cannot identify uncertain entities.
+BEUrRE~\citep{chen2021probabilistic} uses box embeddings where volume indicates uncertainty, but lacks probabilistic grounding.
+These methods do not incorporate graph structure into uncertainty estimation.
+
+\paragraph{Gaussian Processes on Graphs.}
+Diffusion kernels~\citep{kondor2002diffusion} and graph Mat\'ern GPs~\citep{borovitskiy2021matern} define valid covariances on graphs, but only for \emph{homogeneous} graphs with a single edge type.
+GGPN~\citep{chen2022graph} applies GPs to multi-relational graphs but does not evaluate uncertainty quality.
+We show GGPN's uncertainty is miscalibrated (AUROC$<$0.5), while \ours{} achieves 0.854.
+
+\paragraph{Graph Posterior Networks.}
+GPN~\citep{stadler2021graph} provides principled uncertainty for node classification via neighbor agreement axioms.
+We extend these principles to heterogeneous KGs with relation-aware kernels.

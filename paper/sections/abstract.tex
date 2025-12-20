@@ -1,0 +1,7 @@
+% Abstract - Concise, impact-focused
+
+Knowledge Graph Embedding (KGE) models provide point estimates without uncertainty quantification.
+We propose \ours{}, a Gaussian Process prior with a \emph{relation-aware kernel} that learns different smoothness parameters per relation type.
+On FB15k-237 and YAGO3-10, \ours{} achieves \textbf{55\%} and \textbf{34\%} improvements in out-of-distribution detection (AUROC) over deterministic baselines, while maintaining competitive link prediction.
+We identify a critical threshold: \ours{} is effective on knowledge graphs with $\geq$30 relation types.
+We also discover that existing GP-based methods (GGPN) are miscalibrated, with AUROC below 0.5.
