@@ -175,6 +175,7 @@ class RelationAwareKernel(BaseGraphKernel):
         else:
             iterator = valid_relations.items()
 
+        success_count = 0
         for r, adj in iterator:
             # Make symmetric (undirected)
             adj_sym = adj + adj.T
@@ -182,10 +183,14 @@ class RelationAwareKernel(BaseGraphKernel):
 
             laplacian = GraphLaplacian(normalized=True)
             laplacian.set_graph(adj_sym, num_eigenvectors=num_eigenvectors)
-            self.relation_laplacians[r] = laplacian
+
+            # Only add if eigendecomp succeeded
+            if laplacian.eigenvectors is not None:
+                self.relation_laplacians[r] = laplacian
+                success_count += 1
 
         if show_progress:
-            print(f"Spectral decomposition complete: {len(self.relation_laplacians)} relations processed")
+            print(f"Spectral decomposition complete: {success_count}/{len(valid_relations)} relations succeeded")
 
     def _compute_relation_kernel(self, r: int) -> torch.Tensor:
         """Compute kernel matrix for a single relation."""

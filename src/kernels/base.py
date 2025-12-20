@@ -121,13 +121,22 @@ class GraphLaplacian(nn.Module):
             self.eigenvectors = eigenvectors
         else:
             # For large graphs, use sparse operations or approximate
-            from scipy.sparse.linalg import eigsh
+            from scipy.sparse.linalg import eigsh, ArpackNoConvergence
 
             k = num_eigenvectors or min(1000, self.num_nodes - 1)
-            eigenvalues, eigenvectors = eigsh(L, k=k, which='SM')
-
-            self.eigenvalues = torch.tensor(eigenvalues, dtype=torch.float32)
-            self.eigenvectors = torch.tensor(eigenvectors, dtype=torch.float32)
+            try:
+                eigenvalues, eigenvectors = eigsh(L, k=k, which='SM', maxiter=5000)
+                self.eigenvalues = torch.tensor(eigenvalues, dtype=torch.float32)
+                self.eigenvectors = torch.tensor(eigenvectors, dtype=torch.float32)
+            except ArpackNoConvergence as e:
+                # Use partially converged results if available
+                if e.eigenvalues is not None and len(e.eigenvalues) > 0:
+                    self.eigenvalues = torch.tensor(e.eigenvalues, dtype=torch.float32)
+                    self.eigenvectors = torch.tensor(e.eigenvectors, dtype=torch.float32)
+                else:
+                    # No convergence at all - skip this relation
+                    self.eigenvalues = None
+                    self.eigenvectors = None
             self.L = None  # Don't store full Laplacian for large graphs
 
     def apply_function(

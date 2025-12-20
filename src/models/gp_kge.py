@@ -422,6 +422,32 @@ class GPKGE(nn.Module):
         _, var = self.get_entity_distribution(entity_ids)
         return var.mean(dim=-1)
 
+    def precompute_kernel_matrix(self) -> None:
+        """
+        Precompute and cache kernel matrix K_uu for fast KL computation.
+        Call this after set_graph() to avoid recomputing the kernel each time.
+        """
+        device = self.entity_mean.device
+        u_idx = self.inducing_indices.to(device)
+
+        # Check if we have a proper kernel with graph structure
+        has_single_laplacian = (
+            hasattr(self.kernel, 'laplacian') and
+            self.kernel.laplacian is not None
+        )
+        has_relation_laplacians = (
+            hasattr(self.kernel, 'relation_laplacians') and
+            self.kernel.relation_laplacians
+        )
+
+        if has_single_laplacian or has_relation_laplacians:
+            K_uu = self.kernel(u_idx, u_idx)
+            K_uu = K_uu + self.jitter * torch.eye(len(u_idx), device=device)
+            self._cached_K_uu = K_uu
+            print(f"Precomputed K_uu: {K_uu.shape}")
+        else:
+            self._cached_K_uu = None
+
     def kl_divergence(self) -> torch.Tensor:
         """
         Compute KL divergence between variational posterior and GP prior.
@@ -437,23 +463,33 @@ class GPKGE(nn.Module):
         u_idx = self.inducing_indices.to(device)
         mu_u = self.entity_mean[u_idx]  # (M, D)
 
-        # Check if kernel has proper eigenvectors (relation-aware kernel)
-        # For RBF/Matern kernels without graph structure, use identity prior
-        has_spectral_kernel = (
-            hasattr(self.kernel, 'laplacian') and
-            self.kernel.laplacian is not None and
-            hasattr(self.kernel.laplacian, 'eigenvectors') and
-            self.kernel.laplacian.eigenvectors is not None
-        )
-
-        if has_spectral_kernel:
-            # Compute prior covariance at inducing points using spectral kernel
-            K_uu = self.kernel(u_idx, u_idx)
-            K_uu = K_uu + self.jitter * torch.eye(len(u_idx), device=device)
+        # Use cached kernel matrix if available (much faster)
+        if hasattr(self, '_cached_K_uu') and self._cached_K_uu is not None:
+            K_uu = self._cached_K_uu
         else:
-            # Fallback: use identity prior (standard Gaussian regularization)
-            # This is equivalent to L2 regularization on embeddings
-            K_uu = torch.eye(len(u_idx), device=device)
+            # Check if kernel has proper eigenvectors (relation-aware kernel)
+            # For RBF/Matern kernels without graph structure, use identity prior
+            has_single_laplacian = (
+                hasattr(self.kernel, 'laplacian') and
+                self.kernel.laplacian is not None and
+                hasattr(self.kernel.laplacian, 'eigenvectors') and
+                self.kernel.laplacian.eigenvectors is not None
+            )
+            # Also check for relation-aware kernel which uses relation_laplacians (plural)
+            has_relation_laplacians = (
+                hasattr(self.kernel, 'relation_laplacians') and
+                self.kernel.relation_laplacians  # non-empty dict
+            )
+            has_spectral_kernel = has_single_laplacian or has_relation_laplacians
+
+            if has_spectral_kernel:
+                # Compute prior covariance at inducing points using spectral kernel
+                K_uu = self.kernel(u_idx, u_idx)
+                K_uu = K_uu + self.jitter * torch.eye(len(u_idx), device=device)
+            else:
+                # Fallback: use identity prior (standard Gaussian regularization)
+                # This is equivalent to L2 regularization on embeddings
+                K_uu = torch.eye(len(u_idx), device=device)
 
         # Variational covariance at inducing points (diagonal approximation)
         _, var_u = self.get_entity_distribution(u_idx)
