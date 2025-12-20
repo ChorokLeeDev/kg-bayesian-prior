@@ -18,7 +18,8 @@
   - 결론: Global kernel은 calibration에 효과적, OOD detection은 relation-rich KG에서만 유효
 
 ### 📋 TODO (NeurIPS 수준)
-- [ ] 추가 데이터셋: YAGO3-10, CoDEx-L/M
+- [x] 추가 데이터셋: YAGO3-10 ✅ (GP-KGE +34% AUROC)
+- [ ] 추가 데이터셋: CoDEx-L/M
 - [ ] 추가 Baselines: RGCN, CompGCN
 - [ ] Scalability 분석 (시간/메모리)
 - [ ] 이론적 분석 (optional)
