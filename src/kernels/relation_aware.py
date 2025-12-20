@@ -67,12 +67,16 @@ class RelationAwareKernel(BaseGraphKernel):
     """
     Relation-aware kernel for Knowledge Graphs.
 
-    K(i, j) = Σ_r  σ_r² · K_r(i, j | ℓ_r)
+    K(i, j) = K_global(i, j) + Σ_r  σ_r² · K_r(i, j | ℓ_r)
 
-    where K_r is computed from the relation-r subgraph.
+    where K_r is computed from the relation-r subgraph, and K_global uses
+    all edges regardless of relation type (fallback for sparse-relation KGs).
 
     This kernel captures the heterogeneous structure of KGs by learning
     different smoothness assumptions for different relation types.
+
+    For relation-sparse KGs (like WN18RR with 11 relations), the global kernel
+    provides meaningful structure even when per-relation eigendecomposition fails.
     """
 
     def __init__(
@@ -84,6 +88,7 @@ class RelationAwareKernel(BaseGraphKernel):
         init_variance: float = 1.0,
         share_lengthscale: bool = False,
         aggregation: str = "sum",  # "sum", "attention", or "product"
+        use_global_kernel: bool = True,  # NEW: whether to add global kernel
     ):
         """
         Args:
@@ -94,6 +99,7 @@ class RelationAwareKernel(BaseGraphKernel):
             init_variance: Initial variance for all relations
             share_lengthscale: If True, share one lengthscale across relations
             aggregation: How to combine relation kernels
+            use_global_kernel: If True, add a global kernel using all edges (helps sparse KGs)
         """
         super().__init__()
 
@@ -102,6 +108,7 @@ class RelationAwareKernel(BaseGraphKernel):
         self.nu = nu
         self.aggregation = aggregation
         self.share_lengthscale = share_lengthscale
+        self.use_global_kernel = use_global_kernel
 
         # Per-relation parameters
         if share_lengthscale:
@@ -117,12 +124,23 @@ class RelationAwareKernel(BaseGraphKernel):
             torch.full((num_relations,), np.log(init_variance))
         )
 
+        # Global kernel parameters (for all edges combined)
+        if use_global_kernel:
+            self.log_global_lengthscale = nn.Parameter(
+                torch.tensor(np.log(init_lengthscale))
+            )
+            self.log_global_variance = nn.Parameter(
+                torch.tensor(np.log(init_variance))
+            )
+
         # For attention-based aggregation
         if aggregation == "attention":
             self.attention_weights = nn.Parameter(torch.zeros(num_relations))
 
         # Per-relation Laplacians (set when graph is provided)
         self.relation_laplacians: Dict[int, GraphLaplacian] = {}
+        # Global Laplacian (all edges combined)
+        self.global_laplacian: Optional[GraphLaplacian] = None
         self.num_entities = 0
 
         # Cached kernel matrices
@@ -161,7 +179,38 @@ class RelationAwareKernel(BaseGraphKernel):
         self.num_entities = num_entities
         self.relation_laplacians = {}
         self._relation_kernels = {}
+        self.global_laplacian = None
 
+        # Step 1: Build global adjacency (all edges combined)
+        if self.use_global_kernel:
+            if show_progress:
+                print("Building global adjacency matrix (all relations combined)...")
+
+            # Combine all relation adjacencies
+            global_adj = sparse.csr_matrix((num_entities, num_entities))
+            for adj in relation_adjacencies.values():
+                global_adj = global_adj + adj
+
+            # Make symmetric and binary
+            global_adj = global_adj + global_adj.T
+            global_adj.data = np.clip(global_adj.data, 0, 1)
+
+            if show_progress:
+                print(f"  Global graph: {global_adj.nnz} edges")
+
+            # Compute global Laplacian
+            self.global_laplacian = GraphLaplacian(normalized=True)
+            self.global_laplacian.set_graph(global_adj, num_eigenvectors=num_eigenvectors)
+
+            if self.global_laplacian.eigenvectors is not None:
+                if show_progress:
+                    print(f"  Global eigendecomp: SUCCESS ({self.global_laplacian.eigenvectors.shape[1]} eigenvectors)")
+            else:
+                if show_progress:
+                    print("  Global eigendecomp: FAILED")
+                self.global_laplacian = None
+
+        # Step 2: Build per-relation Laplacians
         # Filter relations with enough edges
         valid_relations = {
             r: adj for r, adj in relation_adjacencies.items()
@@ -169,7 +218,7 @@ class RelationAwareKernel(BaseGraphKernel):
         }
 
         if show_progress:
-            print(f"Computing spectral decomposition for {len(valid_relations)}/{len(relation_adjacencies)} relations...")
+            print(f"Computing per-relation spectral decomposition for {len(valid_relations)}/{len(relation_adjacencies)} relations...")
             print(f"  (skipping {len(relation_adjacencies) - len(valid_relations)} sparse relations with <{min_edges} edges)")
             iterator = tqdm(valid_relations.items(), desc="Eigendecomp", unit="rel")
         else:
@@ -190,7 +239,9 @@ class RelationAwareKernel(BaseGraphKernel):
                 success_count += 1
 
         if show_progress:
-            print(f"Spectral decomposition complete: {success_count}/{len(valid_relations)} relations succeeded")
+            print(f"Per-relation spectral decomposition: {success_count}/{len(valid_relations)} relations succeeded")
+            if self.use_global_kernel and self.global_laplacian is not None:
+                print(f"Global kernel: ENABLED (fallback for {len(relation_adjacencies) - success_count} failed relations)")
 
     def _compute_relation_kernel(self, r: int) -> torch.Tensor:
         """Compute kernel matrix for a single relation."""
@@ -227,9 +278,84 @@ class RelationAwareKernel(BaseGraphKernel):
         K_r = laplacian.apply_function(kernel_func)
         return K_r
 
+    def _compute_global_kernel_subset(self, x1: torch.Tensor, x2: torch.Tensor) -> Optional[torch.Tensor]:
+        """
+        Compute global kernel for a SUBSET of nodes (memory efficient).
+
+        Instead of computing full N×N kernel, only compute for requested indices.
+        K[x1, x2] = U[x1] @ diag(f(λ)) @ U[x2].T
+
+        Args:
+            x1: First set of node indices
+            x2: Second set of node indices
+
+        Returns:
+            Kernel matrix of shape (len(x1), len(x2))
+        """
+        if not self.use_global_kernel or self.global_laplacian is None:
+            return None
+
+        if self.global_laplacian.eigenvectors is None:
+            return None
+
+        device = self.log_global_variance.device
+        ell = torch.exp(self.log_global_lengthscale)
+        sigma_sq = torch.exp(self.log_global_variance)
+
+        # Get eigenvectors for the subset of nodes
+        U1 = self.global_laplacian.eigenvectors[x1.cpu()].to(device)  # (n1, k)
+        U2 = self.global_laplacian.eigenvectors[x2.cpu()].to(device)  # (n2, k)
+        eigenvalues = self.global_laplacian.eigenvalues.to(device)
+
+        if self.kernel_type == "diffusion":
+            f_lambda = sigma_sq * torch.exp(-eigenvalues / (ell ** 2))
+        else:
+            # Matérn
+            f_lambda = torch.pow(2 * self.nu / (ell ** 2) + eigenvalues, -self.nu)
+            f_lambda = f_lambda / f_lambda[0]
+            f_lambda = sigma_sq * f_lambda
+
+        # K[x1, x2] = U1 @ diag(f_λ) @ U2.T
+        K_global = U1 @ torch.diag(f_lambda) @ U2.T
+        return K_global
+
+    def _compute_relation_kernel_subset(self, r: int, x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
+        """Compute relation kernel for a SUBSET of nodes (memory efficient)."""
+        if r not in self.relation_laplacians:
+            device = self.log_variance.device
+            return torch.zeros(len(x1), len(x2), device=device)
+
+        laplacian = self.relation_laplacians[r]
+
+        if self.share_lengthscale:
+            ell = self.lengthscale
+        else:
+            ell = self.lengthscale[r]
+        sigma_sq = self.variance[r]
+
+        device = sigma_sq.device
+
+        # Get eigenvectors for the subset
+        U1 = laplacian.eigenvectors[x1.cpu()].to(device)
+        U2 = laplacian.eigenvectors[x2.cpu()].to(device)
+        eigenvalues = laplacian.eigenvalues.to(device)
+
+        if self.kernel_type == "diffusion":
+            f_lambda = sigma_sq * torch.exp(-eigenvalues / (ell ** 2))
+        else:
+            f_lambda = torch.pow(2 * self.nu / (ell ** 2) + eigenvalues, -self.nu)
+            f_lambda = f_lambda / f_lambda[0]
+            f_lambda = sigma_sq * f_lambda
+
+        K_r = U1 @ torch.diag(f_lambda) @ U2.T
+        return K_r
+
     def _compute_full_kernel(self) -> torch.Tensor:
         """Compute the full aggregated kernel matrix."""
         device = self.log_variance.device
+
+        # Start with global kernel if available
+        K_global = self._compute_global_kernel()
 
         # Compute all relation kernels
         relation_kernels = []
@@ -243,7 +369,7 @@ class RelationAwareKernel(BaseGraphKernel):
         # Stack: (num_relations, num_entities, num_entities)
         K_stack = torch.stack(relation_kernels, dim=0)
 
-        # Aggregate
+        # Aggregate per-relation kernels
         if self.aggregation == "sum":
             # Simple sum
             K = K_stack.sum(dim=0)
@@ -262,6 +388,10 @@ class RelationAwareKernel(BaseGraphKernel):
         else:
             raise ValueError(f"Unknown aggregation: {self.aggregation}")
 
+        # Add global kernel contribution
+        if K_global is not None:
+            K = K + K_global
+
         return K
 
     def forward(
@@ -269,18 +399,39 @@ class RelationAwareKernel(BaseGraphKernel):
         x1: torch.Tensor,
         x2: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        """Compute kernel values."""
-        K = self._compute_full_kernel()
+        """
+        Compute kernel values for specified indices.
 
+        Uses efficient subset computation to avoid building full N×N kernel.
+        Memory: O(n1 * n2 * k) instead of O(N²)
+        """
         if x2 is None:
             x2 = x1
 
-        return K[x1.unsqueeze(1), x2.unsqueeze(0)]
+        device = self.log_variance.device
+
+        # Use efficient subset computation
+        # Start with global kernel
+        K_global = self._compute_global_kernel_subset(x1, x2)
+
+        # Add per-relation kernels
+        K = torch.zeros(len(x1), len(x2), device=device)
+        for r in range(self.num_relations):
+            if r in self.relation_laplacians:
+                K_r = self._compute_relation_kernel_subset(r, x1, x2)
+                K = K + K_r
+
+        # Add global kernel
+        if K_global is not None:
+            K = K + K_global
+
+        return K
 
     def diag(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute diagonal of kernel."""
-        K = self._compute_full_kernel()
-        return K[x, x]
+        """Compute diagonal of kernel (efficient)."""
+        # For diagonal, use forward with same indices
+        K = self.forward(x, x)
+        return torch.diag(K)
 
     def get_relation_importance(self) -> torch.Tensor:
         """Get learned importance of each relation type."""

@@ -1,5 +1,28 @@
 # TODO: NeurIPS Paper Preparation
 
+## Current Status: 2024-12-20
+
+### ✅ Completed
+- [x] FB15k-237 main experiments (3 seeds) - GP-KGE AUROC 0.854
+- [x] WN18RR quick validation - GP-KGE fails (AUROC 0.598 vs DistMult 0.865)
+- [x] Ablation: Graph-Init vs Random-Init (ECE +44% improvement)
+- [x] Results documentation
+
+### 🔄 In Progress
+- [x] **WN18RR 문제 해결: Global Kernel 추가** ✅ IMPLEMENTED
+  - 문제: WN18RR은 11개 relation만 있어 eigendecomp 5/11만 성공
+  - 해결: `use_global_kernel=True` 옵션 추가
+  - 구현: `src/kernels/relation_aware.py` - 모든 edge 통합한 global Laplacian 추가
+  - 테스트: `notebooks/exp_wn18rr_global_kernel.ipynb`
+
+### 📋 TODO (NeurIPS 수준)
+- [ ] 추가 데이터셋: YAGO3-10, CoDEx-L/M
+- [ ] 추가 Baselines: RGCN, CompGCN
+- [ ] Scalability 분석 (시간/메모리)
+- [ ] 이론적 분석 (optional)
+
+---
+
 ## PIVOT: Calibration → OOD Detection
 
 **Original Hypothesis:** GP-KGE provides better calibration (ECE)
@@ -10,7 +33,9 @@
 
 ---
 
-## Final Results (FB15k-237, 3 seeds)
+## Results Summary
+
+### FB15k-237 (3 seeds)
 
 | Model | MRR | H@10 | ECE ↓ | AUROC ↑ |
 |-------|-----|------|-------|---------|
@@ -18,7 +43,21 @@
 | GGPN | 0.249 | 0.416 | **0.079** | 0.221 |
 | **GP-KGE** | 0.255 | 0.413 | 0.118 | **0.854** |
 
-**Key Finding:** GP-KGE achieves 55% better AUROC than DistMult for OOD detection.
+### WN18RR (1 seed, quick validation)
+
+| Model | MRR | AUROC ↑ | Note |
+|-------|-----|---------|------|
+| DistMult | 0.236 | **0.865** | Winner |
+| GP-KGE | 0.167 | 0.598 | Fails (sparse relations) |
+
+### Ablation: Init Method (FB15k-237)
+
+| Model | ECE ↓ | AUROC ↑ |
+|-------|-------|---------|
+| Random-Init | 0.099 | 0.870 |
+| **Graph-Init** | **0.055** | **0.877** |
+
+**Key Finding:** Graph eigenvector init improves calibration +44%.
 
 ---
 

@@ -191,23 +191,29 @@ class GPKGE(nn.Module):
         - Relation-Aware: uses graph eigenvectors for initialization
 
         Entities connected by relations get similar initial embeddings.
-        """
-        if not hasattr(self.kernel, 'relation_laplacians') or not self.kernel.relation_laplacians:
-            return
 
-        # Collect eigenvectors from all relations
+        For sparse-relation KGs (like WN18RR), also uses global kernel eigenvectors.
+        """
         all_eigenvecs = []
-        for rel_id, laplacian in self.kernel.relation_laplacians.items():
-            if hasattr(laplacian, 'eigenvectors') and laplacian.eigenvectors is not None:
-                # Use top eigenvectors (smooth graph functions)
-                evecs = laplacian.eigenvectors  # (num_entities, k)
+
+        # First, try to use global kernel eigenvectors (for sparse-relation KGs)
+        if hasattr(self.kernel, 'global_laplacian') and self.kernel.global_laplacian is not None:
+            if hasattr(self.kernel.global_laplacian, 'eigenvectors') and self.kernel.global_laplacian.eigenvectors is not None:
+                evecs = self.kernel.global_laplacian.eigenvectors
                 all_eigenvecs.append(evecs)
+
+        # Then, add per-relation eigenvectors
+        if hasattr(self.kernel, 'relation_laplacians') and self.kernel.relation_laplacians:
+            for rel_id, laplacian in self.kernel.relation_laplacians.items():
+                if hasattr(laplacian, 'eigenvectors') and laplacian.eigenvectors is not None:
+                    evecs = laplacian.eigenvectors  # (num_entities, k)
+                    all_eigenvecs.append(evecs)
 
         if not all_eigenvecs:
             return
 
         # Concatenate and use PCA-like projection
-        # Take first few eigenvectors from each relation
+        # Take first few eigenvectors from each source
         combined = []
         for evecs in all_eigenvecs:
             n_use = min(evecs.shape[1], self.embedding_dim // len(all_eigenvecs) + 1)
@@ -232,7 +238,9 @@ class GPKGE(nn.Module):
         with torch.no_grad():
             self.entity_mean.copy_(init_emb)
 
-        print(f"Initialized embeddings from {len(all_eigenvecs)} relation eigenvectors")
+        has_global = hasattr(self.kernel, 'global_laplacian') and self.kernel.global_laplacian is not None
+        n_relations = len(self.kernel.relation_laplacians) if hasattr(self.kernel, 'relation_laplacians') else 0
+        print(f"Initialized embeddings from {len(all_eigenvecs)} sources (global={has_global}, relations={n_relations})")
 
     def get_entity_distribution(
         self,
