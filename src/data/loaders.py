@@ -157,7 +157,8 @@ def _download_wn18rr(data_dir: Path):
     """Download WN18RR dataset."""
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    base_url = "https://raw.githubusercontent.com/villmow/datasets_knowledge_embedding/master/WN18RR"
+    # Primary source: DeepGraphLearning repo
+    base_url = "https://raw.githubusercontent.com/DeepGraphLearning/KnowledgeGraphEmbedding/master/data/wn18rr"
 
     for split in ["train", "valid", "test"]:
         url = f"{base_url}/{split}.txt"
