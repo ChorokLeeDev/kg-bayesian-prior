@@ -147,7 +147,7 @@ class GPKGE(nn.Module):
     def noise(self) -> torch.Tensor:
         return torch.exp(self.log_noise)
 
-    def set_graph(self, kg_dataset, num_eigenvectors: int = 100, min_edges: int = 10, show_progress: bool = True):
+    def set_graph(self, kg_dataset, num_eigenvectors: int = 100, min_edges: int = 10, show_progress: bool = True, init_embeddings: bool = True):
         """
         Set the KG structure for the GP prior.
 
@@ -156,6 +156,7 @@ class GPKGE(nn.Module):
             num_eigenvectors: Number of eigenvectors for spectral decomposition (default: 100)
             min_edges: Skip relations with fewer edges (default: 10)
             show_progress: Show progress bar during eigendecomposition
+            init_embeddings: Whether to initialize embeddings from graph structure (default: True)
         """
         if hasattr(self.kernel, 'set_graph'):
             # RelationAwareKernel has the new signature
@@ -176,6 +177,62 @@ class GPKGE(nn.Module):
                 )
         self._K_uu = None
         self._L_uu = None
+
+        # Initialize embeddings from graph eigenvectors if available
+        if init_embeddings and hasattr(self.kernel, 'relation_laplacians'):
+            self._init_embeddings_from_graph()
+
+    def _init_embeddings_from_graph(self):
+        """
+        Initialize entity embeddings from graph eigenvectors.
+
+        This is the KEY difference for kernel ablation:
+        - RBF kernel: no graph structure, random init
+        - Relation-Aware: uses graph eigenvectors for initialization
+
+        Entities connected by relations get similar initial embeddings.
+        """
+        if not hasattr(self.kernel, 'relation_laplacians') or not self.kernel.relation_laplacians:
+            return
+
+        # Collect eigenvectors from all relations
+        all_eigenvecs = []
+        for rel_id, laplacian in self.kernel.relation_laplacians.items():
+            if hasattr(laplacian, 'eigenvectors') and laplacian.eigenvectors is not None:
+                # Use top eigenvectors (smooth graph functions)
+                evecs = laplacian.eigenvectors  # (num_entities, k)
+                all_eigenvecs.append(evecs)
+
+        if not all_eigenvecs:
+            return
+
+        # Concatenate and use PCA-like projection
+        # Take first few eigenvectors from each relation
+        combined = []
+        for evecs in all_eigenvecs:
+            n_use = min(evecs.shape[1], self.embedding_dim // len(all_eigenvecs) + 1)
+            combined.append(evecs[:, :n_use])
+
+        combined = torch.cat(combined, dim=1)  # (num_entities, total_dims)
+
+        # Project to embedding dimension
+        if combined.shape[1] >= self.embedding_dim:
+            # Use first embedding_dim columns
+            init_emb = combined[:, :self.embedding_dim]
+        else:
+            # Pad with random
+            pad_size = self.embedding_dim - combined.shape[1]
+            padding = torch.randn(self.num_entities, pad_size) * 0.1
+            init_emb = torch.cat([combined, padding], dim=1)
+
+        # Normalize
+        init_emb = init_emb / (init_emb.norm(dim=1, keepdim=True) + 1e-8) * 0.1
+
+        # Set as initial embedding
+        with torch.no_grad():
+            self.entity_mean.copy_(init_emb)
+
+        print(f"Initialized embeddings from {len(all_eigenvecs)} relation eigenvectors")
 
     def get_entity_distribution(
         self,
