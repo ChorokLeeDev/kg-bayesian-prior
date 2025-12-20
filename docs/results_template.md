@@ -1,4 +1,15 @@
-# Experiment Results - FB15k-237
+# Experiment Results
+
+## Summary
+
+| Dataset | Best OOD Model | AUROC |
+|---------|----------------|-------|
+| FB15k-237 | GP-KGE | 0.854 |
+| WN18RR | TBD | TBD |
+
+---
+
+# FB15k-237 Results
 
 **Date:** 2024-12-20
 **GPU:** NVIDIA A100-SXM4-40GB (Colab Pro Education)
@@ -106,3 +117,43 @@ GP-KGE may be:
 - Indicates uncertainty is inverted
 - High uncertainty on ID, low on OOD
 - Possible issue with their uncertainty estimation
+
+---
+
+# WN18RR Results (Quick Validation)
+
+**Date:** 2024-12-20
+**Settings:** Reduced for quick validation (epochs=30, dim=100, sample=2000)
+**Seed:** 42 (single run)
+
+## Results (In Progress)
+
+| Model | MRR | H@1 | H@10 | ECE ↓ | AUROC ↑ | Time |
+|-------|-----|-----|------|-------|---------|------|
+| DistMult | 0.2016 | - | 0.4210 | 0.1279 | 0.8479 | - |
+| GGPN | - | - | - | - | - | - |
+| GP-KGE | - | - | - | - | - | - |
+
+## Dataset Comparison
+
+| Metric | FB15k-237 | WN18RR |
+|--------|-----------|--------|
+| Entities | 14,541 | 40,943 |
+| Relations | 237 | 11 |
+| Train triples | 272,115 | 86,835 |
+
+## Preliminary Observations
+
+### DistMult Baseline AUROC
+- FB15k-237: 0.550
+- WN18RR: **0.848**
+
+WN18RR baseline AUROC가 높은 이유:
+- Relations이 11개로 적음 (FB15k-237: 237개)
+- 구조가 단순해서 OOD 탐지가 더 쉬움
+- Random negative가 더 명확하게 OOD로 구분됨
+
+### Key Question
+GP-KGE가 WN18RR에서도 baseline을 넘을 수 있을까?
+- FB15k-237: GP-KGE 0.854 >> DistMult 0.550 (+55%)
+- WN18RR: GP-KGE ? vs DistMult 0.848
