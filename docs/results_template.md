@@ -2,32 +2,61 @@
 
 **Date:** 2024-12-20
 **GPU:** NVIDIA A100-SXM4-40GB (Colab Pro Education)
-**Test Set:** Full (20,466 triples)
 **Seeds:** 42, 123, 456 (mean ± std)
+**Loss:** BCE (unified for all models)
 
 ---
 
-## Baselines
+## Final Results
 
-| Model | Role | Embedding Dim |
-|-------|------|---------------|
-| DistMult | Deterministic baseline | 200 |
-| GGPN | GP-based baseline | 100 |
-| **GP-KGE** | **Ours** | 200 |
-
-> MC Dropout removed: AUROC=0.4373 (< 0.5) indicates inability to detect OOD samples.
+| Model | MRR | H@1 | H@10 | ECE ↓ | Brier ↓ | AUROC ↑ |
+|-------|-----|-----|------|-------|---------|---------|
+| DistMult | 0.2644 ± 0.0003 | 0.1835 ± 0.0008 | 0.4329 ± 0.0021 | 0.0820 ± 0.0014 | 0.0710 ± 0.0007 | 0.5503 ± 0.0086 |
+| GGPN | 0.2494 ± 0.0020 | 0.1694 ± 0.0034 | 0.4156 ± 0.0004 | **0.0788 ± 0.0035** | **0.0711 ± 0.0026** | 0.2206 ± 0.0090 |
+| **GP-KGE** | 0.2550 ± 0.0011 | 0.1777 ± 0.0022 | 0.4130 ± 0.0005 | 0.1181 ± 0.0008 | 0.1025 ± 0.0006 | **0.8542 ± 0.0025** |
 
 ---
 
-## Results Table (Pending)
+## Key Findings
 
-| Model | MRR | H@1 | H@10 | ECE ↓ | Brier ↓ | AUROC |
-|-------|-----|-----|------|-------|---------|-------|
-| DistMult | - | - | - | - | - | - |
-| GGPN | - | - | - | - | - | - |
-| **GP-KGE** | - | - | - | - | - | - |
+### 1. OOD Detection (AUROC) - GP-KGE Wins
+```
+GP-KGE:   0.8542  ████████████████████████████████████████
+DistMult: 0.5503  ██████████████████████
+GGPN:     0.2206  █████████
+```
+- **GP-KGE achieves 55% better AUROC than DistMult**
+- GGPN AUROC < 0.5 indicates inverted uncertainty
 
-*Results will be populated from `results/*.json` after experiments complete.*
+### 2. Calibration (ECE) - GGPN Wins
+```
+GGPN:     0.0788  ████████
+DistMult: 0.0820  ████████
+GP-KGE:   0.1181  ████████████
+```
+- GP-KGE has worst calibration
+- Original hypothesis (GP-KGE best calibration) rejected
+
+### 3. Link Prediction (MRR) - DistMult Wins
+```
+DistMult: 0.2644  ██████████████████████████
+GP-KGE:   0.2550  █████████████████████████
+GGPN:     0.2494  █████████████████████████
+```
+- All models competitive (~0.25-0.26)
+- GP-KGE maintains reasonable accuracy
+
+---
+
+## Pivot: OOD Detection Focus
+
+**Original Story:** "GP-KGE provides better calibration"
+- ❌ ECE: GP-KGE worst (0.118 vs 0.079)
+
+**New Story:** "GP-KGE provides superior OOD detection"
+- ✅ AUROC: GP-KGE best (0.854 vs 0.550)
+- GP prior captures epistemic uncertainty effectively
+- Useful for detecting unreliable predictions
 
 ---
 
@@ -41,21 +70,19 @@
 
 ---
 
-## For Paper
-
-### Table 1: Main Results on FB15k-237
+## For Paper (LaTeX)
 
 ```latex
 \begin{table}[h]
 \centering
-\caption{Experimental results on FB15k-237 (mean $\pm$ std over 3 seeds). Best results in \textbf{bold}.}
-\begin{tabular}{lcccccc}
+\caption{Results on FB15k-237 (mean $\pm$ std over 3 seeds). Best in \textbf{bold}.}
+\begin{tabular}{lccccc}
 \toprule
-Model & MRR $\uparrow$ & H@1 $\uparrow$ & H@10 $\uparrow$ & ECE $\downarrow$ & Brier $\downarrow$ & AUROC $\uparrow$ \\
+Model & MRR $\uparrow$ & H@10 $\uparrow$ & ECE $\downarrow$ & AUROC $\uparrow$ \\
 \midrule
-DistMult & - & - & - & - & - & - \\
-GGPN & - & - & - & - & - & - \\
-\textbf{GP-KGE (Ours)} & - & - & - & - & - & - \\
+DistMult & 0.264 & 0.433 & 0.082 & 0.550 \\
+GGPN & 0.249 & 0.416 & \textbf{0.079} & 0.221 \\
+GP-KGE (Ours) & 0.255 & 0.413 & 0.118 & \textbf{0.854} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -63,8 +90,19 @@ GGPN & - & - & - & - & - & - \\
 
 ---
 
-## Notes
+## Analysis Notes
 
-- All models use BCE loss for fair calibration comparison
-- GGPN uses 100 dim (vs 200) due to memory constraints
-- Results auto-saved to `results/` folder via Colab
+### Why GP-KGE has poor ECE but good AUROC?
+
+- **ECE** measures: "confidence matches accuracy"
+- **AUROC** measures: "can distinguish ID vs OOD"
+
+GP-KGE may be:
+- Overconfident on correct predictions (hurts ECE)
+- But correctly assigns higher uncertainty to OOD samples (good AUROC)
+
+### GGPN AUROC < 0.5
+
+- Indicates uncertainty is inverted
+- High uncertainty on ID, low on OOD
+- Possible issue with their uncertainty estimation

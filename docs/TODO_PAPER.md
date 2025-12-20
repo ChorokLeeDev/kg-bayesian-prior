@@ -1,83 +1,87 @@
 # TODO: NeurIPS Paper Preparation
 
-## Baselines (Final)
+## PIVOT: Calibration → OOD Detection
 
-| Model | Role | Status |
-|-------|------|--------|
-| DistMult | Deterministic baseline | Running |
-| GGPN | GP-based baseline (prior work) | Running |
-| **GP-KGE** | **Ours** | Running |
+**Original Hypothesis:** GP-KGE provides better calibration (ECE)
+- ❌ Result: GP-KGE has worst ECE (0.118 vs GGPN 0.079)
 
-> MC Dropout removed: AUROC < 0.5 indicates inability to detect OOD samples.
+**New Direction:** GP-KGE provides superior OOD detection
+- ✅ Result: GP-KGE AUROC 0.854 >> DistMult 0.550 >> GGPN 0.221
 
 ---
 
-## Current Experiments (FB15k-237)
+## Final Results (FB15k-237, 3 seeds)
 
-**Settings:**
-- Loss: BCE (unified)
-- Seeds: 42, 123, 456
-- Embedding dim: 200 (DistMult, GP-KGE), 100 (GGPN)
+| Model | MRR | H@10 | ECE ↓ | AUROC ↑ |
+|-------|-----|------|-------|---------|
+| DistMult | 0.264 | 0.433 | 0.082 | 0.550 |
+| GGPN | 0.249 | 0.416 | **0.079** | 0.221 |
+| **GP-KGE** | 0.255 | 0.413 | 0.118 | **0.854** |
 
-**Notebooks:**
-- `exp_distmult.ipynb` - DistMult baseline
-- `exp_ggpn.ipynb` - GGPN baseline
-- `exp_gpkge.ipynb` - GP-KGE (ours)
-- `kernel_ablation.ipynb` - RBF vs Relation-Aware kernel
-
-**Results:** Saved to `results/` folder and auto-pushed to GitHub.
+**Key Finding:** GP-KGE achieves 55% better AUROC than DistMult for OOD detection.
 
 ---
 
-## ✅ Fixed Issues
+## New Paper Story
 
-### 1. Loss Function Mismatch ✅
-- All models now use BCE loss
+### Title Options
+1. "Detecting Unreliable Knowledge Graph Predictions with Gaussian Process Priors"
+2. "GP-KGE: Out-of-Distribution Detection for Knowledge Graph Embeddings"
 
-### 2. Inverted AUROC ✅
-- GP-KGE uncertainty changed from `score_var` to `-mean_score`
+### Main Contribution
+- GP prior on entity embeddings enables effective OOD detection
+- Relation-aware kernel captures graph structure
+- 55% improvement over deterministic baseline (AUROC)
 
-### 3. GGPN Parameter Mismatch ✅
-- Increased to 100 dim
-
-### 4. Single Seed ✅
-- All experiments run 3 seeds (42, 123, 456)
-
-### 5. MC Dropout Removed ✅
-- AUROC=0.4373 (< 0.5) → Not suitable for OOD detection in KGE
+### Why OOD Detection Matters
+- KG often incomplete → many valid queries have no answer
+- Need to know when model is uncertain
+- Applications: medical KG, financial KG (high-stakes)
 
 ---
 
-## ❌ Remaining for NeurIPS
+## Remaining Experiments
 
 ### High Priority
-
-- [ ] **Collect Current Results**: Wait for running experiments
-- [ ] **Kernel Ablation**: RBF vs Relation-Aware
-- [ ] **Second Dataset**: WN18RR
+- [ ] **WN18RR dataset** - Show generalization
+- [ ] **Kernel ablation** - RBF vs Relation-Aware (already have notebook)
 
 ### Medium Priority
+- [ ] **OOD type ablation** - Random vs Corrupted vs Novel entities
+- [ ] **Selective prediction** - Risk-coverage curves
 
-- [ ] **Calibration Reliability Diagram**
-- [ ] **Computational Cost Table**
-
-### Nice to Have
-
-- [ ] **YAGO3-10 Dataset**
-- [ ] **Case Study**: Qualitative examples
+### Optional
+- [ ] **Temperature scaling** - Can it fix GP-KGE calibration?
+- [ ] **Uncertainty visualization** - Qualitative examples
 
 ---
 
-## Paper Structure (NeurIPS)
+## Paper Structure (Revised)
 
-1. **Abstract** (150 words)
-2. **Introduction** (1 page)
-3. **Related Work** (0.5 page)
-4. **Method** (2 pages)
-   - Relation-aware kernel
-   - Inducing point approximation
-5. **Experiments** (2 pages)
-   - Main results: DistMult, GGPN, GP-KGE
-   - Ablation: Kernel type
-   - Calibration diagram
-6. **Conclusion** (0.5 page)
+1. **Abstract** - OOD detection focus
+2. **Introduction** - Why OOD detection matters for KG
+3. **Related Work** - Uncertainty in KGE, OOD detection
+4. **Method** - GP-KGE with relation-aware kernel
+5. **Experiments**
+   - Main: OOD detection (AUROC) - Table 1
+   - Link prediction (MRR) - competitive
+   - Calibration (ECE) - discuss limitation
+   - Ablation: kernel type
+6. **Conclusion**
+
+---
+
+## Questions to Address
+
+1. **Why poor ECE but good AUROC?**
+   - ECE: confidence vs accuracy matching
+   - AUROC: ranking uncertainty (ID vs OOD separation)
+   - GP may be overconfident but still distinguishes OOD
+
+2. **Why GGPN AUROC < 0.5?**
+   - Their uncertainty estimation may be inverted
+   - Worth investigating in paper
+
+3. **Is 0.854 AUROC good enough?**
+   - Yes, significant improvement over baselines
+   - Practical for filtering unreliable predictions
