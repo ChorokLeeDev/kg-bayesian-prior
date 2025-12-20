@@ -287,6 +287,88 @@ def load_cn15k(data_dir: Optional[Path] = None) -> Tuple[KGDataset, KGDataset, K
     )
 
 
+def _download_yago310(data_dir: Path):
+    """Download YAGO3-10 dataset."""
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    # YAGO3-10 from OpenKE
+    base_url = "https://raw.githubusercontent.com/thunlp/OpenKE/OpenKE-PyTorch/benchmarks/YAGO3-10"
+
+    for split in ["train", "valid", "test"]:
+        # OpenKE uses train2id.txt format, we need to convert
+        url = f"{base_url}/{split}2id.txt"
+        dest = data_dir / f"{split}2id.txt"
+
+        if not dest.exists():
+            print(f"Downloading {split}2id.txt...")
+            _download_file(url, dest, f"Downloading {split}")
+
+    # Also download entity and relation mappings
+    for mapping in ["entity2id", "relation2id"]:
+        url = f"{base_url}/{mapping}.txt"
+        dest = data_dir / f"{mapping}.txt"
+
+        if not dest.exists():
+            print(f"Downloading {mapping}.txt...")
+            _download_file(url, dest, f"Downloading {mapping}")
+
+    print("YAGO3-10 download complete!")
+
+
+def load_yago310(data_dir: Optional[Path] = None) -> Tuple[KGDataset, KGDataset, KGDataset]:
+    """
+    Load YAGO3-10 dataset.
+
+    YAGO3-10 is a subset of YAGO3 containing 123,182 entities and 37 relations.
+    It has more relations than WN18RR but fewer than FB15k-237.
+
+    This is a good middle-ground dataset for testing the hypothesis:
+    "GP-KGE works better with more relations"
+
+    Returns:
+        Tuple of (train_dataset, valid_dataset, test_dataset)
+    """
+    if data_dir is None:
+        data_dir = DATA_DIR / "yago3-10"
+    else:
+        data_dir = Path(data_dir)
+
+    train_path = data_dir / "train2id.txt"
+
+    if not train_path.exists():
+        print("YAGO3-10 not found. Downloading...")
+        _download_yago310(data_dir)
+
+    def load_openke_format(path: Path) -> np.ndarray:
+        """Load triples from OpenKE format (first line is count, rest are h t r)."""
+        triples = []
+        with open(path) as f:
+            n = int(f.readline().strip())
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) == 3:
+                    h, t, r = int(parts[0]), int(parts[1]), int(parts[2])
+                    triples.append([h, r, t])  # Convert to (h, r, t) format
+        return np.array(triples)
+
+    train_triples = load_openke_format(data_dir / "train2id.txt")
+    valid_triples = load_openke_format(data_dir / "valid2id.txt")
+    test_triples = load_openke_format(data_dir / "test2id.txt")
+
+    # Load mappings
+    with open(data_dir / "entity2id.txt") as f:
+        num_entities = int(f.readline().strip())
+
+    with open(data_dir / "relation2id.txt") as f:
+        num_relations = int(f.readline().strip())
+
+    return (
+        KGDataset(train_triples, num_entities, num_relations),
+        KGDataset(valid_triples, num_entities, num_relations),
+        KGDataset(test_triples, num_entities, num_relations),
+    )
+
+
 def _create_sample_data(data_dir: Path):
     """Create sample data for testing when real data is not available."""
     data_dir.mkdir(parents=True, exist_ok=True)
