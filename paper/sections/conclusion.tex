@@ -1,15 +1,19 @@
 % Conclusion
 
-This paper reveals a fundamental limitation in probabilistic knowledge graph embeddings: learned variances are relation-agnostic and miss structural uncertainty.
-The semantic-structural decomposition provides a principled framework, showing that both components---embedding quality (GP variance) and observation patterns (coverage)---are necessary for effective OOD detection.
+This paper identifies a fundamental limitation in probabilistic knowledge graph embeddings: learned variances are relation-agnostic and cannot capture structural uncertainty.
+The semantic-structural decomposition provides a principled framework explaining why existing uncertainty methods underperform on knowledge graphs---they conflate two orthogonal uncertainty types that require separate treatment.
 
-The simple CAGP combination achieves 0.87--0.96 AUROC with 14--32\% synergy over single components across three benchmarks.
-The key contribution is not the algorithm itself but the \emph{insight} that uncertainty in knowledge graphs naturally decomposes into orthogonal types that existing methods conflate.
+CAGP, a simple linear combination of both signals, achieves 0.87--0.96 AUROC with 14--32\% improvement over individual components.
+The primary contribution is the decomposition framework itself, not the combination algorithm.
 
 \paragraph{Limitations.}
-This work evaluates only random tail corruption as OOD.
-Other OOD types (semantic shift, temporal drift) may require different signals.
-The coverage matrix requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage, though it is sparse in practice.
+Several limitations warrant discussion:
+\begin{itemize}
+    \item \textbf{OOD definition}: We evaluate only random tail corruption. Real-world distribution shifts (temporal drift, domain transfer, adversarial perturbations) may exhibit different characteristics. Type-constrained corruption, where replacement entities match the original type, would provide a harder test.
+    \item \textbf{Base model}: All experiments use DistMult. While the decomposition insight should generalize, empirical validation on translation-based (TransE) and rotation-based (RotatE) models would strengthen the claims.
+    \item \textbf{Storage}: The coverage matrix requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage. For YAGO3-10 (123K entities, 37 relations), this is 4.5M entries, though typically $<$5\% are non-zero.
+    \item \textbf{Link prediction}: Our base model achieves MRR 0.255 on FB15k-237, below state-of-the-art ($\sim$0.35). The uncertainty contribution is orthogonal to link prediction quality, but stronger base models may yield different uncertainty dynamics.
+\end{itemize}
 
 \paragraph{Future Work.}
-Extending the decomposition to temporal KGs, learning per-relation $\alpha$ values, and investigating other uncertainty types beyond semantic and structural.
+Extending the decomposition to temporal knowledge graphs where observation recency matters; learning relation-specific $\alpha$ values; investigating type-constrained and adversarial OOD settings; and applying the framework to downstream tasks such as drug interaction prediction where uncertainty calibration is critical.

@@ -46,15 +46,15 @@ Coverage equals 1 if entity $e$ appears with relation $r$ in training, else 0.
 
 This ranges from 0 (both entities seen with $r$) to 2 (neither seen).
 
-\begin{theorem}[Coverage AUROC]
-\label{thm:coverage_auroc}
+\begin{proposition}[Coverage AUROC under Random Corruption]
+\label{prop:coverage_auroc}
 Under random tail corruption with relation sparsity $s_r = 1 - |\{e : c(e,r)=1\}|/|\mathcal{E}|$, let $a = P(\text{both covered} | \text{ID})$ and $b = P(\text{exactly one covered} | \text{ID})$. Then:
 \begin{equation}
     \text{AUROC}_{\text{cov}} = \frac{1}{2}\left(a(1+s_r) + s_r \cdot b\right)
 \end{equation}
-\end{theorem}
+\end{proposition}
 
-\begin{proof}[Proof sketch]
+\begin{proof}[Derivation]
 ID uncertainty distribution: $P(U=0)=a$, $P(U=1)=b$, $P(U=2)=1-a-b$.
 OOD has head from ID, random tail: $P(U=0)=1-s_r$, $P(U=1)=s_r$.
 AUROC follows from $P(U_{\text{ID}} < U_{\text{OOD}}) + \frac{1}{2}P(U_{\text{ID}} = U_{\text{OOD}})$.
@@ -63,26 +63,30 @@ Full derivation in Appendix~\ref{app:proof}.
 
 \subsection{Complementarity of Signals}
 
-\begin{theorem}[Complementarity]
-\label{thm:complementarity}
-Neither coverage nor GP variance is sufficient alone. Specifically:
-\begin{enumerate}
-    \item $\exists$ cases where coverage is correct and GP is wrong
-    \item $\exists$ cases where GP is correct and coverage is wrong
-\end{enumerate}
-\end{theorem}
+The two uncertainty types capture orthogonal information, making neither sufficient alone.
+
+\begin{proposition}[Complementarity]
+\label{prop:complementarity}
+Coverage and GP variance are not redundant: each correctly identifies OOD samples that the other misses.
+\end{proposition}
 
 \begin{proof}
-\textbf{Case 1 (Coverage correct, GP wrong):} Entity $e$ appears frequently overall (low $\sigma^2_e$) but never with relation $r$.
-For triple $(?, r, e)$: Coverage correctly assigns high uncertainty; GP incorrectly assigns low uncertainty.
+We construct explicit failure cases for each signal:
 
-\textbf{Case 2 (GP correct, Coverage wrong):} An OOD triple $(h, r, t')$ where the randomly sampled tail $t'$ is a rare entity (high $\sigma^2_{t'}$) that happens to have appeared once with relation $r$.
-Coverage incorrectly assigns low uncertainty (suggests ID); GP correctly flags the rare entity.
+\textbf{Case 1 (GP fails, Coverage succeeds):} Let entity $e$ appear in 1000 training triples across relations $\{r_1, \ldots, r_{10}\}$, but never with relation $r_{11}$.
+GP assigns low variance $\sigma^2_e$ (well-observed entity).
+For query $(?, r_{11}, e)$: GP incorrectly signals low uncertainty, while coverage correctly signals high uncertainty since $c(e, r_{11}) = 0$.
+
+\textbf{Case 2 (Coverage fails, GP succeeds):} Let entity $e'$ appear in exactly one training triple $(h, r, e')$.
+Coverage assigns $c(e', r) = 1$.
+For OOD query $(h', r, e')$ where $e'$ was randomly sampled: Coverage incorrectly signals low uncertainty, while GP correctly signals high uncertainty due to large $\sigma^2_{e'}$.
 \end{proof}
+
+\noindent\textbf{Intuition.} GP variance captures \emph{how well an entity is learned} (global property), while coverage captures \emph{whether an entity-relation pair was observed} (local property). A frequently-observed entity can still be queried in novel relational contexts; a rarely-observed entity can still appear in familiar relational contexts.
 
 \subsection{CAGP: Combining Both Signals}
 
-The complementarity theorem motivates combining both signals:
+Proposition~\ref{prop:complementarity} motivates combining both signals:
 
 \begin{definition}[CAGP Uncertainty]
 \begin{equation}
