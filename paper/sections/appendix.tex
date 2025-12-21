@@ -116,11 +116,10 @@ Dataset & $p_h$ & $p_t$ & $P(\text{both})$ & $s_r$ (avg) \\
 \midrule
 WN18RR & 0.636 & 0.885 & 0.542 & 0.834 \\
 FB15k-237 & 0.763 & 0.905 & 0.685 & 0.960 \\
-YAGO3-10 & 0.71* & 0.89* & 0.63* & 0.92* \\
+YAGO3-10 & 0.854 & 0.973 & 0.834 & 0.919 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-*YAGO3-10 values estimated from coverage-only AUROC (0.760) using Theorem~\ref{thm:coverage_auroc}; exact computation infeasible due to dataset size (123K entities).
-
 Note: $p_h < p_t$ because test triples often query rare heads against common tails (standard evaluation protocol).
+YAGO3-10 has higher coverage than other datasets, yet lower AUROC (0.760), suggesting the theorem's assumptions are less accurate for this dataset structure.
