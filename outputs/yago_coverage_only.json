@@ -1,0 +1,9 @@
+{
+  "dataset": "YAGO3-10",
+  "num_entities": 123161,
+  "num_relations": 37,
+  "train_size": 1079040,
+  "test_size": 5000,
+  "coverage_only_auroc": 0.7618,
+  "note": "Full GP training requires GPU for reasonable time. Coverage-only is instant."
+}
