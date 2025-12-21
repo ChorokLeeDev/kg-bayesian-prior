@@ -5,12 +5,11 @@
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
 
-\bibitem[Chen et~al.(2022{\natexlab{a}})]{chen2022graph}
+\bibitem[Chen et~al.(2022)]{chen2022graph}
 Hao Chen et~al.
 \newblock Graph gaussian processes for multi-relational knowledge graph
   completion.
-\newblock In \emph{AAAI Conference on Artificial Intelligence},
-  2022{\natexlab{a}}.
+\newblock In \emph{AAAI Conference on Artificial Intelligence}, 2022.
 
 \bibitem[Chen et~al.(2019)Chen, Chen, Shi, Sun, and Zaniolo]{chen2019embedding}
 Xuelu Chen, Muhao Chen, Weijia Shi, Yizhou Sun, and Carlo Zaniolo.
@@ -18,18 +17,18 @@ Xuelu Chen, Muhao Chen, Weijia Shi, Yizhou Sun, and Carlo Zaniolo.
 \newblock In \emph{AAAI Conference on Artificial Intelligence}, pages
   3363--3370, 2019.
 
-\bibitem[Chen et~al.(2021)Chen, Chen, Fan, Ramnath, and
+\bibitem[Chen et~al.(2021{\natexlab{a}})Chen, Chen, Fan, Ramnath, and
   Ren]{chen2021probabilistic}
 Xuelu Chen, Muhao Chen, Changjun Fan, Ankur Ramnath, and Kai Ren.
 \newblock Probabilistic box embeddings for uncertain knowledge graph reasoning.
 \newblock In \emph{Annual Conference of the North American Chapter of the ACL},
-  pages 882--893, 2021.
+  pages 882--893, 2021{\natexlab{a}}.
 
-\bibitem[Chen et~al.(2022{\natexlab{b}})]{Chen2022}
-Zhangjie Chen et~al.
+\bibitem[Chen et~al.(2021{\natexlab{b}})Chen, Wang, Wang, and Ren]{Chen2022}
+Zhangjie Chen, Yue Wang, Zenglin Wang, and Zhaochun Ren.
 \newblock Probabilistic entity representation model for reasoning over
   knowledge graphs.
-\newblock \emph{arXiv preprint}, 2022{\natexlab{b}}.
+\newblock \emph{arXiv preprint arXiv:2110.13522}, 2021{\natexlab{b}}.
 
 \bibitem[Gal and Ghahramani(2016)]{gal2016dropout}
 Yarin Gal and Zoubin Ghahramani.

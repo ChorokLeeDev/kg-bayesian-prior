@@ -13,7 +13,6 @@
 \citation{chen2022graph}
 \citation{sun2019rotate}
 \citation{toutanova2015observed}
-\citation{safavi2020codex}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces OOD detection AUROC. CAGP consistently outperforms single signals with 14--32\% synergy.}}{2}{figure.caption.1}\protected@file@percent }
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
 \newlabel{fig:main_results}{{1}{2}{OOD detection AUROC. CAGP consistently outperforms single signals with 14--32\% synergy}{figure.caption.1}{}}
@@ -24,12 +23,13 @@
 \@writefile{toc}{\contentsline {paragraph}{Graph-Based Uncertainty.}{2}{section*.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Coverage in Knowledge Graphs.}{2}{section*.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Positioning.}{2}{section*.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}Background}{2}{section.3}\protected@file@percent }
-\newlabel{sec:background}{{3}{2}{Background}{section.3}{}}
-\@writefile{toc}{\contentsline {paragraph}{Knowledge Graphs.}{2}{section*.7}\protected@file@percent }
+\citation{safavi2020codex}
 \citation{Chen2022}
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces GP variance (right) is constant across relations; coverage (left) is relation-specific.}}{3}{figure.caption.10}\protected@file@percent }
 \newlabel{fig:gp_limitation}{{2}{3}{GP variance (right) is constant across relations; coverage (left) is relation-specific}{figure.caption.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Background}{3}{section.3}\protected@file@percent }
+\newlabel{sec:background}{{3}{3}{Background}{section.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Knowledge Graphs.}{3}{section*.7}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{OOD Detection Task.}{3}{section*.8}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{GP-KGE Uncertainty.}{3}{section*.9}\protected@file@percent }
 \newlabel{eq:gp_uncertainty}{{2}{3}{GP-KGE Uncertainty}{equation.2}{}}
@@ -46,36 +46,36 @@
 \newlabel{sec:experiments}{{5}{4}{Experiments}{section.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Setup}{4}{subsection.5.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Datasets.}{4}{section*.11}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Task.}{4}{section*.12}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces OOD Detection AUROC. CAGP consistently outperforms all baselines with 14--32\% synergy.}}{5}{table.caption.16}\protected@file@percent }
 \newlabel{tab:main}{{1}{5}{OOD Detection AUROC. CAGP consistently outperforms all baselines with 14--32\% synergy}{table.caption.16}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Coverage AUROC Theorem (Theorem~\ref {thm:coverage_auroc}) validation.}}{5}{table.caption.17}\protected@file@percent }
 \newlabel{tab:theorem}{{2}{5}{Coverage AUROC Theorem (Theorem~\ref {thm:coverage_auroc}) validation}{table.caption.17}{}}
+\@writefile{toc}{\contentsline {paragraph}{Task.}{5}{section*.12}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Baselines.}{5}{section*.13}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Metric.}{5}{section*.14}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Training.}{5}{section*.15}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Main Results}{5}{subsection.5.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Theorem Validation}{5}{subsection.5.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Ablation: Why Both Components?}{5}{subsection.5.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Link Prediction Performance.}{5}{section*.19}\protected@file@percent }
 \bibdata{references}
-\bibcite{chen2022graph}{{1}{2022{a}}{{Chen et~al.}}{{}}}
+\bibcite{chen2022graph}{{1}{2022}{{Chen et~al.}}{{}}}
 \bibcite{chen2019embedding}{{2}{2019}{{Chen et~al.}}{{Chen, Chen, Shi, Sun, and Zaniolo}}}
-\bibcite{chen2021probabilistic}{{3}{2021}{{Chen et~al.}}{{Chen, Chen, Fan, Ramnath, and Ren}}}
-\bibcite{Chen2022}{{4}{2022{b}}{{Chen et~al.}}{{}}}
+\bibcite{chen2021probabilistic}{{3}{2021{a}}{{Chen et~al.}}{{Chen, Chen, Fan, Ramnath, and Ren}}}
+\bibcite{Chen2022}{{4}{2021{b}}{{Chen et~al.}}{{Chen, Wang, Wang, and Ren}}}
 \bibcite{gal2016dropout}{{5}{2016}{{Gal and Ghahramani}}{{}}}
 \bibcite{lakshminarayanan2017simple}{{6}{2017}{{Lakshminarayanan et~al.}}{{Lakshminarayanan, Pritzel, and Blundell}}}
 \bibcite{safavi2020codex}{{7}{2020}{{Safavi and Koutra}}{{}}}
 \bibcite{stadler2021graph}{{8}{2021}{{Stadler et~al.}}{{Stadler, Charpentier, and G{\"u}nnemann}}}
-\bibcite{sun2019rotate}{{9}{2019}{{Sun et~al.}}{{Sun, Deng, Nie, and Tang}}}
-\bibcite{toutanova2015observed}{{10}{2015}{{Toutanova and Chen}}{{}}}
-\bibstyle{plainnat}
 \@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Ablation study: removing either component hurts performance.}}{6}{table.caption.18}\protected@file@percent }
 \newlabel{tab:ablation}{{3}{6}{Ablation study: removing either component hurts performance}{table.caption.18}{}}
+\@writefile{toc}{\contentsline {paragraph}{Link Prediction Performance.}{6}{section*.19}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{6}{section.6}\protected@file@percent }
 \newlabel{sec:conclusion}{{6}{6}{Conclusion}{section.6}{}}
 \@writefile{toc}{\contentsline {paragraph}{Limitations.}{6}{section*.20}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Future Work.}{6}{section*.21}\protected@file@percent }
+\bibcite{sun2019rotate}{{9}{2019}{{Sun et~al.}}{{Sun, Deng, Nie, and Tang}}}
+\bibcite{toutanova2015observed}{{10}{2015}{{Toutanova and Chen}}{{}}}
+\bibstyle{plainnat}
 \@writefile{toc}{\contentsline {section}{\numberline {A}Proof of Theorem~\ref {thm:coverage_auroc}}{7}{appendix.A}\protected@file@percent }
 \newlabel{app:proof}{{A}{7}{Proof of Theorem~\ref {thm:coverage_auroc}}{appendix.A}{}}
 \@writefile{toc}{\contentsline {paragraph}{Setup.}{7}{section*.23}\protected@file@percent }
@@ -85,16 +85,16 @@
 \newlabel{app:implementation}{{B}{7}{Implementation Details}{appendix.B}{}}
 \@writefile{toc}{\contentsline {paragraph}{Hyperparameters.}{7}{section*.26}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Coverage Computation.}{7}{section*.27}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{CAGP Implementation.}{7}{section*.28}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Theorem validation: predicted vs observed coverage-only AUROC.}}{8}{figure.caption.29}\protected@file@percent }
-\newlabel{fig:theorem}{{3}{8}{Theorem validation: predicted vs observed coverage-only AUROC}{figure.caption.29}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Full results with standard deviations (3 seeds).}}{8}{table.caption.30}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {C}Extended Results}{8}{appendix.C}\protected@file@percent }
 \newlabel{app:extended}{{C}{8}{Extended Results}{appendix.C}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Full results with standard deviations (3 seeds).}}{8}{table.caption.29}\protected@file@percent }
+\newlabel{tab:full_results}{{4}{8}{Full results with standard deviations (3 seeds)}{table.caption.29}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Theorem validation: predicted vs observed coverage-only AUROC.}}{8}{figure.caption.30}\protected@file@percent }
+\newlabel{fig:theorem}{{3}{8}{Theorem validation: predicted vs observed coverage-only AUROC}{figure.caption.30}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {D}Dataset Statistics}{8}{appendix.D}\protected@file@percent }
 \newlabel{app:datasets}{{D}{8}{Dataset Statistics}{appendix.D}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Dataset statistics.}}{8}{table.caption.31}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {E}Coverage Statistics}{8}{appendix.E}\protected@file@percent }
-\newlabel{app:coverage}{{E}{8}{Coverage Statistics}{appendix.E}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Dataset statistics.}}{9}{table.caption.31}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Coverage statistics for ID test triples.}}{9}{table.caption.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {E}Coverage Statistics}{9}{appendix.E}\protected@file@percent }
+\newlabel{app:coverage}{{E}{9}{Coverage Statistics}{appendix.E}{}}
 \gdef \@abspage@last{9}

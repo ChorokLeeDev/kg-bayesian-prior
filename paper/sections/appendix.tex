@@ -48,33 +48,27 @@ Coverage matrix $\mat{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ is pr
 Storage is sparse: typically $<$5\% of entries are non-zero.
 
 \paragraph{CAGP Implementation.}
-\begin{verbatim}
+\begin{lstlisting}[language=Python]
 def cagp_uncertainty(h, r, t, gp_var, coverage, alpha):
     # GP uncertainty (semantic)
     u_gp = (gp_var[h] + gp_var[t]) / 2
-
     # Coverage uncertainty (structural)
     u_cov = 2.0 - coverage[h, r] - coverage[t, r]
-
     # Normalize GP to coverage scale
     u_gp_norm = u_gp * u_cov.mean() / u_gp.mean()
-
     return alpha * u_gp_norm + (1 - alpha) * u_cov
-\end{verbatim}
+\end{lstlisting}
 
 \section{Extended Results}
 \label{app:extended}
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figures/fig2_theorem_validation.pdf}
-\caption{Theorem validation: predicted vs observed coverage-only AUROC.}
-\label{fig:theorem}
-\end{figure}
+Table~\ref{tab:full_results} provides results with standard deviations across 3 random seeds.
+Figure~\ref{fig:theorem} visualizes the theorem validation from Section~\ref{sec:experiments}.
 
 \begin{table}[h]
 \centering
 \caption{Full results with standard deviations (3 seeds).}
+\label{tab:full_results}
 \begin{tabular}{lccc}
 \toprule
 Method & WN18RR & FB15k-237 & YAGO3-10 \\
@@ -85,6 +79,13 @@ CAGP & 0.871 $\pm$ 0.003 & 0.960 $\pm$ 0.000 & 0.942 $\pm$ 0.000 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{figures/fig2_theorem_validation.pdf}
+\caption{Theorem validation: predicted vs observed coverage-only AUROC.}
+\label{fig:theorem}
+\end{figure}
 
 \section{Dataset Statistics}
 \label{app:datasets}
