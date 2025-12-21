@@ -30,7 +30,7 @@ Hook → Gap → Insight → Method → Validation → Implications
 **Structure:** Context → Problem → Insight → Method → Results → Impact
 
 **Draft:**
-> Knowledge graph embedding methods increasingly incorporate uncertainty quantification, yet their reliability for out-of-distribution detection remains poorly understood. We identify a fundamental limitation in probabilistic approaches: learned entity variances are relation-agnostic and cannot capture whether an entity has been observed with a specific relation. We formalize this as a semantic-structural decomposition, where semantic uncertainty reflects embedding quality and structural uncertainty reflects observation patterns. We prove that coverage—a simple relation-specific lookup—provides a sufficient statistic for structural uncertainty with a closed-form AUROC bound (validated within 3% error). Neither component alone suffices: their combination achieves 0.87–0.96 AUROC across three benchmarks with 14–32% improvement over the best single signal. Our analysis reveals why existing methods struggle and provides a principled framework for uncertainty quantification in knowledge graphs.
+> Knowledge graph embedding methods increasingly incorporate uncertainty quantification, yet their reliability for out-of-distribution detection remains poorly understood. I identify a fundamental limitation in probabilistic approaches: learned entity variances are relation-agnostic and cannot capture whether an entity has been observed with a specific relation. I formalize this as a semantic-structural decomposition, where semantic uncertainty reflects embedding quality and structural uncertainty reflects observation patterns. I prove that coverage—a simple relation-specific lookup—provides a sufficient statistic for structural uncertainty with a closed-form AUROC bound (validated within 3% error). Neither component alone suffices: their combination achieves 0.87–0.96 AUROC across three benchmarks with 14–32% improvement over the best single signal. This analysis reveals why existing methods struggle and provides a principled framework for uncertainty quantification in knowledge graphs.
 
 ---
 
@@ -85,10 +85,10 @@ Hook → Gap → Insight → Method → Validation → Implications
 **2.3 Coverage in Knowledge Graphs**
 - Used for negative sampling, not uncertainty
 - Relation-specific statistics underexplored
-- We repurpose as uncertainty signal
+- I repurpose as uncertainty signal
 
 **Key positioning statement:**
-> Prior work treats uncertainty as monolithic. We show it naturally decomposes into semantic and structural components, each requiring distinct modeling.
+> Prior work treats uncertainty as monolithic. This paper shows it naturally decomposes into semantic and structural components, each requiring distinct modeling.
 
 ---
 
@@ -239,7 +239,7 @@ Hypothesis: GP performs better when entity embedding quality varies more (YAGO h
 
 ### 7. Conclusion (0.25 pages)
 
-> We revealed a fundamental limitation in probabilistic knowledge graph embeddings: learned variances are relation-agnostic and miss structural uncertainty. Our semantic-structural decomposition provides a principled framework, showing that both components are necessary. The simple CAGP combination achieves strong OOD detection with consistent synergy across benchmarks. This work provides both theoretical understanding and practical guidance for uncertainty quantification in knowledge graphs.
+> This paper reveals a fundamental limitation in probabilistic knowledge graph embeddings: learned variances are relation-agnostic and miss structural uncertainty. The semantic-structural decomposition provides a principled framework, showing that both components are necessary. The simple CAGP combination achieves strong OOD detection with consistent synergy across benchmarks. This work provides both theoretical understanding and practical guidance for uncertainty quantification in knowledge graphs.
 
 ---
 
@@ -266,29 +266,31 @@ Hypothesis: GP performs better when entity embedding quality varies more (YAGO h
 ## Writing Guidelines
 
 ### DO:
-- Use active voice: "We show" not "It is shown"
+- Use "I" (single author): "I show" not "It is shown"
 - Be direct: "X fails because Y" not "X may potentially have issues"
 - Quantify claims: "32% improvement" not "significant improvement"
 - One idea per paragraph
 - Topic sentence first
 
 ### DON'T:
-- Hedge: "We believe", "It seems", "might potentially"
+- Hedge: "I believe", "It seems", "might potentially"
 - Overstate: "revolutionary", "novel paradigm shift"
 - Repeat: Say it once, say it well
 - Bury the lede: Key result in first sentence
+- Use "we" (you're the only author)
 
 ### Phrases to use:
-- "We identify..." (not "We noticed...")
+- "I identify..." (not "I noticed...")
 - "This reveals..." (not "This suggests...")
-- "The key insight is..." (not "We think that...")
+- "The key insight is..." (not "I think that...")
 - "Specifically,..." (not "In other words,...")
 
 ### Phrases to avoid:
 - "Interestingly,..." (let reader decide)
 - "Obviously,..." (if obvious, don't say it)
-- "To the best of our knowledge..." (just state the claim)
+- "To the best of my knowledge..." (just state the claim)
 - "It is important to note..." (just note it)
+- "We" (single author paper)
 
 ---
 
