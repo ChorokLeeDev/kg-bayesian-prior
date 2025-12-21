@@ -64,6 +64,7 @@ Dataset & $p_h$ & $p_t$ & Predicted & Observed \\
 \midrule
 WN18RR & 0.636 & 0.885 & 0.681 & 0.657 \\
 FB15k-237 & 0.763 & 0.905 & 0.815 & 0.821 \\
+YAGO3-10 & 0.854 & 0.973 & 0.797 & 0.760 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -92,7 +93,8 @@ $\alpha = 1$ (GP only) & 0.647 & 0.749 \\
 Table~\ref{tab:ablation} confirms that both components are necessary.
 Setting $\alpha = 0$ or $\alpha = 1$ reduces to single-signal baselines, losing 17--33\% AUROC.
 
-\paragraph{Link Prediction Performance.}
+\subsection{Link Prediction Performance}
+
 CAGP uses the same entity embeddings as GP-KGE---it only modifies uncertainty computation, not the scoring function.
 Thus link prediction metrics (MRR, Hits@10) are identical between CAGP and GP-KGE.
 On FB15k-237, both achieve MRR = 0.255, Hits@10 = 0.413, competitive with DistMult (MRR = 0.264).
