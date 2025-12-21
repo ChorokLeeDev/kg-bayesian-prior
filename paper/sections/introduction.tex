@@ -31,8 +31,17 @@ Coverage is relation-specific by construction, addressing exactly the limitation
 \begin{enumerate}
     \item I identify a fundamental limitation in probabilistic KGE: learned variances are relation-agnostic and miss structural uncertainty.
     \item I propose a semantic-structural decomposition framework that separates these orthogonal uncertainty types.
-    \item I prove a closed-form AUROC bound for coverage-based detection, validated empirically with $<$3\% error.
+    \item I derive a closed-form AUROC bound for coverage-based detection, validated empirically with $<$4\% error.
     \item I demonstrate that combining both signals (CAGP) achieves 0.87--0.96 AUROC with 14--32\% synergy over single components across three benchmarks.
 \end{enumerate}
 
 The key finding is not the CAGP algorithm itself---which is a simple linear combination---but the \emph{insight} that probabilistic KGE methods have a structural blind spot that cannot be learned away.
+Figure~\ref{fig:main_results} summarizes the main results.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig1_main_results.pdf}
+\vspace{-1em}
+\caption{OOD detection AUROC. CAGP consistently outperforms single signals with 14--32\% synergy.}
+\label{fig:main_results}
+\end{figure}

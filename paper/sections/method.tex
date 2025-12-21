@@ -14,8 +14,16 @@ GP-KGE uncertainty (Eq.~\ref{eq:gp_uncertainty}) is relation-agnostic: for any e
 Immediate from Eq.~\ref{eq:gp_uncertainty}: the relation $r$ does not appear in the uncertainty computation.
 \end{proof}
 
-This limitation is fundamental, not an implementation detail.
+This limitation is fundamental, not an implementation detail (see Figure~\ref{fig:gp_limitation}).
 Making GP variance relation-aware would require learning $|\mathcal{E}| \times |\mathcal{R}| \times d$ parameters---infeasible for typical KG sizes.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig5_gp_limitation.pdf}
+\vspace{-1em}
+\caption{GP variance (right) is constant across relations; coverage (left) is relation-specific.}
+\label{fig:gp_limitation}
+\end{figure}
 
 \subsection{Structural Uncertainty via Coverage}
 
@@ -65,11 +73,11 @@ Neither coverage nor GP variance is sufficient alone. Specifically:
 \end{theorem}
 
 \begin{proof}
-\textbf{Case 1:} Entity $e$ is frequent overall (low $\sigma^2_e$) but never seen with relation $r$.
-Coverage correctly gives high uncertainty; GP incorrectly gives low uncertainty.
+\textbf{Case 1 (Coverage correct, GP wrong):} Entity $e$ appears frequently overall (low $\sigma^2_e$) but never with relation $r$.
+For triple $(?, r, e)$: Coverage correctly assigns high uncertainty; GP incorrectly assigns low uncertainty.
 
-\textbf{Case 2:} Entity $e$ is rare (high $\sigma^2_e$) but seen once with relation $r$.
-For a truly OOD triple, GP correctly gives high uncertainty; coverage incorrectly gives low uncertainty.
+\textbf{Case 2 (GP correct, Coverage wrong):} An OOD triple $(h, r, t')$ where the randomly sampled tail $t'$ is a rare entity (high $\sigma^2_{t'}$) that happens to have appeared once with relation $r$.
+Coverage incorrectly assigns low uncertainty (suggests ID); GP correctly flags the rare entity.
 \end{proof}
 
 \subsection{CAGP: Combining Both Signals}
