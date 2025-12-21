@@ -19,14 +19,15 @@ We discover that effective OOD detection in knowledge graphs requires **two comp
 |---------|-----------|---------|---------------|------|---------|
 | WN18RR | 11 | 0.647 | 0.657 | **0.871** | +32% |
 | FB15k-237 | 237 | 0.749 | 0.821 | **0.960** | +17% |
-| YAGO3-10 | 37 | TBD | 0.762 | TBD | TBD |
+| YAGO3-10 | 37 | 0.824 | 0.760 | **0.942** | +14% |
 
 ### 1.2 Key Observations
 
-1. **Coverage scales with relation count:** More relations → higher sparsity → better coverage AUROC
-2. **GP alone is weak:** 0.65-0.75 AUROC across datasets
-3. **Synergy is real:** CAGP >> max(GP, Coverage) consistently
-4. **Learned α ≈ 0.5:** Both signals contribute equally
+1. **CAGP consistently achieves 0.87-0.96 AUROC** across all datasets
+2. **Synergy is universal:** +14% to +32% improvement over best single component
+3. **GP vs Coverage varies by dataset:** GP wins on YAGO (0.824 vs 0.760), Coverage wins on FB15k-237 (0.821 vs 0.749)
+4. **Learned α = 0.5 exactly:** Stays at initialization, both signals contribute equally
+5. **CAGP is remarkably stable:** std = 0.0001 on YAGO (virtually no variance across seeds)
 
 ---
 
