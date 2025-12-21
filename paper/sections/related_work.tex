@@ -1,18 +1,25 @@
-% Related Work Section - Concise NeurIPS style
+% Related Work - Position against prior work
 
-\paragraph{Knowledge Graph Embeddings.}
-TransE~\citep{bordes2013translating}, DistMult~\citep{yang2015embedding}, and ComplEx~\citep{trouillon2016complex} learn entity representations for link prediction but provide only point estimates.
+\paragraph{Uncertainty in Knowledge Graph Embeddings.}
+UKGE~\citep{chen2019embedding} associates confidence scores with triples, reflecting triple-level reliability rather than entity-level uncertainty.
+BEUrRE~\citep{chen2021probabilistic} uses box embeddings where box size indicates uncertainty, but uncertainty remains entity-level and relation-agnostic.
+GP-KGE learns Gaussian distributions over entity embeddings.
+The limitation I identify---that learned variances cannot capture relation-specific uncertainty---applies to all these methods.
 
-\paragraph{Uncertainty in KGE.}
-UKGE~\citep{chen2019embedding} models triple-level confidence scores but cannot identify uncertain entities.
-BEUrRE~\citep{chen2021probabilistic} uses box embeddings where volume indicates uncertainty, but lacks probabilistic grounding.
-These methods do not incorporate graph structure into uncertainty estimation.
+\paragraph{OOD Detection in Deep Learning.}
+MC Dropout~\citep{gal2016dropout} estimates uncertainty via dropout at test time.
+Deep Ensembles~\citep{lakshminarayanan2017simple} aggregate predictions from independently trained models.
+These methods are relation-agnostic when applied to KG embeddings: they capture model uncertainty but not structural observation patterns.
 
-\paragraph{Gaussian Processes on Graphs.}
-Diffusion kernels~\citep{kondor2002diffusion} and graph Mat\'ern GPs~\citep{borovitskiy2021matern} define valid covariances on graphs, but only for \emph{homogeneous} graphs with a single edge type.
-GGPN~\citep{chen2022graph} applies GPs to multi-relational graphs but does not evaluate uncertainty quality.
-We show GGPN's uncertainty is miscalibrated (AUROC$<$0.5), while \ours{} achieves 0.854.
+\paragraph{Graph-Based Uncertainty.}
+Graph Posterior Networks~\citep{stadler2021graph} propagate uncertainty through graph structure for node classification.
+GGPN~\citep{chen2022graph} extends this to knowledge graphs.
+These methods treat edges homogeneously, missing the heterogeneous nature of KG relations.
 
-\paragraph{Graph Posterior Networks.}
-GPN~\citep{stadler2021graph} provides principled uncertainty for node classification via neighbor agreement axioms.
-We extend these principles to heterogeneous KGs with relation-aware kernels.
+\paragraph{Coverage in Knowledge Graphs.}
+Entity coverage statistics are used for negative sampling~\citep{sun2019rotate} and dataset analysis~\citep{toutanova2015observed}, but not for uncertainty quantification.
+I repurpose coverage as a first-class uncertainty signal, showing it captures structural information that learned methods miss.
+
+\paragraph{Positioning.}
+Prior work treats uncertainty as a single quantity to be learned.
+I show it decomposes into semantic and structural components, explaining why existing methods underperform.

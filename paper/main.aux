@@ -2,64 +2,69 @@
 \providecommand\hyper@newdestlabel[2]{}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
-\citation{chen2019embedding}
-\citation{chen2022graph}
-\citation{chen2022graph}
-\citation{bordes2013translating}
-\citation{yang2015embedding}
-\citation{trouillon2016complex}
-\citation{chen2019embedding}
-\citation{chen2021probabilistic}
-\citation{kondor2002diffusion}
-\citation{borovitskiy2021matern}
-\citation{chen2022graph}
+\citation{Chen2022}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
 \newlabel{sec:intro}{{1}{1}{Introduction}{section.1}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{1}{section.2}\protected@file@percent }
-\newlabel{sec:related}{{2}{1}{Related Work}{section.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{Knowledge Graph Embeddings.}{1}{section*.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Uncertainty in KGE.}{1}{section*.2}\protected@file@percent }
+\citation{chen2019embedding}
+\citation{chen2021probabilistic}
+\citation{gal2016dropout}
+\citation{lakshminarayanan2017simple}
 \citation{stadler2021graph}
-\citation{kondor2002diffusion}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textsc  {GP-KGE}{} architecture: Per-relation Laplacians define a relation-aware kernel for the GP prior over entity embeddings.}}{2}{figure.caption.8}\protected@file@percent }
-\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig:architecture}{{1}{2}{\ours {} architecture: Per-relation Laplacians define a relation-aware kernel for the GP prior over entity embeddings}{figure.caption.8}{}}
-\@writefile{toc}{\contentsline {paragraph}{Gaussian Processes on Graphs.}{2}{section*.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Graph Posterior Networks.}{2}{section*.4}\protected@file@percent }
+\citation{chen2022graph}
+\citation{sun2019rotate}
+\citation{toutanova2015observed}
+\citation{safavi2020codex}
+\citation{Chen2022}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{2}{section.2}\protected@file@percent }
+\newlabel{sec:related}{{2}{2}{Related Work}{section.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Uncertainty in Knowledge Graph Embeddings.}{2}{section*.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{OOD Detection in Deep Learning.}{2}{section*.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Graph-Based Uncertainty.}{2}{section*.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Coverage in Knowledge Graphs.}{2}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Positioning.}{2}{section*.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3}Background}{2}{section.3}\protected@file@percent }
 \newlabel{sec:background}{{3}{2}{Background}{section.3}{}}
-\@writefile{toc}{\contentsline {paragraph}{Knowledge Graph Embeddings.}{2}{section*.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Gaussian Processes.}{2}{section*.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Graph Laplacian and Diffusion Kernels.}{2}{section*.7}\protected@file@percent }
-\citation{yang2015embedding}
-\citation{chen2022graph}
+\@writefile{toc}{\contentsline {paragraph}{Knowledge Graphs.}{2}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{OOD Detection Task.}{2}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{GP-KGE Uncertainty.}{2}{section*.8}\protected@file@percent }
+\newlabel{eq:gp_uncertainty}{{2}{2}{GP-KGE Uncertainty}{equation.2}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4}Method}{3}{section.4}\protected@file@percent }
 \newlabel{sec:method}{{4}{3}{Method}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Problem Setup}{3}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Relation-Aware Kernel}{3}{subsection.4.2}\protected@file@percent }
-\newlabel{eq:kernel}{{1}{3}{Relation-Aware Kernel}{equation.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}GP Prior and Variational Inference}{3}{subsection.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Entity-Level Uncertainty}{3}{subsection.4.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Experiments}{3}{section.5}\protected@file@percent }
-\newlabel{sec:experiments}{{5}{3}{Experiments}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Main Results}{3}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}The Limitation of GP Variance}{3}{subsection.4.1}\protected@file@percent }
+\newlabel{prop:relation_agnostic}{{1}{3}{Relation-Agnostic}{proposition.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Structural Uncertainty via Coverage}{3}{subsection.4.2}\protected@file@percent }
+\newlabel{thm:coverage_auroc}{{1}{3}{Coverage AUROC}{theorem.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Complementarity of Signals}{3}{subsection.4.3}\protected@file@percent }
+\newlabel{thm:complementarity}{{2}{3}{Complementarity}{theorem.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}CAGP: Combining Both Signals}{3}{subsection.4.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces OOD Detection AUROC. CAGP consistently outperforms all baselines with 14--32\% synergy.}}{4}{table.caption.14}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:main}{{1}{4}{OOD Detection AUROC. CAGP consistently outperforms all baselines with 14--32\% synergy}{table.caption.14}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Experiments}{4}{section.5}\protected@file@percent }
+\newlabel{sec:experiments}{{5}{4}{Experiments}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Setup}{4}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Datasets.}{4}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Task.}{4}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Baselines.}{4}{section*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Metric.}{4}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Training.}{4}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Main Results}{4}{subsection.5.2}\protected@file@percent }
 \bibdata{references}
 \bibcite{bordes2013translating}{{1}{2013}{{Bordes et~al.}}{{Bordes, Usunier, Garcia-Duran, Weston, and Yakhnenko}}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Coverage AUROC Theorem (Theorem~\ref {thm:coverage_auroc}) validation.}}{5}{table.caption.15}\protected@file@percent }
+\newlabel{tab:theorem}{{2}{5}{Coverage AUROC Theorem (Theorem~\ref {thm:coverage_auroc}) validation}{table.caption.15}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Ablation study: removing either component hurts performance.}}{5}{table.caption.16}\protected@file@percent }
+\newlabel{tab:ablation}{{3}{5}{Ablation study: removing either component hurts performance}{table.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Theorem Validation}{5}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Ablation: Why Both Components?}{5}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{5}{section.6}\protected@file@percent }
+\newlabel{sec:conclusion}{{6}{5}{Conclusion}{section.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Limitations.}{5}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Future Work.}{5}{section*.18}\protected@file@percent }
 \bibcite{borovitskiy2021matern}{{2}{2021}{{Borovitskiy et~al.}}{{Borovitskiy, Azangulov, Terenin, Mostowsky, Deisenroth, and Cunningham}}}
 \bibcite{chen2022graph}{{3}{2022}{{Chen et~al.}}{{}}}
 \bibcite{chen2019embedding}{{4}{2019}{{Chen et~al.}}{{Chen, Chen, Shi, Sun, and Zaniolo}}}
 \bibcite{chen2021probabilistic}{{5}{2021}{{Chen et~al.}}{{Chen, Chen, Fan, Ramnath, and Ren}}}
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Results on FB15k-237 (mean $\pm $ std, 3 seeds). \textsc  {GP-KGE}{} achieves \textbf  {55\% higher AUROC} than DistMult.}}{4}{table.caption.9}\protected@file@percent }
-\newlabel{tab:main}{{1}{4}{Results on FB15k-237 (mean $\pm $ std, 3 seeds). \ours {} achieves \textbf {55\% higher AUROC} than DistMult}{table.caption.9}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces OOD detection across datasets. \textsc  {GP-KGE}{} excels when \#relations $\geq 30$.}}{4}{table.caption.10}\protected@file@percent }
-\newlabel{tab:threshold}{{2}{4}{OOD detection across datasets. \ours {} excels when \#relations $\geq 30$}{table.caption.10}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}When Does \textsc  {GP-KGE}{} Work?}{4}{subsection.5.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Ablations}{4}{subsection.5.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Graph Initialization.}{4}{section*.12}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Global Kernel.}{4}{section*.13}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{4}{section.6}\protected@file@percent }
-\newlabel{sec:conclusion}{{6}{4}{Conclusion}{section.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Limitations.}{4}{section*.14}\protected@file@percent }
 \bibcite{dettmers2018convolutional}{{6}{2018}{{Dettmers et~al.}}{{Dettmers, Minervini, Stenetorp, and Riedel}}}
 \bibcite{gal2016dropout}{{7}{2016}{{Gal and Ghahramani}}{{}}}
 \bibcite{guo2017calibration}{{8}{2017}{{Guo et~al.}}{{Guo, Pleiss, Sun, and Weinberger}}}
@@ -71,8 +76,6 @@
 \bibcite{rao2024knowledge}{{14}{2024}{{Rao et~al.}}{{}}}
 \bibcite{singhal2012knowledge}{{15}{2012}{{Singhal}}{{}}}
 \bibcite{stadler2021graph}{{16}{2021}{{Stadler et~al.}}{{Stadler, Charpentier, and G{\"u}nnemann}}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces OOD detection performance vs relation density. GP-KGE excels when \#relations $\geq 30$.}}{5}{figure.caption.11}\protected@file@percent }
-\newlabel{fig:threshold}{{2}{5}{OOD detection performance vs relation density. GP-KGE excels when \#relations $\geq 30$}{figure.caption.11}{}}
 \bibcite{sun2019rotate}{{17}{2019}{{Sun et~al.}}{{Sun, Deng, Nie, and Tang}}}
 \bibcite{toutanova2015observed}{{18}{2015}{{Toutanova and Chen}}{{}}}
 \bibcite{trouillon2016complex}{{19}{2016}{{Trouillon et~al.}}{{Trouillon, Welbl, Riedel, Gaussier, and Bouchard}}}
@@ -80,10 +83,23 @@
 \bibcite{yang2015embedding}{{21}{2015}{{Yang et~al.}}{{Yang, Yih, He, Gao, and Deng}}}
 \bibcite{zhang2024ufkgc}{{22}{2024}{{Zhang et~al.}}{{Zhang, Chen, Guo, et~al.}}}
 \bibstyle{plainnat}
-\@writefile{toc}{\contentsline {section}{\numberline {A}Implementation Details}{6}{appendix.A}\protected@file@percent }
-\newlabel{app:implementation}{{A}{6}{Implementation Details}{appendix.A}{}}
-\@writefile{toc}{\contentsline {paragraph}{Hyperparameters.}{6}{section*.16}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Eigendecomposition.}{6}{section*.17}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {B}Extended Results}{6}{appendix.B}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Full link prediction metrics on FB15k-237.}}{6}{table.caption.18}\protected@file@percent }
-\gdef \@abspage@last{6}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Proof of Theorem~\ref {thm:coverage_auroc}}{7}{appendix.A}\protected@file@percent }
+\newlabel{app:proof}{{A}{7}{Proof of Theorem~\ref {thm:coverage_auroc}}{appendix.A}{}}
+\@writefile{toc}{\contentsline {paragraph}{Setup.}{7}{section*.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Uncertainty Distributions.}{7}{section*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{AUROC Derivation.}{7}{section*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {B}Implementation Details}{7}{appendix.B}\protected@file@percent }
+\newlabel{app:implementation}{{B}{7}{Implementation Details}{appendix.B}{}}
+\@writefile{toc}{\contentsline {paragraph}{Hyperparameters.}{7}{section*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Coverage Computation.}{7}{section*.24}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{CAGP Implementation.}{8}{section*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Extended Results}{8}{appendix.C}\protected@file@percent }
+\newlabel{app:extended}{{C}{8}{Extended Results}{appendix.C}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Full results with standard deviations (3 seeds).}}{8}{table.caption.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {D}Dataset Statistics}{8}{appendix.D}\protected@file@percent }
+\newlabel{app:datasets}{{D}{8}{Dataset Statistics}{appendix.D}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Dataset statistics.}}{8}{table.caption.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {E}Coverage Statistics}{8}{appendix.E}\protected@file@percent }
+\newlabel{app:coverage}{{E}{8}{Coverage Statistics}{appendix.E}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Coverage statistics for ID test triples.}}{8}{table.caption.28}\protected@file@percent }
+\gdef \@abspage@last{8}

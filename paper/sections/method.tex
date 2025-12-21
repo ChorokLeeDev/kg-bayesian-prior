@@ -1,52 +1,93 @@
-% Method Section - Concise NeurIPS style
+% Method Section - Semantic-Structural Decomposition
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.95\linewidth]{figures/architecture.pdf}
-\caption{\ours{} architecture: Per-relation Laplacians define a relation-aware kernel for the GP prior over entity embeddings.}
-\label{fig:architecture}
-\end{figure}
+\subsection{The Limitation of GP Variance}
 
-\subsection{Problem Setup}
-
-A knowledge graph $\mathcal{G} = (\mathcal{E}, \mathcal{R}, \mathcal{T})$ contains entities $\mathcal{E}$, relation types $\mathcal{R}$, and triples $\mathcal{T} \subseteq \mathcal{E} \times \mathcal{R} \times \mathcal{E}$.
-We learn entity embeddings $\mat{F} \in \R^{N \times d}$ that are (1) predictive for link prediction and (2) equipped with calibrated uncertainty estimates reflecting graph structure.
-
-\subsection{Relation-Aware Kernel}
-
-For each relation $r$, let $\mat{L}_r = \mat{I} - \mat{D}_r^{-1/2}\mat{A}_r\mat{D}_r^{-1/2}$ be the normalized Laplacian of the relation-$r$ subgraph.
-Our kernel aggregates relation-specific diffusion processes:
+\begin{proposition}[Relation-Agnostic]
+\label{prop:relation_agnostic}
+GP-KGE uncertainty (Eq.~\ref{eq:gp_uncertainty}) is relation-agnostic: for any entity $e$ and relations $r_1, r_2$,
 \begin{equation}
-    \mat{K} = \sum_{r=1}^{M} \sigma_r^2 \cdot \exp\left(-\frac{\mat{L}_r}{\ell_r^2}\right)
-    \label{eq:kernel}
+    U_{\text{GP}}(e, r_1, \cdot) = U_{\text{GP}}(e, r_2, \cdot)
 \end{equation}
-where $\sigma_r^2$ controls relation $r$'s contribution and $\ell_r$ controls information propagation distance.
-The kernel is computed via eigendecomposition: $\exp(-\mat{L}_r/\ell_r^2) = \mat{U}_r \exp(-\mat{\Lambda}_r/\ell_r^2) \mat{U}_r^\top$.
-
-\begin{proposition}
-$\mat{K}$ is positive semi-definite (valid kernel).
 \end{proposition}
+
 \begin{proof}
-Each $\mat{L}_r$ is PSD $\Rightarrow$ $\exp(-\mat{L}_r/\ell_r^2)$ is PSD $\Rightarrow$ weighted sum with $\sigma_r^2 > 0$ is PSD.
+Immediate from Eq.~\ref{eq:gp_uncertainty}: the relation $r$ does not appear in the uncertainty computation.
 \end{proof}
 
-\subsection{GP Prior and Variational Inference}
+This limitation is fundamental, not an implementation detail.
+Making GP variance relation-aware would require learning $|\mathcal{E}| \times |\mathcal{R}| \times d$ parameters---infeasible for typical KG sizes.
 
-We place independent GP priors per embedding dimension:
-$\vect{f}^{(j)} \sim \GP(0, \mat{K})$ for $j = 1, \ldots, d$.
-For link prediction, we use DistMult scoring: $s(h,r,t) = \langle \vect{f}_h, \vect{w}_r, \vect{f}_t \rangle$.
+\subsection{Structural Uncertainty via Coverage}
 
-We approximate the posterior with $q(\mat{F}) = \N(\mat{M}, \mat{S})$ and maximize the ELBO:
+I introduce \emph{coverage} as a relation-specific uncertainty signal.
+
+\begin{definition}[Coverage]
+For entity $e$ and relation $r$:
 \begin{equation}
-    \mathcal{L} = \E_{q}[\log p(\mathcal{T} | \mat{F})] - \beta \cdot \KL(q(\mat{F}) \| p(\mat{F} | \mat{K}))
+    c(e, r) = \mathbb{1}\left[\exists (h', r, t') \in \mathcal{T} : h' = e \lor t' = e\right]
 \end{equation}
-For scalability, we use $P$ inducing points, reducing complexity from $O(N^3)$ to $O(NP^2 + P^3)$.
+\end{definition}
 
-\subsection{Entity-Level Uncertainty}
+Coverage equals 1 if entity $e$ appears with relation $r$ in training, else 0.
 
-The posterior variance $\mat{S}_{ii}$ quantifies uncertainty for entity $e_i$.
-For a query $(h, r, t)$, prediction uncertainty propagates through the scoring function:
+\begin{definition}[Structural Uncertainty]
 \begin{equation}
-    \text{Var}[s(h,r,t)] \approx \sum_{i} w_{r,i}^2 (S_{hh,i} m_{t,i}^2 + S_{tt,i} m_{h,i}^2 + S_{hh,i} S_{tt,i})
+    U_{\text{cov}}(h, r, t) = 2 - c(h, r) - c(t, r)
 \end{equation}
-High uncertainty flags potentially unreliable predictions, enabling OOD detection.
+\end{definition}
+
+This ranges from 0 (both entities seen with $r$) to 2 (neither seen).
+
+\begin{theorem}[Coverage AUROC]
+\label{thm:coverage_auroc}
+Under random tail corruption with relation sparsity $s_r = 1 - |\{e : c(e,r)=1\}|/|\mathcal{E}|$, let $a = P(\text{both covered} | \text{ID})$ and $b = P(\text{exactly one covered} | \text{ID})$. Then:
+\begin{equation}
+    \text{AUROC}_{\text{cov}} = \frac{1}{2}\left(a(1+s_r) + s_r \cdot b\right)
+\end{equation}
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+ID uncertainty distribution: $P(U=0)=a$, $P(U=1)=b$, $P(U=2)=1-a-b$.
+OOD has head from ID, random tail: $P(U=0)=1-s_r$, $P(U=1)=s_r$.
+AUROC follows from $P(U_{\text{ID}} < U_{\text{OOD}}) + \frac{1}{2}P(U_{\text{ID}} = U_{\text{OOD}})$.
+Full derivation in Appendix~\ref{app:proof}.
+\end{proof}
+
+\subsection{Complementarity of Signals}
+
+\begin{theorem}[Complementarity]
+\label{thm:complementarity}
+Neither coverage nor GP variance is sufficient alone. Specifically:
+\begin{enumerate}
+    \item $\exists$ cases where coverage is correct and GP is wrong
+    \item $\exists$ cases where GP is correct and coverage is wrong
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\textbf{Case 1:} Entity $e$ is frequent overall (low $\sigma^2_e$) but never seen with relation $r$.
+Coverage correctly gives high uncertainty; GP incorrectly gives low uncertainty.
+
+\textbf{Case 2:} Entity $e$ is rare (high $\sigma^2_e$) but seen once with relation $r$.
+For a truly OOD triple, GP correctly gives high uncertainty; coverage incorrectly gives low uncertainty.
+\end{proof}
+
+\subsection{CAGP: Combining Both Signals}
+
+The complementarity theorem motivates combining both signals:
+
+\begin{definition}[CAGP Uncertainty]
+\begin{equation}
+    U_{\text{CAGP}}(h, r, t) = \alpha \cdot \tilde{U}_{\text{GP}}(h, r, t) + (1-\alpha) \cdot U_{\text{cov}}(h, r, t)
+\end{equation}
+where $\tilde{U}_{\text{GP}}$ is GP uncertainty normalized to match coverage scale, and $\alpha \in [0,1]$ is a learnable mixing coefficient.
+\end{definition}
+
+Implementation details:
+\begin{itemize}
+    \item Coverage matrix is precomputed from training data (no additional learning)
+    \item $\alpha$ is parameterized as $\sigma(\alpha_{\text{logit}})$ to ensure $\alpha \in (0,1)$
+    \item Normalization: $\tilde{U}_{\text{GP}} = U_{\text{GP}} \cdot \frac{\mathbb{E}[U_{\text{cov}}]}{\mathbb{E}[U_{\text{GP}}]}$
+\end{itemize}
+
+The algorithm adds minimal overhead: one $|\mathcal{E}| \times |\mathcal{R}|$ binary matrix (sparse in practice) and one scalar parameter.

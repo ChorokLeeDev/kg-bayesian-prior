@@ -1,27 +1,38 @@
-% Introduction - Concise NeurIPS style
+% Introduction - Single author, direct style
 
-Knowledge Graph Embedding (KGE) methods achieve impressive link prediction accuracy but provide only point estimates.
-For safety-critical applications---medical KGs predicting drug interactions, financial KGs for fraud detection---knowing \emph{when predictions are unreliable} is essential.
+Knowledge graphs power critical applications: drug interaction prediction, fraud detection, recommendation systems.
+When these systems make predictions about unseen entities or novel relationships, knowing \emph{when to trust the output} is essential for safe deployment.
+This motivates out-of-distribution (OOD) detection---distinguishing reliable predictions from uncertain ones.
 
-Existing uncertainty approaches fall short.
-Triple-level methods~\citep{chen2019embedding} cannot identify which entities are poorly understood.
-Post-hoc methods like MC Dropout often yield poorly calibrated uncertainties.
-GP-based methods~\citep{chen2022graph} incorporate graph structure but have not evaluated whether their uncertainties are meaningful.
+Probabilistic knowledge graph embedding methods address this by learning distributions over entity embeddings rather than point estimates.
+GP-KGE~\citep{Chen2022} learns a variance $\sigma^2_e$ for each entity, capturing how ``uncertain'' the model is about that entity's representation.
+The intuition is appealing: entities seen frequently should have low variance (well-constrained embeddings), while rare entities should have high variance.
 
-A key observation motivates our approach: existing GP methods treat all relations identically.
-But knowledge graphs are heterogeneous---\texttt{born\_in} implies different similarity patterns than \texttt{similar\_to}.
-Entities sharing a birthplace may otherwise be unrelated, while \texttt{similar\_to} suggests global similarity.
+\textbf{The limitation I identify.}
+This intuition breaks down because the learned variance is \emph{relation-agnostic}.
+Consider an entity $e$ that appears frequently with relation $r_1$ (e.g., \texttt{born\_in}) but never with relation $r_2$ (e.g., \texttt{works\_at}).
+GP-KGE assigns a single variance $\sigma^2_e$ to entity $e$, which is the same for both relations.
+But the model's uncertainty about $(e, r_1, ?)$ and $(e, r_2, ?)$ should differ---$e$ has been observed with $r_1$ but not with $r_2$.
 
-We propose \ours{}, a Gaussian Process prior with a \textbf{relation-aware kernel} that assigns learnable parameters per relation type:
-\begin{itemize}
-    \item \textbf{Lengthscale} $\ell_r$: how far information propagates along relation $r$
-    \item \textbf{Variance} $\sigma_r^2$: how much relation $r$ contributes to similarity
-\end{itemize}
+This observation leads to the central insight of this paper:
 
-Our contributions:
+\begin{quote}
+\emph{Uncertainty in knowledge graphs decomposes into two orthogonal components: semantic uncertainty (embedding quality) and structural uncertainty (observation patterns). Neither alone is sufficient for OOD detection.}
+\end{quote}
+
+\textbf{Semantic uncertainty} captures how well-constrained an entity's embedding is, based on how frequently and consistently it appears in training.
+GP variance captures this signal: rare entities have high variance, frequent entities have low variance.
+
+\textbf{Structural uncertainty} captures whether a specific entity-relation combination has been observed.
+I formalize this through \emph{coverage}: $c(e, r) = 1$ if entity $e$ appears with relation $r$ in training, else 0.
+Coverage is relation-specific by construction, addressing exactly the limitation of GP variance.
+
+\textbf{Contributions.}
 \begin{enumerate}
-    \item \textbf{Relation-aware GP kernel} capturing heterogeneous KG structure
-    \item \textbf{+55\% OOD detection} on FB15k-237, +34\% on YAGO3-10 vs deterministic baselines
-    \item \textbf{Relation density threshold}: \ours{} requires $\geq$30 relation types to be effective
-    \item \textbf{Discovery}: GGPN~\citep{chen2022graph} is miscalibrated (AUROC$<$0.5)
+    \item I identify a fundamental limitation in probabilistic KGE: learned variances are relation-agnostic and miss structural uncertainty.
+    \item I propose a semantic-structural decomposition framework that separates these orthogonal uncertainty types.
+    \item I prove a closed-form AUROC bound for coverage-based detection, validated empirically with $<$3\% error.
+    \item I demonstrate that combining both signals (CAGP) achieves 0.87--0.96 AUROC with 14--32\% synergy over single components across three benchmarks.
 \end{enumerate}
+
+The key finding is not the CAGP algorithm itself---which is a simple linear combination---but the \emph{insight} that probabilistic KGE methods have a structural blind spot that cannot be learned away.

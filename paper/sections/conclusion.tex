@@ -1,8 +1,15 @@
-% Conclusion - Concise
+% Conclusion
 
-We presented \ours{}, a GP-based KGE method with a relation-aware kernel for principled uncertainty quantification.
-Key findings: (1) \ours{} achieves 55\% better OOD detection on relation-rich KGs, (2) effectiveness requires $\geq$30 relation types, and (3) existing GP methods (GGPN) are miscalibrated.
+This paper reveals a fundamental limitation in probabilistic knowledge graph embeddings: learned variances are relation-agnostic and miss structural uncertainty.
+The semantic-structural decomposition provides a principled framework, showing that both components---embedding quality (GP variance) and observation patterns (coverage)---are necessary for effective OOD detection.
+
+The simple CAGP combination achieves 0.87--0.96 AUROC with 14--32\% synergy over single components across three benchmarks.
+The key contribution is not the algorithm itself but the \emph{insight} that uncertainty in knowledge graphs naturally decomposes into orthogonal types that existing methods conflate.
 
 \paragraph{Limitations.}
-\ours{} is 3.5$\times$ slower than point-estimate methods and shows higher ECE despite good AUROC.
-Future work includes hierarchical kernels for relation-sparse KGs and integration with inductive methods.
+This work evaluates only random tail corruption as OOD.
+Other OOD types (semantic shift, temporal drift) may require different signals.
+The coverage matrix requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage, though it is sparse in practice.
+
+\paragraph{Future Work.}
+Extending the decomposition to temporal KGs, learning per-relation $\alpha$ values, and investigating other uncertainty types beyond semantic and structural.
