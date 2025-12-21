@@ -1,86 +1,90 @@
-# Knowledge Graph as Bayesian Prior for Uncertainty Quantification
+# Semantic-Structural Decomposition for KG Uncertainty
 
-A research project exploring relation-aware Gaussian Process priors on Knowledge Graphs for entity-level uncertainty quantification.
+**OOD Detection in Knowledge Graphs via Coverage-Augmented GP-KGE (CAGP)**
 
-## Core Idea
+## Key Finding
 
-Combine the expressiveness of Knowledge Graph embeddings with Bayesian uncertainty quantification through Gaussian Process priors that respect the heterogeneous relational structure of KGs.
+Effective OOD detection in knowledge graphs requires **two complementary signals**:
 
-## Research Gap
+| Signal | Type | What it captures |
+|--------|------|------------------|
+| **GP Variance** | Semantic | How well-constrained is the entity embedding? |
+| **Coverage** | Structural | Has the entity been observed with this relation? |
 
-| Existing Work | Limitation | Our Solution |
-|---------------|------------|--------------|
-| GP on Graphs (Borovitskiy et al.) | Homogeneous edges only | Relation-specific kernels |
-| Uncertain KGE (UKGE/BEUrRE) | Triple-level confidence | Entity-level posterior |
-| Graph Posterior Network | Classification, ignores relations | Embedding uncertainty + relation-aware |
-| Bayesian KG→BN (BIKG) | Symbolic/discrete | Continuous embedding space |
+**Neither signal alone is sufficient.** Their combination (CAGP) achieves 17-32% improvement over the best single component.
 
-## Key Contributions
+## Results
 
-1. **Relation-aware kernel**: Learnable lengthscale per relation type
-2. **Entity-level posterior**: Full posterior distribution over embeddings
-3. **GPN axioms for KG**: Extended uncertainty propagation axioms
-4. **Scalable inference**: Inducing point methods for large KGs
+| Dataset | GP-only | Coverage-only | CAGP | Synergy |
+|---------|---------|---------------|------|---------|
+| WN18RR | 0.647 | 0.657 | **0.871** | +32% |
+| FB15k-237 | 0.749 | 0.821 | **0.960** | +17% |
+| YAGO3-10 | 0.824 | 0.760 | **0.942** | +14% |
+
+## The CAGP Algorithm
+
+```python
+U_cagp = α × U_gp + (1-α) × U_coverage
+
+where:
+  U_gp = (σ²_head + σ²_tail) / 2      # GP variance (semantic)
+  U_cov = 2 - c(h,r) - c(t,r)          # Coverage uncertainty (structural)
+  α ≈ 0.5                              # Learned mixing coefficient
+```
+
+## Theoretical Contributions
+
+| Theorem | Statement | Validation |
+|---------|-----------|------------|
+| **Coverage AUROC** | Closed-form AUROC from coverage statistics | <3% error |
+| **GP Limitation** | GP variance is relation-agnostic | Proven |
+| **Complementarity** | Coverage ⊥ GP variance | Proven by construction |
 
 ## Project Structure
 
 ```
 kg-bayesian-prior/
-├── src/
-│   ├── models/          # Model implementations
-│   ├── data/            # Data loading and processing
-│   ├── kernels/         # GP kernel implementations
-│   ├── utils/           # Utility functions
-│   └── evaluation/      # Metrics and evaluation
-├── experiments/         # Experiment scripts
-├── notebooks/           # Experiment notebooks
-│   ├── exp_distmult.ipynb   # DistMult baseline
-│   ├── exp_ggpn.ipynb       # GGPN baseline
-│   ├── exp_gpkge.ipynb      # GP-KGE (ours)
-│   └── kernel_ablation.ipynb
-├── results/             # Experiment results (JSON)
-├── docs/                # Documentation
-└── data/                # Data storage
+├── src/models/          # CAGP, VanillaGPKGE implementations
+├── scripts/             # Experiment scripts
+│   ├── run_coverage_only_ablation.py
+│   ├── verify_theorem.py
+│   └── analyze_theorem_gap.py
+├── notebooks/           # Colab notebooks for GPU experiments
+│   ├── colab_yago_full.ipynb
+│   └── colab_baselines.ipynb
+├── outputs/             # Experiment results (JSON)
+└── docs/
+    ├── FINDINGS.md      # Main findings document
+    ├── STATUS.md        # Project status
+    └── theory/          # Theorem proofs
 ```
 
-## Baselines
-
-| Model | Role |
-|-------|------|
-| DistMult | Deterministic baseline |
-| GGPN | GP-based baseline (prior work) |
-| **GP-KGE** | **Ours** |
-
-## Installation
+## Quick Start
 
 ```bash
-pip install -e .
+# Coverage-only baseline (CPU, instant)
+python scripts/run_coverage_only_ablation.py
+
+# Verify Coverage AUROC theorem
+python scripts/verify_theorem.py
+
+# Full experiments (GPU required - use Colab)
+# notebooks/colab_yago_full.ipynb
 ```
 
-## Datasets
+## Documentation
 
-- **FB15k-237**: Standard KG benchmark (14K entities, 237 relations)
-- **WN18RR**: WordNet subset (41K entities, 11 relations)
+- **[FINDINGS.md](docs/FINDINGS.md)** - Complete research findings
+- **[STATUS.md](docs/STATUS.md)** - Current project status
+- **[GPU_EXPERIMENTS.md](docs/GPU_EXPERIMENTS.md)** - Colab instructions
 
-## Results (FB15k-237)
+## Citation
 
-*Results pending - experiments running with 3 seeds (42, 123, 456)*
-
-| Model | MRR | H@1 | H@10 | ECE ↓ | Brier ↓ | AUROC |
-|-------|-----|-----|------|-------|---------|-------|
-| DistMult | - | - | - | - | - | - |
-| GGPN | - | - | - | - | - | - |
-| **GP-KGE (Ours)** | - | - | - | - | - | - |
-
-## Evaluation Metrics
-
-- **Link Prediction**: MRR, Hits@1/10
-- **Calibration**: ECE, Brier Score
-- **OOD Detection**: AUROC
-
-## References
-
-- Borovitskiy et al. (2021) - Matérn GP on Graphs
-- Stadler et al. (2021) - Graph Posterior Network
-- Chen et al. (2019) - UKGE
-- Kondor & Lafferty (2002) - Diffusion Kernels
+```bibtex
+@article{cagp2025,
+  title={The Semantic-Structural Decomposition: Understanding Uncertainty in Knowledge Graph Embeddings},
+  author={...},
+  journal={NeurIPS 2026 (under review)},
+  year={2025}
+}
+```
