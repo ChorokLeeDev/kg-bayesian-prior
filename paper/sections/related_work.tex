@@ -4,7 +4,7 @@
 UKGE~\citep{chen2019embedding} associates confidence scores with triples, reflecting triple-level reliability rather than entity-level uncertainty.
 BEUrRE~\citep{chen2021probabilistic} uses box embeddings where box size indicates uncertainty, but uncertainty remains entity-level and relation-agnostic.
 GP-KGE learns Gaussian distributions over entity embeddings.
-The limitation I identify---that learned variances cannot capture relation-specific uncertainty---applies to all these methods.
+The limitation identified in this paper---that learned variances cannot capture relation-specific uncertainty---applies to all these methods.
 
 \paragraph{OOD Detection in Deep Learning.}
 MC Dropout~\citep{gal2016dropout} estimates uncertainty via dropout at test time.
@@ -18,8 +18,8 @@ These methods treat edges homogeneously, missing the heterogeneous nature of KG 
 
 \paragraph{Coverage in Knowledge Graphs.}
 Entity coverage statistics are used for negative sampling~\citep{sun2019rotate} and dataset analysis~\citep{toutanova2015observed}, but not for uncertainty quantification.
-I repurpose coverage as a first-class uncertainty signal, showing it captures structural information that learned methods miss.
+This work repurposes coverage as a first-class uncertainty signal, showing it captures structural information that learned methods miss.
 
 \paragraph{Positioning.}
 Prior work treats uncertainty as a single quantity to be learned.
-I show it decomposes into semantic and structural components, explaining why existing methods underperform.
+This paper shows uncertainty decomposes into semantic and structural components, explaining why existing methods underperform.

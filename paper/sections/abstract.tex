@@ -1,8 +1,8 @@
 % Abstract - Single author, direct style
 
 Knowledge graph embedding methods increasingly incorporate uncertainty quantification, yet their reliability for out-of-distribution detection remains poorly understood.
-I identify a fundamental limitation in probabilistic approaches: learned entity variances are relation-agnostic and cannot capture whether an entity has been observed with a specific relation.
-I formalize this as a \emph{semantic-structural decomposition}, where semantic uncertainty reflects embedding quality and structural uncertainty reflects observation patterns.
-I show that coverage---a simple relation-specific lookup---provides a sufficient statistic for structural uncertainty with a closed-form AUROC bound (validated within 4\% error).
+This paper identifies a fundamental limitation in probabilistic approaches: learned entity variances are relation-agnostic and cannot capture whether an entity has been observed with a specific relation.
+This observation motivates a \emph{semantic-structural decomposition}, where semantic uncertainty reflects embedding quality and structural uncertainty reflects observation patterns.
+Coverage---a simple relation-specific lookup---provides a sufficient statistic for structural uncertainty with a closed-form AUROC bound (validated within 4\% error).
 Neither component alone suffices: their combination achieves 0.87--0.96 AUROC across three benchmarks with 14--32\% improvement over the best single signal.
 This analysis reveals why existing methods struggle and provides a principled framework for uncertainty quantification in knowledge graphs.

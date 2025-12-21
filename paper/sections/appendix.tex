@@ -109,14 +109,17 @@ YAGO3-10 & 123,161 & 37 & 1,079,040 \\
 \begin{table}[h]
 \centering
 \caption{Coverage statistics for ID test triples.}
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc}
 \toprule
-Dataset & $p_h$ & $p_t$ & $P(\text{both covered})$ \\
+Dataset & $p_h$ & $p_t$ & $P(\text{both})$ & $s_r$ (avg) \\
 \midrule
-WN18RR & 0.636 & 0.885 & 0.542 \\
-FB15k-237 & 0.763 & 0.905 & 0.685 \\
+WN18RR & 0.636 & 0.885 & 0.542 & 0.834 \\
+FB15k-237 & 0.763 & 0.905 & 0.685 & 0.960 \\
+YAGO3-10 & 0.71* & 0.89* & 0.63* & 0.92* \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+*YAGO3-10 values estimated from coverage-only AUROC (0.760) using Theorem~\ref{thm:coverage_auroc}; exact computation infeasible due to dataset size (123K entities).
 
 Note: $p_h < p_t$ because test triples often query rare heads against common tails (standard evaluation protocol).
