@@ -3,6 +3,6 @@
 Probabilistic knowledge graph embedding methods learn entity variances for uncertainty quantification, but these variances are \emph{relation-agnostic}: an entity receives identical uncertainty regardless of which relation is queried.
 This structural limitation prevents detection of out-of-distribution queries involving familiar entities in unfamiliar relational contexts.
 We propose a semantic-structural decomposition that separates two orthogonal uncertainty types: \emph{semantic uncertainty} from learned embeddings (capturing entity frequency) and \emph{structural uncertainty} from coverage (capturing entity-relation co-occurrence).
-We derive a closed-form expression for coverage-based AUROC, validated within 5\% error across three benchmarks.
-Combining both signals via a single learned mixing coefficient achieves 0.87--0.96 AUROC on WN18RR, FB15k-237, and YAGO3-10, representing 14--32\% relative improvement over the best individual signal (GP-only: 0.65--0.82; coverage-only: 0.66--0.82).
+Combining both signals achieves 0.87--0.96 AUROC on WN18RR, FB15k-237, and YAGO3-10, with consistent $\sim$14\% synergy across DistMult, TransE, and ComplEx architectures.
+Crucially, our method remains robust under type-constrained OOD (0.82 AUROC) where coverage alone drops to near-random (0.57), demonstrating it captures structural patterns beyond type violations.
 The primary contribution is not the combination algorithm but the decomposition framework itself, which explains why existing uncertainty methods systematically underperform on knowledge graphs.
