@@ -1,4 +1,4 @@
-\begin{thebibliography}{10}
+\begin{thebibliography}{11}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -44,6 +44,12 @@ Balaji Lakshminarayanan, Alexander Pritzel, and Charles Blundell.
   ensembles.
 \newblock In \emph{Advances in Neural Information Processing Systems}, pages
   6402--6413, 2017.
+
+\bibitem[Liu et~al.(2020)Liu, Wang, Owens, and Li]{liu2020energy}
+Weitang Liu, Xiaoyun Wang, John~D Owens, and Yixuan Li.
+\newblock Energy-based out-of-distribution detection.
+\newblock In \emph{Advances in Neural Information Processing Systems}, pages
+  21464--21475, 2020.
 
 \bibitem[Safavi and Koutra(2020)]{safavi2020codex}
 Tara Safavi and Danai Koutra.
