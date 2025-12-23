@@ -6,18 +6,21 @@
 % ACL/EMNLP style - download acl.sty from official repo
 % For submission: use \usepackage[review]{acl}
 % For camera-ready: use \usepackage{acl}
-\usepackage[review,anonymous]{acl}
+\usepackage[review]{acl}
 
 % Standard packages
 \usepackage{times}
 \usepackage{latexsym}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}  % Latin Modern fonts (includes monospace)
 \usepackage[utf8]{inputenc}
 \usepackage{microtype}
 % \usepackage{inconsolata}  % Optional font, commented out
 
 % Math and formatting
 \usepackage{amsmath}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\small,breaklines=true}
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{booktabs}
@@ -40,7 +43,7 @@
 \newcommand{\ELBO}{\mathcal{L}}
 \newcommand{\vect}[1]{\bm{#1}}
 \newcommand{\mat}[1]{\mathbf{#1}}
-\newcommand{\ours}{\textsc{CAGP}}
+% \newcommand{\ours}{\textsc{CAGP}}  % Unused, keeping for potential future use
 
 \title{Semantic-Structural Decomposition for Uncertainty Quantification in Knowledge Graph-Enhanced NLP}
 
@@ -86,7 +89,6 @@ Limitations are discussed in Section~\ref{sec:conclusion}.
 This work focuses on uncertainty quantification for knowledge graph systems, which can help NLP applications abstain from unreliable predictions rather than generating misinformation. We do not foresee negative societal impacts.
 
 \bibliography{references}
-\bibliographystyle{acl_natbib}
 
 \appendix
 \input{sections/appendix}

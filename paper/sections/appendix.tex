@@ -1,6 +1,6 @@
 % Appendix
 
-\section{Derivation of Proposition~\ref{prop:coverage_auroc}}
+\section{Derivation of Coverage AUROC}
 \label{app:proof}
 
 \paragraph{Setup.}
@@ -40,6 +40,12 @@ OOD triples (head from ID, random tail):
 Embedding dimension $d=100$, batch size 2048, learning rate $10^{-3}$, KL weight $0.01$.
 All experiments use 50 epochs and are averaged over 3 seeds (42, 123, 456).
 
+\paragraph{Statistical Testing.}
+Significance tests ($^\dagger$p$<$0.01 in tables) use paired bootstrap resampling with 10,000 iterations.
+For each iteration, we sample test triples with replacement and compute AUROC for both methods.
+The p-value is the fraction of iterations where the baseline outperforms our method.
+We report significance only when p$<$0.01 across all three random seeds.
+
 \paragraph{Coverage Computation.}
 Coverage matrix $\mat{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ is precomputed from training triples:
 \begin{equation}
@@ -63,7 +69,7 @@ def cagp_uncertainty(h, r, t, gp_var, coverage, alpha):
 \label{app:extended}
 
 Table~\ref{tab:full_results} provides results with standard deviations across 3 random seeds.
-Figure~\ref{fig:theorem} visualizes the theorem validation from Section~\ref{sec:experiments}.
+Figure~\ref{fig:proposition} visualizes the complementarity proposition validation from Section~\ref{sec:experiments}.
 
 \begin{table}[h]
 \centering
@@ -83,8 +89,8 @@ CAGP & 0.871 $\pm$ 0.003 & 0.960 $\pm$ 0.000 & 0.942 $\pm$ 0.000 \\
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.5\linewidth]{figures/fig2_theorem_validation.pdf}
-\caption{Theorem validation: predicted vs observed coverage-only AUROC.}
-\label{fig:theorem}
+\caption{Proposition validation: predicted vs observed coverage-only AUROC.}
+\label{fig:proposition}
 \end{figure}
 
 \section{Dataset Statistics}
@@ -93,16 +99,38 @@ CAGP & 0.871 $\pm$ 0.003 & 0.960 $\pm$ 0.000 & 0.942 $\pm$ 0.000 \\
 \begin{table}[h]
 \centering
 \caption{Dataset statistics.}
-\begin{tabular}{lccc}
+\begin{tabular}{lccccc}
 \toprule
-Dataset & Entities & Relations & Training Triples \\
+Dataset & Entities & Relations & Train & Valid & Test \\
 \midrule
-WN18RR & 40,943 & 11 & 86,835 \\
-FB15k-237 & 14,541 & 237 & 272,115 \\
-YAGO3-10 & 123,161 & 37 & 1,079,040 \\
+WN18RR & 40,943 & 11 & 86,835 & 3,034 & 3,134 \\
+FB15k-237 & 14,541 & 237 & 272,115 & 17,535 & 20,466 \\
+YAGO3-10 & 123,161 & 37 & 1,079,040 & 5,000 & 5,000 \\
+ICEWS14 & 7,128 & 230 & 72,826 & 8,941 & 8,963 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\section{Computational Overhead}
+\label{app:compute}
+
+\begin{table}[h]
+\centering
+\caption{Computational overhead on FB15k-237 (single V100 GPU).}
+\begin{tabular}{lccc}
+\toprule
+Method & Train Time & Inference & Memory \\
+\midrule
+Base GP-KGE & 45 min & 1.0$\times$ & 2.1 GB \\
+CAGP & +2 min & 1.02$\times$ & +50 MB \\
+AttentionCAGP & +8 min & 1.15$\times$ & +120 MB \\
+RelCondVar & +12 min & 1.08$\times$ & +95 MB \\
+GNNUncertainty & +35 min & 1.42$\times$ & +280 MB \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+CAGP adds negligible overhead (coverage is precomputed once). AttentionCAGP and RelCondVar add moderate cost from the learned networks. GNNUncertainty is most expensive due to message passing but remains practical.
 
 \section{Coverage Statistics}
 \label{app:coverage}

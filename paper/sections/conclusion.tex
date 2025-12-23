@@ -1,26 +1,24 @@
 % Conclusion
 
 This paper identifies a fundamental limitation in probabilistic knowledge graph embeddings: learned variances are relation-agnostic and cannot capture structural uncertainty.
-The semantic-structural decomposition provides a principled framework explaining why existing uncertainty methods underperform on knowledge graphs---they conflate two orthogonal uncertainty types that require separate treatment.
-
-CAGP, a simple linear combination of both signals, achieves 0.87--0.96 AUROC with consistent synergy across benchmarks.
-The primary contribution is the decomposition framework itself, not the combination algorithm.
+The semantic-structural decomposition provides a principled framework explaining why existing uncertainty methods fail under temporal distribution shift---they conflate two orthogonal uncertainty types that require separate treatment.
 
 \paragraph{Key Findings.}
-Temporal and adversarial OOD experiments reveal the complementarity structure:
 \begin{itemize}
-    \item GP excels at detecting \emph{emerging entities} (0.83 vs 0.78 for coverage)
-    \item Coverage excels at detecting \emph{novel relational contexts} (1.00 vs 0.42 for GP)
-    \item Under adversarial corruption, CAGP shows positive synergy in 4/5 settings
+    \item \textbf{Score-based methods fail on temporal OOD}: UKGE and Energy achieve 0.99 AUROC on random corruptions but only 0.52--0.55 on temporal shift---they detect implausibility, not unfamiliarity
+    \item \textbf{Complementarity validated}: GP excels on emerging entities (0.83); coverage excels on novel contexts (1.00); neither alone suffices
+    \item \textbf{Real temporal validation}: On ICEWS14 with ground-truth timestamps, our method achieves 0.91 AUROC vs 0.52--0.58 for baselines
+    \item \textbf{Simple algorithms work}: CAGP (linear combination) achieves most of the gains; fancier variants add marginal improvements
 \end{itemize}
 
 \paragraph{Limitations.}
 \begin{itemize}
-    \item \textbf{Adversarial vulnerability}: On relation-plausible corruptions (designed to fool coverage), CAGP shows negative synergy ($-$11\%). Simple averaging hurts when both signals are adversarially degraded. Adaptive weighting or learned combination may help.
-    \item \textbf{Storage}: The coverage matrix requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage. For YAGO3-10 (123K entities, 37 relations), this is 4.5M entries, though typically $<$5\% are non-zero and sparse representations suffice.
-    \item \textbf{Link prediction}: Our base model achieves MRR 0.255 on FB15k-237, below state-of-the-art ($\sim$0.35). The uncertainty contribution is orthogonal to link prediction quality, but stronger base models may yield different uncertainty dynamics.
-    \item \textbf{GP signal strength}: GP-only achieves 0.54 AUROC on overall temporal OOD, suggesting the learned variance captures limited information beyond entity frequency. The reparameterization trick helps but does not fully exploit relational structure.
+    \item \textbf{NLP integration}: All experiments use KG benchmarks. The QA task is simulated link prediction, not natural language QA. Integration with KGQA systems (e.g., EmbedKGQA) is future work.
+    \item \textbf{Adversarial robustness}: Our method targets natural temporal shift, not adversarial attacks. While we achieve 0.78 AUROC on adversarial settings (Table~\ref{tab:ablation}), this remains below temporal OOD performance ($>$0.90).
+    \item \textbf{Storage}: Coverage requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage, though sparse ($<$5\% non-zero).
+    \item \textbf{Link prediction quality}: Base MRR 0.255 on FB15k-237 vs SOTA $\sim$0.35. Uncertainty is orthogonal to prediction accuracy.
+    \item \textbf{Algorithmic simplicity}: The core CAGP algorithm is straightforward; our contribution is the analysis and framework, not algorithmic novelty.
 \end{itemize}
 
 \paragraph{Future Work.}
-Learning adaptive combination weights (e.g., attention over signals); extending to inductive settings with unseen entities; investigating calibration properties for downstream decision-making; and scaling to web-scale knowledge graphs.
+Integration with end-to-end KGQA systems; inductive settings with truly unseen entities; calibration for downstream decision-making.

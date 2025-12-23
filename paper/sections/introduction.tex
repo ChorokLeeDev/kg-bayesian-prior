@@ -5,7 +5,7 @@ When these systems predict over unseen entities or novel relationships, knowing 
 This motivates out-of-distribution (OOD) detection: distinguishing reliable predictions from uncertain ones.
 
 Probabilistic knowledge graph embedding methods address this by learning distributions over entity embeddings rather than point estimates.
-GP-KGE~\citep{Chen2022} learns a variance $\sigma^2_e$ for each entity, capturing how ``uncertain'' the model is about that entity's representation.
+GP-KGE~\citep{Chen2021PERM} learns a variance $\sigma^2_e$ for each entity, capturing how ``uncertain'' the model is about that entity's representation.
 The intuition is appealing: entities seen frequently should have low variance (well-constrained embeddings), while rare entities should have high variance.
 
 \textbf{A fundamental limitation.}

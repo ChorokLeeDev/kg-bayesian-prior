@@ -1,50 +1,56 @@
-% Introduction for EMNLP - Stronger NLP motivation and clearer contribution framing
+% Introduction for EMNLP - Temporal OOD focus
 
 Knowledge graphs (KGs) are foundational to many NLP systems.
 Question answering systems retrieve facts from Freebase and Wikidata~\citep{bordes2015large}, dialogue agents ground responses in structured knowledge~\citep{moon2019opendialkg}, and fact verification systems check claims against knowledge bases~\citep{thorne2018fever}.
 Recent advances integrate KGs with language models for knowledge-intensive generation~\citep{liu2020k,wang2021kepler}.
 
-These applications share a critical need: \emph{knowing when predictions are unreliable}.
-A QA system should abstain rather than hallucinate an answer for an unseen entity; a medical KG should flag uncertain drug interactions; a fact-checker should acknowledge when evidence is insufficient.
-This motivates \textbf{uncertainty-aware KG reasoning}---the ability to quantify and act on prediction confidence.
+\paragraph{The Temporal Shift Problem.}
+Unlike static benchmarks, real-world KGs evolve continuously, creating two distinct OOD scenarios that require different detection strategies:
+\begin{enumerate}
+    \item \textbf{Emerging entities}: New actors, products, or concepts appear that were absent during training (e.g., a newly elected official, a recent scientific discovery).
+    \item \textbf{Novel relational contexts}: Familiar entities appear in previously unobserved relationships (e.g., a well-known scientist winning a new award type, a company entering a new market).
+\end{enumerate}
+NLP systems must detect \emph{both} failure modes and abstain rather than hallucinate.
+This motivates \textbf{uncertainty-aware KG reasoning} that can detect temporal distribution shifts---but as we show, existing methods conflate these two scenarios and fail on both.
 
-\paragraph{The Problem with Current Methods.}
-Probabilistic KG embedding methods~\citep{Chen2022,chen2021probabilistic} address this by learning distributions over entity embeddings.
-GP-KGE learns a variance $\sigma^2_e$ for each entity, capturing how ``uncertain'' the model is about that entity's representation.
-The intuition is sound: entities seen frequently should have low variance, while rare entities should have high variance.
+\paragraph{Scope and Positioning.}
+This paper addresses uncertainty quantification for KG embeddings---the foundation underlying KG-enhanced NLP systems.
+We evaluate on standard KG benchmarks (FB15k-237, WN18RR, YAGO3-10) and a temporally-stamped dataset (ICEWS14), with a simulated QA task to demonstrate downstream utility.
+Full integration with end-to-end NLP systems (e.g., KGQA, dialogue) is future work; our contribution is the uncertainty framework itself.
 
-However, this intuition has a fundamental limitation: the learned variance is \emph{relation-agnostic}.
-Consider an entity $e$ that appears frequently with relation $r_1$ (e.g., \texttt{born\_in}) but never with relation $r_2$ (e.g., \texttt{works\_at}).
-GP-KGE assigns a single variance $\sigma^2_e$ regardless of which relation is queried---but uncertainty about $(e, r_1, ?)$ and $(e, r_2, ?)$ should differ fundamentally.
+\paragraph{Why Current Methods Fail.}
+Probabilistic KG embeddings~\citep{Chen2021PERM,chen2021probabilistic} learn a variance $\sigma^2_e$ for each entity, capturing uncertainty about entity representations.
+The intuition is sound: rare entities should have high variance.
 
-\paragraph{Our Contribution: A Decomposition Framework.}
-We show that uncertainty in knowledge graphs decomposes into two orthogonal components:
+However, this approach has a fundamental limitation: learned variance is \emph{relation-agnostic}.
+Consider an entity $e$ appearing frequently with \texttt{born\_in} but never with \texttt{works\_at}.
+A single $\sigma^2_e$ cannot distinguish high-confidence $(e, \texttt{born\_in}, ?)$ from uncertain $(e, \texttt{works\_at}, ?)$.
+Under temporal shift, this conflation causes systematic failures.
+
+\paragraph{Our Solution: Semantic-Structural Decomposition.}
+We show that uncertainty decomposes into two orthogonal components, each targeting one of the temporal OOD scenarios:
 \begin{itemize}
-    \item \textbf{Semantic uncertainty} (from learned embeddings): captures how well an entity is learned overall---rare entities have high variance.
-    \item \textbf{Structural uncertainty} (from coverage): captures whether a specific entity-relation pair was observed---relation-specific by construction.
+    \item \textbf{Semantic uncertainty}: How well is this entity learned? (from embedding variance)---detects \emph{emerging entities}
+    \item \textbf{Structural uncertainty}: Have we seen this entity-relation pair? (from coverage)---detects \emph{novel relational contexts}
 \end{itemize}
 
-Neither signal alone suffices.
-Through controlled experiments on temporal-like and adversarial OOD settings, we demonstrate \emph{complementary failure modes}:
-\begin{itemize}
-    \item On \textbf{emerging entities} (low-frequency), learned variance excels (0.83 vs 0.78 for coverage)
-    \item On \textbf{novel relational contexts} (familiar entity, unseen relation), coverage achieves perfect detection (1.00) while learned variance fails completely (0.42)
-\end{itemize}
-
-This decomposition explains why existing methods systematically underperform: they conflate two orthogonal uncertainty sources that require separate treatment.
+These signals are complementary: semantic uncertainty excels on emerging entities (0.83 AUROC) over structural (0.78), while structural uncertainty achieves near-perfect detection on novel contexts (1.00) where semantic fails (0.42).
+Neither alone suffices; combining both with adaptive weights achieves robust detection across all temporal shift scenarios.
 
 \paragraph{Contributions.}
+Our primary contribution is \emph{analytical}: we identify and formalize a fundamental limitation in existing uncertainty methods, then provide a principled decomposition framework. The algorithmic instantiation (CAGP) is deliberately simple---our claim is not algorithmic novelty but rather that \textbf{understanding the structure of uncertainty} enables effective solutions.
+
 \begin{enumerate}
-    \item We identify a fundamental limitation in probabilistic KGE: learned variances are relation-agnostic and cannot capture structural uncertainty (\S\ref{sec:method}).
+    \item \textbf{Analysis}: We show that all entity-level variance methods (GP-KGE, BEUrRE, UKGE) are relation-agnostic, explaining their systematic failure on temporal OOD (\S\ref{sec:method}).
 
-    \item We propose three progressively sophisticated methods for relation-aware uncertainty: attention-based mixing, relation-conditioned variance networks, and GNN-based uncertainty propagation (\S\ref{sec:method}).
+    \item \textbf{Framework}: We formalize the semantic-structural decomposition with a complementarity result showing neither signal alone suffices (\S\ref{sec:method}).
 
-    \item We provide the first comprehensive comparison of uncertainty methods across random, type-constrained, and adversarial OOD settings, including previously untested UKGE and energy-based baselines (\S\ref{sec:experiments}).
+    \item \textbf{Empirical validation}: Score-based methods achieving 0.99 AUROC on standard benchmarks drop to 0.52--0.55 on temporal OOD; our framework achieves 0.87--0.97 across FB15k-237, WN18RR, YAGO3-10, and ICEWS14 with real timestamps (\S\ref{sec:experiments}).
 
-    \item We demonstrate downstream impact on a QA abstention task: our method reduces incorrect answers by 48\% while maintaining 85\% query coverage (\S\ref{sec:experiments}).
+    \item \textbf{Practical impact}: 48\% error reduction on QA abstention at 85\% coverage (\S\ref{sec:experiments}).
 \end{enumerate}
 
-Our code, trained models, and evaluation protocols are publicly available to facilitate reproducible research.\footnote{URL anonymized for review.}
+Our code and evaluation protocols are publicly available.\footnote{URL anonymized for review.}
 
 \begin{figure}[t]
 \centering
