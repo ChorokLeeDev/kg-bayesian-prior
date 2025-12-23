@@ -1,8 +1,8 @@
 % Introduction - Single author, direct style
 
-Knowledge graphs power critical applications: drug interaction prediction, fraud detection, recommendation systems.
-When these systems make predictions about unseen entities or novel relationships, knowing \emph{when to trust the output} is essential for safe deployment.
-This motivates out-of-distribution (OOD) detection---distinguishing reliable predictions from uncertain ones.
+Knowledge graphs underpin critical NLP applications: question answering systems retrieve facts from Freebase and Wikidata~\citep{bordes2015large}, dialogue agents ground responses in structured knowledge~\citep{moon2019opendialkg}, and fact verification systems check claims against knowledge bases~\citep{thorne2018fever}.
+When these systems predict over unseen entities or novel relationships, knowing \emph{when to trust the output} is essential---a QA system should abstain rather than hallucinate, and a medical KG should flag uncertain drug interactions.
+This motivates out-of-distribution (OOD) detection: distinguishing reliable predictions from uncertain ones.
 
 Probabilistic knowledge graph embedding methods address this by learning distributions over entity embeddings rather than point estimates.
 GP-KGE~\citep{Chen2022} learns a variance $\sigma^2_e$ for each entity, capturing how ``uncertain'' the model is about that entity's representation.

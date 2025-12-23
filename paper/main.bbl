@@ -1,9 +1,24 @@
-\begin{thebibliography}{11}
+\begin{thebibliography}{20}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Akrami et~al.(2020)Akrami, Saeef, Zhang, Hu, and
+  Li]{akrami2020realistic}
+Farahnaz Akrami, Mohammed~Samiul Saeef, Qingheng Zhang, Wei Hu, and Chengkai
+  Li.
+\newblock Realistic re-evaluation of knowledge graph completion methods: An
+  experimental study.
+\newblock In \emph{ACM SIGMOD International Conference on Management of Data},
+  pages 1995--2010, 2020.
+
+\bibitem[Bordes et~al.(2015)Bordes, Usunier, Chopra, and
+  Weston]{bordes2015large}
+Antoine Bordes, Nicolas Usunier, Sumit Chopra, and Jason Weston.
+\newblock Large-scale simple question answering with memory networks.
+\newblock In \emph{arXiv preprint arXiv:1506.02075}, 2015.
 
 \bibitem[Chen et~al.(2022)]{chen2022graph}
 Hao Chen et~al.
@@ -45,11 +60,26 @@ Balaji Lakshminarayanan, Alexander Pritzel, and Charles Blundell.
 \newblock In \emph{Advances in Neural Information Processing Systems}, pages
   6402--6413, 2017.
 
-\bibitem[Liu et~al.(2020)Liu, Wang, Owens, and Li]{liu2020energy}
+\bibitem[Liu et~al.(2020{\natexlab{a}})Liu, Zhou, Zhao, Wang, Ju, Deng, and
+  Wang]{liu2020k}
+Weijie Liu, Peng Zhou, Zhe Zhao, Zhiruo Wang, Qi~Ju, Haotang Deng, and Ping
+  Wang.
+\newblock K-bert: Enabling language representation with knowledge graph.
+\newblock In \emph{AAAI Conference on Artificial Intelligence}, pages
+  2901--2908, 2020{\natexlab{a}}.
+
+\bibitem[Liu et~al.(2020{\natexlab{b}})Liu, Wang, Owens, and Li]{liu2020energy}
 Weitang Liu, Xiaoyun Wang, John~D Owens, and Yixuan Li.
 \newblock Energy-based out-of-distribution detection.
 \newblock In \emph{Advances in Neural Information Processing Systems}, pages
-  21464--21475, 2020.
+  21464--21475, 2020{\natexlab{b}}.
+
+\bibitem[Moon et~al.(2019)Moon, Shah, Kumar, and Subba]{moon2019opendialkg}
+Seungwhan Moon, Pararth Shah, Anuj Kumar, and Rajen Subba.
+\newblock Opendialkg: Explainable conversational reasoning with attention-based
+  walks over knowledge graphs.
+\newblock In \emph{Annual Meeting of the Association for Computational
+  Linguistics}, pages 845--854, 2019.
 
 \bibitem[Safavi and Koutra(2020)]{safavi2020codex}
 Tara Safavi and Danai Koutra.
@@ -71,11 +101,50 @@ Zhiqing Sun, Zhi-Hong Deng, Jian-Yun Nie, and Jian Tang.
   space.
 \newblock In \emph{International Conference on Learning Representations}, 2019.
 
+\bibitem[Thorne et~al.(2018)Thorne, Vlachos, Christodoulopoulos, and
+  Mittal]{thorne2018fever}
+James Thorne, Andreas Vlachos, Christos Christodoulopoulos, and Arpit Mittal.
+\newblock Fever: a large-scale dataset for fact extraction and verification.
+\newblock In \emph{Annual Conference of the North American Chapter of the ACL},
+  pages 809--819, 2018.
+
 \bibitem[Toutanova and Chen(2015)]{toutanova2015observed}
 Kristina Toutanova and Danqi Chen.
 \newblock Observed versus latent features for knowledge base and text
   inference.
 \newblock In \emph{Workshop on Continuous Vector Space Models and their
   Compositionality}, pages 57--66, 2015.
+
+\bibitem[Wang et~al.(2021)Wang, Gao, Zhu, Zhang, Liu, Li, and
+  Tang]{wang2021kepler}
+Xiaozhi Wang, Tianyu Gao, Zhaocheng Zhu, Zhengyan Zhang, Zhiyuan Liu, Juanzi
+  Li, and Jian Tang.
+\newblock Kepler: A unified model for knowledge embedding and pre-trained
+  language representation.
+\newblock In \emph{Transactions of the Association for Computational
+  Linguistics}, volume~9, pages 176--194, 2021.
+
+\bibitem[Wu et~al.(2020)Wu, Petroni, Josifoski, Riedel, and
+  Zettlemoyer]{wu2020scalable}
+Ledell Wu, Fabio Petroni, Martin Josifoski, Sebastian Riedel, and Luke
+  Zettlemoyer.
+\newblock Scalable zero-shot entity linking with dense entity retrieval.
+\newblock In \emph{Conference on Empirical Methods in Natural Language
+  Processing}, pages 6397--6407, 2020.
+
+\bibitem[Yasunaga et~al.(2021)Yasunaga, Ren, Bosselut, Liang, and
+  Leskovec]{yasunaga2021qa}
+Michihiro Yasunaga, Hongyu Ren, Antoine Bosselut, Percy Liang, and Jure
+  Leskovec.
+\newblock Qa-gnn: Reasoning with language models and knowledge graphs for
+  question answering.
+\newblock In \emph{Annual Conference of the North American Chapter of the ACL},
+  pages 535--546, 2021.
+
+\bibitem[Zhang et~al.(2018)Zhang, Dai, Kozareva, Smola, and
+  Song]{zhang2018variational}
+Yuyu Zhang, Hanjun Dai, Zornitsa Kozareva, Alexander Smola, and Le~Song.
+\newblock Variational reasoning for question answering with knowledge graph.
+\newblock In \emph{AAAI Conference on Artificial Intelligence}, 2018.
 
 \end{thebibliography}

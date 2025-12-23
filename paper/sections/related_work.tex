@@ -1,25 +1,34 @@
 % Related Work - Position against prior work
 
+\paragraph{Knowledge Graphs in NLP.}
+KG embeddings enable downstream NLP tasks: KG-augmented question answering~\citep{zhang2018variational,yasunaga2021qa}, dialogue grounding~\citep{moon2019opendialkg}, and entity linking~\citep{wu2020scalable}.
+Recent work integrates KGs with language models for fact-aware generation~\citep{liu2020k,wang2021kepler}.
+These applications require knowing when KG predictions are unreliable---yet uncertainty quantification for KG embeddings remains underexplored.
+
 \paragraph{Uncertainty in Knowledge Graph Embeddings.}
 UKGE~\citep{chen2019embedding} associates confidence scores with triples, reflecting triple-level reliability rather than entity-level uncertainty.
 BEUrRE~\citep{chen2021probabilistic} uses box embeddings where box size indicates uncertainty, but uncertainty remains entity-level and relation-agnostic.
-GP-KGE learns Gaussian distributions over entity embeddings.
+GP-KGE~\citep{Chen2022} learns Gaussian distributions over entity embeddings.
 The limitation identified in this paper---that learned variances cannot capture relation-specific uncertainty---applies to all these methods.
 
-\paragraph{OOD Detection in Deep Learning.}
+\paragraph{OOD Detection.}
 MC Dropout~\citep{gal2016dropout} estimates uncertainty via dropout at test time.
 Deep Ensembles~\citep{lakshminarayanan2017simple} aggregate predictions from independently trained models.
-These methods are relation-agnostic when applied to KG embeddings: they capture model uncertainty but not structural observation patterns.
+Energy-based OOD detection~\citep{liu2020energy} uses output magnitudes.
+When applied to KG embeddings, these methods are relation-agnostic: they capture model uncertainty but not structural observation patterns.
 
 \paragraph{Graph-Based Uncertainty.}
 Graph Posterior Networks~\citep{stadler2021graph} propagate uncertainty through graph structure for node classification.
 GGPN~\citep{chen2022graph} extends this to knowledge graphs.
-These methods treat edges homogeneously, missing the heterogeneous nature of KG relations.
+These methods treat edges homogeneously, missing the heterogeneous nature of KG relations where an entity may be well-observed for some relations but unseen for others.
 
-\paragraph{Coverage in Knowledge Graphs.}
-Entity coverage statistics are used for negative sampling~\citep{sun2019rotate} and dataset analysis~\citep{toutanova2015observed}, but not for uncertainty quantification.
-This work repurposes coverage as a first-class uncertainty signal, showing it captures structural information that learned methods miss.
+\paragraph{Coverage and Sparsity in KGs.}
+Entity coverage statistics are used for negative sampling~\citep{sun2019rotate} and dataset bias analysis~\citep{toutanova2015observed,akrami2020realistic}.
+Prior work notes that KG incompleteness affects evaluation~\citep{safavi2020codex}, but does not leverage coverage for uncertainty quantification.
+This work repurposes coverage as a first-class uncertainty signal complementing learned embeddings.
 
 \paragraph{Positioning.}
-Prior work treats uncertainty as a single quantity to be learned.
-This paper shows uncertainty decomposes into semantic and structural components, explaining why existing methods underperform.
+Prior work treats uncertainty as a single quantity to be learned end-to-end.
+This paper shows KG uncertainty decomposes into semantic (entity-level) and structural (relation-specific) components.
+Neither alone suffices: semantic uncertainty misses novel relational contexts; structural uncertainty misses rare entities.
+The decomposition framework explains systematic failures of existing methods.
