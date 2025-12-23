@@ -1,4 +1,6 @@
 # Core ML
+# Note: torch>=1.12 required for scatter_reduce_ in GNNUncertainty
+# We use 2.0+ for best performance and MPS support
 torch>=2.0.0
 numpy>=1.24.0
 scipy>=1.10.0

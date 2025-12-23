@@ -1,0 +1,55 @@
+% Introduction for EMNLP - Stronger NLP motivation and clearer contribution framing
+
+Knowledge graphs (KGs) are foundational to many NLP systems.
+Question answering systems retrieve facts from Freebase and Wikidata~\citep{bordes2015large}, dialogue agents ground responses in structured knowledge~\citep{moon2019opendialkg}, and fact verification systems check claims against knowledge bases~\citep{thorne2018fever}.
+Recent advances integrate KGs with language models for knowledge-intensive generation~\citep{liu2020k,wang2021kepler}.
+
+These applications share a critical need: \emph{knowing when predictions are unreliable}.
+A QA system should abstain rather than hallucinate an answer for an unseen entity; a medical KG should flag uncertain drug interactions; a fact-checker should acknowledge when evidence is insufficient.
+This motivates \textbf{uncertainty-aware KG reasoning}---the ability to quantify and act on prediction confidence.
+
+\paragraph{The Problem with Current Methods.}
+Probabilistic KG embedding methods~\citep{Chen2022,chen2021probabilistic} address this by learning distributions over entity embeddings.
+GP-KGE learns a variance $\sigma^2_e$ for each entity, capturing how ``uncertain'' the model is about that entity's representation.
+The intuition is sound: entities seen frequently should have low variance, while rare entities should have high variance.
+
+However, this intuition has a fundamental limitation: the learned variance is \emph{relation-agnostic}.
+Consider an entity $e$ that appears frequently with relation $r_1$ (e.g., \texttt{born\_in}) but never with relation $r_2$ (e.g., \texttt{works\_at}).
+GP-KGE assigns a single variance $\sigma^2_e$ regardless of which relation is queried---but uncertainty about $(e, r_1, ?)$ and $(e, r_2, ?)$ should differ fundamentally.
+
+\paragraph{Our Contribution: A Decomposition Framework.}
+We show that uncertainty in knowledge graphs decomposes into two orthogonal components:
+\begin{itemize}
+    \item \textbf{Semantic uncertainty} (from learned embeddings): captures how well an entity is learned overall---rare entities have high variance.
+    \item \textbf{Structural uncertainty} (from coverage): captures whether a specific entity-relation pair was observed---relation-specific by construction.
+\end{itemize}
+
+Neither signal alone suffices.
+Through controlled experiments on temporal-like and adversarial OOD settings, we demonstrate \emph{complementary failure modes}:
+\begin{itemize}
+    \item On \textbf{emerging entities} (low-frequency), learned variance excels (0.83 vs 0.78 for coverage)
+    \item On \textbf{novel relational contexts} (familiar entity, unseen relation), coverage achieves perfect detection (1.00) while learned variance fails completely (0.42)
+\end{itemize}
+
+This decomposition explains why existing methods systematically underperform: they conflate two orthogonal uncertainty sources that require separate treatment.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+    \item We identify a fundamental limitation in probabilistic KGE: learned variances are relation-agnostic and cannot capture structural uncertainty (\S\ref{sec:method}).
+
+    \item We propose three progressively sophisticated methods for relation-aware uncertainty: attention-based mixing, relation-conditioned variance networks, and GNN-based uncertainty propagation (\S\ref{sec:method}).
+
+    \item We provide the first comprehensive comparison of uncertainty methods across random, type-constrained, and adversarial OOD settings, including previously untested UKGE and energy-based baselines (\S\ref{sec:experiments}).
+
+    \item We demonstrate downstream impact on a QA abstention task: our method reduces incorrect answers by 48\% while maintaining 85\% query coverage (\S\ref{sec:experiments}).
+\end{enumerate}
+
+Our code, trained models, and evaluation protocols are publicly available to facilitate reproducible research.\footnote{URL anonymized for review.}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig1_main_results.pdf}
+\vspace{-1em}
+\caption{OOD detection AUROC across methods and datasets. Our decomposition-based approaches (CAGP variants) consistently outperform single-signal baselines.}
+\label{fig:main_results}
+\end{figure}

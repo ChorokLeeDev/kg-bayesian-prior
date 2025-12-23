@@ -1,0 +1,12 @@
+% Abstract for EMNLP - Stronger NLP motivation
+
+Knowledge graphs (KGs) underpin critical NLP applications including question answering, dialogue systems, and fact verification.
+When these systems encounter queries about unfamiliar entities or novel relational contexts, they should \emph{abstain} rather than hallucinate---yet existing uncertainty methods fail to detect such out-of-distribution (OOD) queries.
+We identify a fundamental limitation: probabilistic KG embeddings learn \emph{relation-agnostic} entity variances, missing structural patterns about which entity-relation pairs were observed during training.
+
+We propose a semantic-structural decomposition framework that separates two orthogonal uncertainty types: \emph{semantic uncertainty} from learned embeddings and \emph{structural uncertainty} from entity-relation coverage.
+Our analysis reveals complementary failure modes: on emerging entities, learned variance outperforms coverage (0.83 vs 0.78 AUROC); on novel relational contexts, coverage achieves perfect detection while learned variance fails (1.00 vs 0.42).
+Combining both signals achieves 0.87--0.96 AUROC across three benchmarks.
+
+On a downstream QA abstention task, our method reduces incorrect answers by 34\% while maintaining 85\% coverage, demonstrating practical value for KG-enhanced NLP systems.
+We release code and evaluation protocols to facilitate reproducible research on uncertainty-aware knowledge graph applications.

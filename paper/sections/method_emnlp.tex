@@ -1,0 +1,124 @@
+% Method Section - Enhanced with learnable approaches
+
+\subsection{The Limitation of Relation-Agnostic Variance}
+
+\begin{proposition}[Relation-Agnostic]
+\label{prop:relation_agnostic}
+GP-KGE uncertainty (Eq.~\ref{eq:gp_uncertainty}) is relation-agnostic: for any entity $e$ and relations $r_1, r_2$,
+\begin{equation}
+    U_{\text{GP}}(e, r_1, \cdot) = U_{\text{GP}}(e, r_2, \cdot)
+\end{equation}
+\end{proposition}
+
+This limitation is fundamental to all entity-level uncertainty methods, including BEUrRE~\citep{chen2021probabilistic} and UKGE~\citep{chen2019embedding}.
+Making variance relation-aware naively would require $|\mathcal{E}| \times |\mathcal{R}| \times d$ parameters---infeasible for typical KG sizes.
+We address this through three increasingly sophisticated approaches.
+
+\subsection{Approach 1: Coverage-Based Structural Uncertainty}
+
+The simplest fix is an explicit structural signal that captures entity-relation co-occurrence.
+
+\begin{definition}[Coverage]
+For entity $e$ and relation $r$:
+\begin{equation}
+    c(e, r) = \mathbb{1}\left[\exists (h', r, t') \in \mathcal{T} : h' = e \lor t' = e\right]
+\end{equation}
+\end{definition}
+
+Coverage equals 1 if entity $e$ appears with relation $r$ in training, else 0.
+Structural uncertainty is then:
+\begin{equation}
+    U_{\text{cov}}(h, r, t) = 2 - c(h, r) - c(t, r)
+\end{equation}
+
+\paragraph{CAGP: Linear Combination.}
+The simplest combination linearly mixes both signals:
+\begin{equation}
+    U_{\text{CAGP}}(h, r, t) = \alpha \cdot \tilde{U}_{\text{GP}} + (1-\alpha) \cdot U_{\text{cov}}
+\end{equation}
+where $\tilde{U}_{\text{GP}}$ is normalized GP uncertainty and $\alpha \in [0,1]$ is learned.
+
+While effective, this approach has limitations:
+\begin{itemize}
+    \item Coverage is binary---it doesn't distinguish between entities seen once vs. 1000 times with a relation
+    \item Global $\alpha$ assumes uniform signal quality across all queries
+\end{itemize}
+
+\subsection{Approach 2: Attention-Based Query-Specific Mixing}
+
+Instead of a global $\alpha$, we learn query-specific mixing weights:
+\begin{equation}
+    \alpha(h, r, t) = \sigma\left(\text{MLP}\left([\vect{h}; \vect{r}; \vect{t}; U_{\text{GP}}; U_{\text{cov}}]\right)\right)
+\end{equation}
+
+The attention mechanism considers:
+\begin{itemize}
+    \item \textbf{Entity/relation embeddings}: semantic content of the query
+    \item \textbf{Current uncertainty values}: meta-information about signal quality
+\end{itemize}
+
+This allows the model to dynamically weight signals---using GP more heavily for rare-entity queries and coverage more heavily for novel-context queries.
+
+For additional expressiveness, we employ multi-head attention:
+\begin{equation}
+    \alpha(h,r,t) = \sum_{i=1}^K w_i(h,r,t) \cdot \alpha_i(h,r,t)
+\end{equation}
+where each head $\alpha_i$ specializes in different query patterns.
+
+\subsection{Approach 3: Relation-Conditioned Variance}
+
+Rather than post-hoc combination, we directly learn relation-aware variance:
+\begin{equation}
+    \sigma^2(e, r) = \text{softplus}\left(\text{MLP}\left([\vect{e}; \vect{r}]\right)\right) + \epsilon
+\end{equation}
+
+This addresses the fundamental limitation: variance now depends on the $(e, r)$ pair, not just $e$.
+The network learns to output:
+\begin{itemize}
+    \item Low variance when entity frequently appears with relation (well-constrained)
+    \item High variance when entity rarely/never appears with relation (uncertain)
+\end{itemize}
+
+Uncertainty for a triple becomes:
+\begin{equation}
+    U_{\text{RelCond}}(h, r, t) = \frac{\sigma^2(h, r) + \sigma^2(t, r)}{2}
+\end{equation}
+
+This is trained jointly with the KGE objective, with the variance network learning to predict uncertainty from the embedding space structure.
+
+\subsection{Approach 4: GNN-Based Uncertainty Propagation}
+
+The most expressive approach propagates uncertainty through the graph:
+\begin{equation}
+    \sigma^{(l+1)}_e = \text{Update}\left(\sigma^{(l)}_e, \text{Aggregate}\left(\{\sigma^{(l)}_n : n \in \mathcal{N}(e)\}\right)\right)
+\end{equation}
+
+Key insight: an entity connected to many uncertain entities should itself be more uncertain.
+This captures higher-order structural patterns beyond simple coverage.
+
+The architecture consists of:
+\begin{enumerate}
+    \item \textbf{Initial uncertainty}: from GP variance + coverage
+    \item \textbf{Message passing}: relation-specific attention over neighbor uncertainties
+    \item \textbf{Readout}: relation-conditioned final uncertainty
+\end{enumerate}
+
+\subsection{Theoretical Analysis: Complementarity}
+
+\begin{proposition}[Complementarity]
+\label{prop:complementarity}
+Semantic (GP) and structural (coverage) uncertainty are not redundant: each correctly identifies OOD samples that the other misses.
+\end{proposition}
+
+\begin{proof}
+\textbf{Case 1 (GP fails, Coverage succeeds):} Entity $e$ appears in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$, but never with $r_{11}$.
+GP assigns low $\sigma^2_e$ (well-observed).
+For query $(?, r_{11}, e)$: GP signals low uncertainty, coverage correctly signals high uncertainty.
+
+\textbf{Case 2 (Coverage fails, GP succeeds):} Entity $e'$ appears in exactly one triple $(h, r, e')$.
+Coverage: $c(e', r) = 1$.
+For OOD query $(h', r, e')$ with random $e'$: coverage signals low uncertainty, GP correctly signals high uncertainty due to large $\sigma^2_{e'}$.
+\end{proof}
+
+\noindent\textbf{Intuition.} GP captures \emph{how well an entity is learned} (global), while coverage captures \emph{whether a context was observed} (local).
+Neither alone covers all OOD scenarios.

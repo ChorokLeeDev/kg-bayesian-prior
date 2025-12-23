@@ -1,0 +1,94 @@
+% EMNLP 2024/2025 Submission
+% Using ACL style files from https://github.com/acl-org/acl-style-files
+
+\documentclass[11pt]{article}
+
+% ACL/EMNLP style - download acl.sty from official repo
+% For submission: use \usepackage[review]{acl}
+% For camera-ready: use \usepackage{acl}
+\usepackage[review,anonymous]{acl}
+
+% Standard packages
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+% \usepackage{inconsolata}  % Optional font, commented out
+
+% Math and formatting
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{bm}
+
+% Theorem environments
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+
+% Custom commands
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\GP}{\mathcal{GP}}
+\newcommand{\KL}{\text{KL}}
+\newcommand{\ELBO}{\mathcal{L}}
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\ours}{\textsc{CAGP}}
+
+\title{Semantic-Structural Decomposition for Uncertainty Quantification in Knowledge Graph-Enhanced NLP}
+
+\author{
+  Anonymous Submission
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/abstract_emnlp}
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+\input{sections/introduction_emnlp}
+
+\section{Related Work}
+\label{sec:related}
+\input{sections/related_work}
+
+\section{Background}
+\label{sec:background}
+\input{sections/background}
+
+\section{Method}
+\label{sec:method}
+\input{sections/method_emnlp}
+
+\section{Experiments}
+\label{sec:experiments}
+\input{sections/experiments_emnlp}
+
+\section{Conclusion}
+\label{sec:conclusion}
+\input{sections/conclusion}
+
+\section*{Limitations}
+Limitations are discussed in Section~\ref{sec:conclusion}.
+
+\section*{Ethics Statement}
+This work focuses on uncertainty quantification for knowledge graph systems, which can help NLP applications abstain from unreliable predictions rather than generating misinformation. We do not foresee negative societal impacts.
+
+\bibliography{references}
+\bibliographystyle{acl_natbib}
+
+\appendix
+\input{sections/appendix}
+
+\end{document}
