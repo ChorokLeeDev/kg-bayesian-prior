@@ -75,3 +75,4 @@ project.zip
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+paper/main_emnlp.pdf
