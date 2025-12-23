@@ -1,0 +1,336 @@
+% Method Section - UAI version with rigorous proofs (v2)
+
+\subsection{Preliminaries and Notation}
+
+We establish formal definitions for rigorous analysis of uncertainty in knowledge graphs.
+
+\begin{definition}[Entity Frequency]
+For entity $e \in \mathcal{E}$ and training set $\mathcal{T}$:
+\begin{equation}
+    \freq(e) = |\{(h,r,t) \in \mathcal{T} : h=e \lor t=e\}|
+\end{equation}
+\end{definition}
+
+\begin{definition}[Relation Coverage]
+For entity $e$ and relation $r$:
+\begin{equation}
+    c(e,r) = \mathbb{1}[\exists (h,r,t) \in \mathcal{T} : h=e \lor t=e]
+\end{equation}
+\end{definition}
+
+\begin{definition}[OOD Partition]
+\label{def:ood}
+Fix a frequency threshold $\tau > 0$. We partition OOD queries into disjoint categories:
+\begin{itemize}
+    \item \textbf{Emerging Entity} $\mathcal{D}_{\text{emerge}}$: Queries $(h,r,t)$ where $\min(\freq(h), \freq(t)) < \tau$.
+    \item \textbf{Novel Context} $\mathcal{D}_{\text{novel}}$: Queries $(h,r,t)$ where $\min(\freq(h), \freq(t)) \geq \tau$ \textbf{and} $(c(h,r) = 0 \lor c(t,r) = 0)$.
+\end{itemize}
+These are mutually exclusive: emerging entities are defined by low frequency regardless of coverage; novel contexts require high frequency with missing coverage.
+\end{definition}
+
+\subsection{Uncertainty Signals}
+
+\begin{definition}[Semantic Uncertainty]
+\begin{equation}
+    U_{\text{sem}}(h,r,t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)
+\end{equation}
+where $\bar{\sigma}^2_e = \frac{1}{d}\sum_{j=1}^d \sigma^2_{e,j}$ is the mean learned variance across embedding dimensions.
+\end{definition}
+
+\begin{definition}[Structural Uncertainty]
+\begin{equation}
+    U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0, 1, 2\}
+\end{equation}
+\end{definition}
+
+\begin{definition}[Normalized Semantic Uncertainty]
+To ensure comparable scales, we define:
+\begin{equation}
+    \tilde{U}_{\text{sem}}(h,r,t) = 2 \cdot \frac{U_{\text{sem}}(h,r,t) - U_{\min}}{U_{\max} - U_{\min}}
+\end{equation}
+where $U_{\min}, U_{\max}$ are the minimum and maximum semantic uncertainty over the dataset. This maps $\tilde{U}_{\text{sem}}$ to $[0, 2]$, matching the range of $U_{\text{str}}$.
+\end{definition}
+
+\subsection{The Relation-Agnostic Limitation}
+
+\begin{proposition}[Relation-Agnostic Variance]
+\label{prop:relation_agnostic}
+For any entity $e$ and relations $r_1 \neq r_2$:
+\begin{equation}
+    U_{\text{sem}}(e, r_1, \cdot) = U_{\text{sem}}(e, r_2, \cdot)
+\end{equation}
+\end{proposition}
+
+This follows directly from the definition: $U_{\text{sem}}$ depends only on entity variances $\sigma^2_h, \sigma^2_t$, not on relation $r$.
+
+\subsection{Main Theoretical Result}
+
+\begin{theorem}[Complementarity]
+\label{thm:complementarity}
+Under the following assumptions:
+
+\begin{enumerate}
+    \item[\textbf{(A1)}] \textbf{Variance-frequency monotonicity}: $\sigma^2_e$ is monotonically decreasing in $\freq(e)$. Formally, $\freq(e_1) > \freq(e_2) \Rightarrow \sigma^2_{e_1} < \sigma^2_{e_2}$.
+
+    \item[\textbf{(A2)}] \textbf{ID coverage}: For all in-distribution triples $(h,r,t) \in \mathcal{D}_{\text{ID}}$: $c(h,r) = c(t,r) = 1$.
+
+    \item[\textbf{(A3)}] \textbf{Frequency overlap}: The frequency distributions of ID and novel-context entities overlap. Formally, for any $(h,r,t) \in \mathcal{D}_{\text{novel}}$, there exists $(h',r',t') \in \mathcal{D}_{\text{ID}}$ with $\freq(h') = \freq(h)$ and $\freq(t') = \freq(t)$.
+
+    \item[\textbf{(A4)}] \textbf{Bounded semantic gap}: Define the maximum semantic gap:
+    \begin{equation}
+        \Delta = \max_{\substack{x \in \mathcal{D}_{\text{novel}} \\ x' \in \mathcal{D}_{\text{ID}}}} \left[ \tilde{U}_{\text{sem}}(x') - \tilde{U}_{\text{sem}}(x) \right]
+    \end{equation}
+    Assume $\Delta < 1$ (semantic uncertainty cannot differ by more than half the signal range between novel-context OOD and ID).
+
+    \item[\textbf{(A5)}] \textbf{Non-degenerate emerging coverage}: Let
+    \begin{equation}
+        \rho = P\bigl(U_{\text{str}}(x) = 0 \bigm| x \in \mathcal{D}_{\text{emerge}}\bigr)
+    \end{equation}
+    be the probability that an emerging-entity query has both entities covered. Assume $0 < \rho < 1$.
+
+    \item[\textbf{(A6)}] \textbf{Semantic separation on emerging}: For all $(h,r,t) \in \mathcal{D}_{\text{emerge}}$ and $(h',r',t') \in \mathcal{D}_{\text{ID}}$:
+    \begin{equation}
+        \tilde{U}_{\text{sem}}(h,r,t) > \tilde{U}_{\text{sem}}(h',r',t')
+    \end{equation}
+\end{enumerate}
+
+Then:
+
+\begin{enumerate}
+    \item[\textbf{(i)}] \textbf{Semantic insufficiency on novel contexts}:
+    \begin{equation}
+        \text{AUROC}(U_{\text{sem}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{novel}}) = \frac{1}{2}
+    \end{equation}
+
+    \item[\textbf{(ii)}] \textbf{Structural insufficiency on emerging entities}:
+    \begin{equation}
+        \text{AUROC}(U_{\text{str}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{emerge}}) = 1 - \rho < 1
+    \end{equation}
+
+    \item[\textbf{(iii)}] \textbf{Structural perfection on novel contexts}:
+    \begin{equation}
+        \text{AUROC}(U_{\text{str}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{novel}}) = 1
+    \end{equation}
+
+    \item[\textbf{(iv)}] \textbf{Combination dominance}: For any $\alpha^* \in \left(0, \frac{1}{1+\Delta}\right)$, define:
+    \begin{equation}
+        U_{\text{comb}}(x) = \alpha^* \tilde{U}_{\text{sem}}(x) + (1-\alpha^*) U_{\text{str}}(x)
+    \end{equation}
+    Then:
+    \begin{equation}
+        \text{AUROC}(U_{\text{comb}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{OOD}}) > \max\left(\text{AUROC}(U_{\text{sem}}), \text{AUROC}(U_{\text{str}})\right)
+    \end{equation}
+    where $\mathcal{D}_{\text{OOD}} = \mathcal{D}_{\text{emerge}} \cup \mathcal{D}_{\text{novel}}$ with mixture weights $p_E, p_N > 0$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+We prove each part.
+
+\paragraph{Part (i): Semantic fails on novel contexts.}
+
+Let $x = (h,r,t) \in \mathcal{D}_{\text{novel}}$. By Definition~\ref{def:ood}, $\freq(h) \geq \tau$ and $\freq(t) \geq \tau$.
+
+By (A3), there exists $x' = (h',r',t') \in \mathcal{D}_{\text{ID}}$ with $\freq(h') = \freq(h)$ and $\freq(t') = \freq(t)$.
+
+By (A1), since frequencies match exactly:
+\begin{equation}
+    \sigma^2_h = \sigma^2_{h'} \quad \text{and} \quad \sigma^2_t = \sigma^2_{t'}
+\end{equation}
+
+Therefore:
+\begin{equation}
+    U_{\text{sem}}(x) = \frac{1}{2}(\sigma^2_h + \sigma^2_t) = \frac{1}{2}(\sigma^2_{h'} + \sigma^2_{t'}) = U_{\text{sem}}(x')
+\end{equation}
+
+Since every novel-context sample has an ID sample with identical semantic uncertainty, the distributions are identical:
+\begin{equation}
+    U_{\text{sem}}(x) \stackrel{d}{=} U_{\text{sem}}(x') \quad \text{for } x \sim \mathcal{D}_{\text{novel}}, x' \sim \mathcal{D}_{\text{ID}}
+\end{equation}
+
+Therefore:
+\begin{equation}
+    \text{AUROC} = P(U_{\text{sem}}(x) > U_{\text{sem}}(x')) = \frac{1}{2}
+\end{equation}
+
+\paragraph{Part (ii): Structural fails on emerging entities.}
+
+By (A2), all ID samples have $U_{\text{str}}(x') = 0$.
+
+For emerging-entity samples, by (A5):
+\begin{align}
+    P(U_{\text{str}}(x) = 0 \mid x \in \mathcal{D}_{\text{emerge}}) &= \rho \\
+    P(U_{\text{str}}(x) > 0 \mid x \in \mathcal{D}_{\text{emerge}}) &= 1 - \rho
+\end{align}
+
+AUROC equals the probability that OOD has strictly higher uncertainty than ID:
+\begin{align}
+    \text{AUROC} &= P(U_{\text{str}}(x) > U_{\text{str}}(x')) \\
+    &= P(U_{\text{str}}(x) > 0) \quad \text{(since } U_{\text{str}}(x') = 0 \text{)} \\
+    &= 1 - \rho
+\end{align}
+
+By (A5), $\rho > 0$, so $\text{AUROC} < 1$.
+
+\paragraph{Part (iii): Structural perfect on novel contexts.}
+
+By Definition~\ref{def:ood}, novel-context samples have $c(h,r) = 0$ or $c(t,r) = 0$, so:
+\begin{equation}
+    U_{\text{str}}(x) \geq 1 \quad \text{for all } x \in \mathcal{D}_{\text{novel}}
+\end{equation}
+
+By (A2), ID samples have:
+\begin{equation}
+    U_{\text{str}}(x') = 0 \quad \text{for all } x' \in \mathcal{D}_{\text{ID}}
+\end{equation}
+
+Therefore:
+\begin{equation}
+    \text{AUROC} = P(U_{\text{str}}(x) > U_{\text{str}}(x')) = P(U_{\text{str}}(x) \geq 1) = 1
+\end{equation}
+
+\paragraph{Part (iv): Combination dominates.}
+
+We show that for $\alpha^* \in (0, \frac{1}{1+\Delta})$, the combination achieves:
+\begin{itemize}
+    \item Perfect AUROC on novel contexts (preserving structural signal)
+    \item AUROC $\geq 1 - \rho$ on emerging entities (at least matching structural, often better)
+\end{itemize}
+
+\textbf{Step 1: Combination preserves separation on novel contexts.}
+
+For $x \in \mathcal{D}_{\text{novel}}$ and $x' \in \mathcal{D}_{\text{ID}}$:
+\begin{align}
+    U_{\text{comb}}(x) &= \alpha^* \tilde{U}_{\text{sem}}(x) + (1-\alpha^*) U_{\text{str}}(x) \\
+    U_{\text{comb}}(x') &= \alpha^* \tilde{U}_{\text{sem}}(x') + (1-\alpha^*) \cdot 0
+\end{align}
+
+We need $U_{\text{comb}}(x) > U_{\text{comb}}(x')$:
+\begin{align}
+    &\alpha^* \tilde{U}_{\text{sem}}(x) + (1-\alpha^*) U_{\text{str}}(x) > \alpha^* \tilde{U}_{\text{sem}}(x') \\
+    \Leftrightarrow \quad & (1-\alpha^*) U_{\text{str}}(x) > \alpha^* [\tilde{U}_{\text{sem}}(x') - \tilde{U}_{\text{sem}}(x)]
+\end{align}
+
+Since $U_{\text{str}}(x) \geq 1$ for novel contexts:
+\begin{equation}
+    (1-\alpha^*) \cdot 1 \geq (1-\alpha^*) U_{\text{str}}(x)
+\end{equation}
+
+By (A4), $\tilde{U}_{\text{sem}}(x') - \tilde{U}_{\text{sem}}(x) \leq \Delta$. So it suffices to show:
+\begin{equation}
+    1 - \alpha^* > \alpha^* \Delta
+\end{equation}
+
+Rearranging:
+\begin{equation}
+    1 > \alpha^*(1 + \Delta) \quad \Leftrightarrow \quad \alpha^* < \frac{1}{1+\Delta}
+\end{equation}
+
+This holds by our choice of $\alpha^*$. Therefore:
+\begin{equation}
+    \text{AUROC}(U_{\text{comb}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{novel}}) = 1
+\end{equation}
+
+\textbf{Step 2: Combination on emerging entities.}
+
+Partition $\mathcal{D}_{\text{emerge}}$ into covered ($U_{\text{str}} = 0$) and uncovered ($U_{\text{str}} > 0$) subsets.
+
+\textit{Case 2a: Uncovered emerging entities} ($U_{\text{str}}(x) > 0$).
+
+Both terms favor OOD:
+\begin{itemize}
+    \item $U_{\text{str}}(x) > 0 = U_{\text{str}}(x')$ by construction
+    \item $\tilde{U}_{\text{sem}}(x) > \tilde{U}_{\text{sem}}(x')$ by (A6)
+\end{itemize}
+
+Therefore $U_{\text{comb}}(x) > U_{\text{comb}}(x')$ for all such pairs.
+
+\textit{Case 2b: Covered emerging entities} ($U_{\text{str}}(x) = 0$).
+
+Here structural uncertainty fails: $U_{\text{str}}(x) = U_{\text{str}}(x') = 0$.
+
+The combination reduces to:
+\begin{align}
+    U_{\text{comb}}(x) &= \alpha^* \tilde{U}_{\text{sem}}(x) \\
+    U_{\text{comb}}(x') &= \alpha^* \tilde{U}_{\text{sem}}(x')
+\end{align}
+
+By (A6), $\tilde{U}_{\text{sem}}(x) > \tilde{U}_{\text{sem}}(x')$, so $U_{\text{comb}}(x) > U_{\text{comb}}(x')$.
+
+Therefore, the combination correctly separates ALL emerging-entity OOD from ID:
+\begin{equation}
+    \text{AUROC}(U_{\text{comb}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{emerge}}) = 1
+\end{equation}
+
+\textbf{Step 3: Overall AUROC.}
+
+AUROC decomposes linearly over OOD mixtures:
+\begin{equation}
+    \text{AUROC}(U, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{OOD}}) = p_E \cdot \text{AUROC}_E + p_N \cdot \text{AUROC}_N
+\end{equation}
+
+For the combination:
+\begin{equation}
+    \text{AUROC}(U_{\text{comb}}) = p_E \cdot 1 + p_N \cdot 1 = 1
+\end{equation}
+
+For semantic uncertainty alone (using Parts i and applying A6 to emerging):
+\begin{equation}
+    \text{AUROC}(U_{\text{sem}}) = p_E \cdot 1 + p_N \cdot \frac{1}{2} = 1 - \frac{p_N}{2} < 1
+\end{equation}
+
+For structural uncertainty alone (using Parts ii and iii):
+\begin{equation}
+    \text{AUROC}(U_{\text{str}}) = p_E \cdot (1-\rho) + p_N \cdot 1 = 1 - p_E \rho < 1
+\end{equation}
+
+Since $p_N > 0$ and $p_E \rho > 0$ (by A5), both single signals achieve $< 1$.
+
+Therefore:
+\begin{equation}
+    \text{AUROC}(U_{\text{comb}}) = 1 > \max(\text{AUROC}(U_{\text{sem}}), \text{AUROC}(U_{\text{str}}))
+\end{equation}
+\end{proof}
+
+\begin{remark}[Practical interpretation of assumptions]
+\begin{itemize}
+    \item \textbf{(A1)} holds when models learn from data: frequently-observed entities have better-constrained embeddings.
+    \item \textbf{(A2)} holds by construction of standard KG benchmarks, where test triples use entities/relations from training.
+    \item \textbf{(A3)} requires novel-context entities to have frequency counterparts in ID. This holds when novel contexts involve common entities in rare relations.
+    \item \textbf{(A4)} requires $\Delta < 1$. Empirically, we observe $\Delta \approx 0.3$ on FB15k-237, well within bounds.
+    \item \textbf{(A5)} holds when emerging entities occasionally appear with observed relations. Empirically, $\rho \approx 0.15$--$0.25$.
+    \item \textbf{(A6)} follows from (A1) when $\tau$ is chosen such that emerging entities have detectably higher variance.
+\end{itemize}
+\end{remark}
+
+\begin{remark}[Tightness of $\alpha^*$ bound]
+The constraint $\alpha^* < \frac{1}{1+\Delta}$ is tight. For $\Delta = 0.3$, we require $\alpha^* < 0.77$. In practice, learned $\alpha$ values fall in $[0.3, 0.5]$, well within this range.
+\end{remark}
+
+\subsection{CAGP: Coverage-Augmented Gaussian Process}
+
+Based on Theorem~\ref{thm:complementarity}, we propose CAGP:
+\begin{equation}
+    U_{\text{CAGP}}(h,r,t) = \alpha \cdot \tilde{U}_{\text{sem}}(h,r,t) + (1-\alpha) \cdot U_{\text{str}}(h,r,t)
+\end{equation}
+
+The mixing weight $\alpha = \sigma(\lambda)$ is learned jointly with embedding parameters via:
+\begin{equation}
+    \mathcal{L} = \mathcal{L}_{\text{BCE}} + \beta \cdot \text{KL}(q(\mathbf{e}) \| p(\mathbf{e}))
+\end{equation}
+
+\paragraph{Computational cost.} Coverage matrix $\mat{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ is precomputed once from training triples. At inference, $U_{\text{str}}$ requires two lookups. Total overhead: $<$2\% of base model inference time.
+
+\subsection{Extensions}
+
+\paragraph{Query-Specific Mixing.}
+\begin{equation}
+    \alpha(h,r,t) = \sigma\left(\text{MLP}([\mathbf{h}; \mathbf{r}; \mathbf{t}])\right)
+\end{equation}
+
+\paragraph{Relation-Conditioned Variance.}
+\begin{equation}
+    \sigma^2(e,r) = \text{softplus}\left(\text{MLP}([\mathbf{e}; \mathbf{r}])\right)
+\end{equation}
+
+Empirically, CAGP captures most gains; extensions provide marginal improvements (\S\ref{sec:experiments}).

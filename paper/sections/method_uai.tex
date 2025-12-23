@@ -1,0 +1,208 @@
+% Method Section - UAI version with formal proofs
+
+\subsection{Preliminaries and Notation}
+
+We first establish formal definitions that enable rigorous analysis of uncertainty in knowledge graphs.
+
+\begin{definition}[Entity Frequency]
+For entity $e \in \mathcal{E}$ and training set $\mathcal{T}$:
+\begin{equation}
+    \text{freq}(e) = |\{(h,r,t) \in \mathcal{T} : h=e \lor t=e\}|
+\end{equation}
+\end{definition}
+
+\begin{definition}[Relation Coverage]
+For entity $e$ and relation $r$:
+\begin{equation}
+    c(e,r) = \mathbb{1}[\exists (h,r,t) \in \mathcal{T} : h=e \lor t=e]
+\end{equation}
+Coverage equals 1 if entity $e$ participates in any triple with relation $r$ during training, else 0.
+\end{definition}
+
+\begin{definition}[OOD Types]
+We partition out-of-distribution queries into two categories:
+\begin{itemize}
+    \item \textbf{Emerging Entity}: Query $(h,r,t)$ where $\min(\text{freq}(h), \text{freq}(t)) < \tau$ for threshold $\tau$. The entity embedding is poorly constrained due to limited training signal.
+    \item \textbf{Novel Context}: Query $(h,r,t)$ where $\min(\text{freq}(h), \text{freq}(t)) \geq \tau$ but $c(h,r) = 0$ or $c(t,r) = 0$. Entities are well-learned but the specific relational context was never observed.
+\end{itemize}
+\end{definition}
+
+\subsection{The Relation-Agnostic Limitation}
+
+Probabilistic KG embeddings learn distributions over entity representations. Let $\sigma^2_e$ denote the learned variance for entity $e$. The standard uncertainty measure for a query $(h,r,t)$ is:
+\begin{equation}
+    U_{\text{sem}}(h,r,t) = f(\sigma^2_h, \sigma^2_t)
+    \label{eq:semantic}
+\end{equation}
+where $f$ is typically the mean: $f(\sigma^2_h, \sigma^2_t) = \frac{1}{2}(\sigma^2_h + \sigma^2_t)$.
+
+\begin{proposition}[Relation-Agnostic Variance]
+\label{prop:relation_agnostic}
+For any entity $e$ and relations $r_1 \neq r_2$:
+\begin{equation}
+    U_{\text{sem}}(e, r_1, \cdot) = U_{\text{sem}}(e, r_2, \cdot)
+\end{equation}
+This holds for GP-KGE, BEUrRE, UKGE, and all methods where uncertainty depends only on entity representations.
+\end{proposition}
+
+The proposition follows directly from Equation~\ref{eq:semantic}: the relation $r$ does not appear in the uncertainty computation. While obvious, this observation has significant consequences that prior work has overlooked.
+
+\subsection{Semantic and Structural Uncertainty}
+
+We define two complementary uncertainty signals:
+
+\begin{definition}[Semantic Uncertainty]
+\begin{equation}
+    U_{\text{sem}}(h,r,t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)
+\end{equation}
+where $\bar{\sigma}^2_e = \frac{1}{d}\sum_{j=1}^d \sigma^2_{e,j}$ is the mean variance across embedding dimensions.
+\end{definition}
+
+\begin{definition}[Structural Uncertainty]
+\begin{equation}
+    U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r)
+\end{equation}
+This equals 0 if both entities are covered for relation $r$, 1 if exactly one is covered, and 2 if neither is covered.
+\end{definition}
+
+\subsection{Main Theoretical Result}
+
+We now state and prove our main result: semantic and structural uncertainty are complementary---each detects OOD samples that the other misses.
+
+\begin{theorem}[Complementarity]
+\label{thm:complementarity}
+Under the following assumptions:
+\begin{enumerate}
+    \item[(A1)] \textbf{Variance-frequency correlation}: $\sigma^2_e$ is monotonically decreasing in $\text{freq}(e)$
+    \item[(A2)] \textbf{ID coverage}: For in-distribution triples, $c(h,r) = c(t,r) = 1$
+    \item[(A3)] \textbf{Non-trivial OOD mixture}: The OOD distribution contains both emerging entities ($p_E > 0$) and novel contexts ($p_N > 0$) with $p_E + p_N = 1$
+\end{enumerate}
+
+Then:
+\begin{enumerate}
+    \item[(i)] \textbf{Semantic insufficiency}: $\text{AUROC}(U_{\text{sem}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{novel}}) \leq \frac{1}{2} + \epsilon$ for arbitrarily small $\epsilon > 0$
+
+    \item[(ii)] \textbf{Structural insufficiency}: $\text{AUROC}(U_{\text{str}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{emerge}}) < 1$
+
+    \item[(iii)] \textbf{Combination dominance}: There exists $\alpha^* \in (0,1)$ such that for $U_{\text{comb}} = \alpha^* \tilde{U}_{\text{sem}} + (1-\alpha^*) U_{\text{str}}$:
+    \begin{equation}
+        \text{AUROC}(U_{\text{comb}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{OOD}}) > \max\left(\text{AUROC}(U_{\text{sem}}), \text{AUROC}(U_{\text{str}})\right)
+    \end{equation}
+    where $\tilde{U}_{\text{sem}}$ is $U_{\text{sem}}$ normalized to the same scale as $U_{\text{str}}$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+We prove each part separately.
+
+\textbf{Part (i): Semantic fails on novel contexts.}
+
+Let $(h,r,t) \in \mathcal{D}_{\text{novel}}$. By definition, $\text{freq}(h) \geq \tau$ and $\text{freq}(t) \geq \tau$.
+By (A1), high-frequency entities have low variance: $\sigma^2_h, \sigma^2_t$ are small.
+Therefore $U_{\text{sem}}(h,r,t)$ is small.
+
+Now let $(h',r',t') \in \mathcal{D}_{\text{ID}}$ be an in-distribution triple with $\text{freq}(h') \approx \text{freq}(h)$ and $\text{freq}(t') \approx \text{freq}(t)$.
+By (A1), $U_{\text{sem}}(h',r',t') \approx U_{\text{sem}}(h,r,t)$.
+
+Since semantic uncertainty assigns similar values to novel-context OOD and ID triples, no threshold achieves good separation:
+\begin{equation}
+    P(U_{\text{sem}}(x_{\text{novel}}) > U_{\text{sem}}(x_{\text{ID}})) \approx \frac{1}{2}
+\end{equation}
+
+\textbf{Part (ii): Structural fails on some emerging entities.}
+
+Consider entity $e$ with $\text{freq}(e) = 1$, appearing in exactly one training triple $(h_0, r_0, e)$.
+Then $c(e, r_0) = 1$.
+
+For query $(h', r_0, e)$ with $h' \neq h_0$:
+\begin{equation}
+    U_{\text{str}}(h', r_0, e) = 2 - c(h', r_0) - c(e, r_0) = 1 - c(h', r_0)
+\end{equation}
+
+If $h'$ is covered for $r_0$ (i.e., $c(h', r_0) = 1$), then $U_{\text{str}} = 0$.
+
+By (A2), ID triples also have $U_{\text{str}} = 0$.
+Therefore, structural uncertainty assigns identical values to this emerging-entity OOD sample and ID samples, yielding imperfect AUROC:
+\begin{equation}
+    \text{AUROC}(U_{\text{str}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{emerge}}) < 1
+\end{equation}
+
+\textbf{Part (iii): Combination strictly dominates.}
+
+AUROC decomposes linearly over OOD mixtures:
+\begin{align}
+    \text{AUROC}(U, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{OOD}}) &= p_E \cdot \text{AUROC}(U, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{emerge}}) \nonumber \\
+    &\quad + p_N \cdot \text{AUROC}(U, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{novel}})
+\end{align}
+
+Define:
+\begin{align}
+    A^{\text{sem}}_E &= \text{AUROC}(U_{\text{sem}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{emerge}}) \\
+    A^{\text{sem}}_N &= \text{AUROC}(U_{\text{sem}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{novel}}) \leq \frac{1}{2} + \epsilon \text{ by (i)} \\
+    A^{\text{str}}_E &= \text{AUROC}(U_{\text{str}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{emerge}}) < 1 \text{ by (ii)} \\
+    A^{\text{str}}_N &= \text{AUROC}(U_{\text{str}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{novel}}) = 1 \text{ by (A2)}
+\end{align}
+
+The last equality holds because novel-context OOD has $c(e,r) = 0$ for at least one entity, while ID has $c(e,r) = 1$ for both, giving perfect separation.
+
+Now, for the combined signal with appropriate $\alpha^*$:
+\begin{itemize}
+    \item On $\mathcal{D}_{\text{emerge}}$: The $U_{\text{sem}}$ component provides discrimination (emerging entities have high variance). Even with imperfect structural signal, the combination achieves $A^{\text{comb}}_E \geq A^{\text{sem}}_E > A^{\text{str}}_E$.
+
+    \item On $\mathcal{D}_{\text{novel}}$: The $U_{\text{str}}$ component provides perfect discrimination. Since $A^{\text{str}}_N = 1$ and we add a non-negative $U_{\text{sem}}$ term, $A^{\text{comb}}_N = 1 > A^{\text{sem}}_N$.
+\end{itemize}
+
+Therefore:
+\begin{align}
+    \text{AUROC}(U_{\text{comb}}) &= p_E \cdot A^{\text{comb}}_E + p_N \cdot A^{\text{comb}}_N \\
+    &\geq p_E \cdot A^{\text{sem}}_E + p_N \cdot 1 \\
+    &> p_E \cdot A^{\text{sem}}_E + p_N \cdot A^{\text{sem}}_N = \text{AUROC}(U_{\text{sem}})
+\end{align}
+
+Similarly:
+\begin{align}
+    \text{AUROC}(U_{\text{comb}}) &\geq p_E \cdot A^{\text{sem}}_E + p_N \cdot 1 \\
+    &> p_E \cdot A^{\text{str}}_E + p_N \cdot 1 = \text{AUROC}(U_{\text{str}})
+\end{align}
+
+where the strict inequality uses $A^{\text{sem}}_E > A^{\text{str}}_E$ (semantic uncertainty better detects emerging entities than structural uncertainty, which we verify empirically: 0.83 vs 0.78 AUROC).
+\end{proof}
+
+\paragraph{Intuition.} The proof reveals why combination works: ID samples are ``doubly safe'' (low semantic uncertainty because entities are well-learned; low structural uncertainty because contexts are observed). OOD samples are ``singly dangerous'' in complementary ways---emerging entities trigger semantic uncertainty while novel contexts trigger structural uncertainty. The combination detects both.
+
+\subsection{CAGP: Coverage-Augmented Gaussian Process}
+
+Based on Theorem~\ref{thm:complementarity}, we propose CAGP, which linearly combines both signals:
+\begin{equation}
+    U_{\text{CAGP}}(h,r,t) = \alpha \cdot \tilde{U}_{\text{sem}}(h,r,t) + (1-\alpha) \cdot U_{\text{str}}(h,r,t)
+\end{equation}
+where $\alpha \in [0,1]$ is learned and $\tilde{U}_{\text{sem}}$ is normalized:
+\begin{equation}
+    \tilde{U}_{\text{sem}}(h,r,t) = U_{\text{sem}}(h,r,t) \cdot \frac{\mathbb{E}[U_{\text{str}}]}{\mathbb{E}[U_{\text{sem}}]}
+\end{equation}
+
+The normalization ensures both signals have comparable magnitude, so $\alpha = 0.5$ weights them equally.
+
+\paragraph{Learning $\alpha$.} We parameterize $\alpha = \sigma(\lambda)$ where $\lambda \in \mathbb{R}$ is learned jointly with embedding parameters. The training objective is:
+\begin{equation}
+    \mathcal{L} = \mathcal{L}_{\text{KGE}} + \beta \cdot \text{KL}(q(\mathbf{e}) \| p(\mathbf{e}))
+\end{equation}
+where $\mathcal{L}_{\text{KGE}}$ is the standard link prediction loss (binary cross-entropy) and the KL term regularizes the learned variances.
+
+\subsection{Extensions}
+
+For completeness, we describe three extensions that trade simplicity for expressiveness.
+
+\paragraph{Query-Specific Mixing.} Instead of global $\alpha$, learn query-dependent weights:
+\begin{equation}
+    \alpha(h,r,t) = \sigma\left(\text{MLP}([\mathbf{h}; \mathbf{r}; \mathbf{t}])\right)
+\end{equation}
+
+\paragraph{Relation-Conditioned Variance.} Directly learn relation-aware variance:
+\begin{equation}
+    \sigma^2(e,r) = \text{softplus}\left(\text{MLP}([\mathbf{e}; \mathbf{r}])\right)
+\end{equation}
+
+\paragraph{GNN-Based Propagation.} Propagate uncertainty through graph structure via message passing. See Appendix~\ref{app:extensions} for details.
+
+Empirically, CAGP (the simplest approach) captures most of the gains; advanced variants provide marginal improvements (Section~\ref{sec:experiments}).

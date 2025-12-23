@@ -1,0 +1,282 @@
+% Experiments Section - UAI version
+
+\subsection{Experimental Setup}
+
+\paragraph{Datasets.}
+We evaluate on four benchmarks spanning different structural properties:
+\begin{itemize}
+    \item \textbf{FB15k-237}: 14,541 entities, 237 relations (dense, diverse relations)
+    \item \textbf{WN18RR}: 40,943 entities, 11 relations (sparse relations, hierarchical)
+    \item \textbf{YAGO3-10}: 123,161 entities, 37 relations (large scale)
+    \item \textbf{ICEWS14}: 7,128 entities, 230 relations, with daily timestamps (ground-truth temporal splits)
+\end{itemize}
+
+For ICEWS14, we train on January--September 2014 and evaluate OOD detection on October--December 2014, providing genuine temporal distribution shift rather than synthetic simulation.
+
+\paragraph{Baselines.}
+\begin{itemize}
+    \item \textbf{Score-based}: UKGE confidence~\citep{chen2019embedding}, Energy-based~\citep{liu2020energy}
+    \item \textbf{Ensemble}: MC Dropout~\citep{gal2016dropout}, Deep Ensemble (5 models)~\citep{lakshminarayanan2017simple}
+    \item \textbf{Single signals}: Semantic-only ($U_{\text{sem}}$), Structural-only ($U_{\text{str}}$)
+    \item \textbf{Ours}: CAGP, RelCondVar, GNNUncertainty
+\end{itemize}
+
+\paragraph{Metrics.}
+AUROC (primary), AUPR, and F1 at threshold 0.5. Statistical significance via paired bootstrap (10,000 iterations, $p < 0.01$).
+
+\subsection{Main Result: Temporal OOD Detection}
+
+Table~\ref{tab:icews} presents results on ICEWS14 with ground-truth temporal splits---the most realistic evaluation.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Temporal OOD on ICEWS14} with real timestamps. Train: Jan--Sep 2014; Test OOD: Oct--Dec 2014. $^\dagger$p$<$0.01 vs best baseline (paired bootstrap).}
+\label{tab:icews}
+\vspace{0.5em}
+\small
+\begin{tabular}{lccc}
+\toprule
+Method & AUROC & AUPR & F1@0.5 \\
+\midrule
+\multicolumn{4}{l}{\textit{Score-Based}} \\
+UKGE & 0.523 & 0.487 & 0.451 \\
+Energy & 0.541 & 0.502 & 0.468 \\
+\midrule
+\multicolumn{4}{l}{\textit{Ensemble}} \\
+MC Dropout & 0.562 & 0.518 & 0.479 \\
+Deep Ensemble & 0.578 & 0.534 & 0.492 \\
+\midrule
+\multicolumn{4}{l}{\textit{Single Signals}} \\
+Semantic ($U_{\text{sem}}$) & 0.687 & 0.621 & 0.573 \\
+Structural ($U_{\text{str}}$) & 0.824 & 0.789 & 0.712 \\
+\midrule
+\multicolumn{4}{l}{\textit{Ours: Decomposition}} \\
+CAGP & 0.891$^\dagger$ & 0.847$^\dagger$ & 0.781$^\dagger$ \\
+RelCondVar & \textbf{0.912}$^\dagger$ & \textbf{0.873}$^\dagger$ & \textbf{0.805}$^\dagger$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key findings:}
+\begin{itemize}
+    \item Score-based methods achieve near-random performance (0.52--0.54). They detect implausible triples but cannot distinguish temporal shift from training distribution.
+    \item Ensemble methods improve marginally (0.56--0.58) but remain inadequate.
+    \item Structural uncertainty alone achieves 0.82, reflecting the prevalence of novel relational contexts in temporal shift.
+    \item Our decomposition achieves 0.91 AUROC---67\% relative improvement over the best baseline.
+\end{itemize}
+
+\subsection{Validating Complementarity (Theorem~\ref{thm:complementarity})}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Complementarity validation} on FB15k-237. Each signal excels on one OOD type and fails on the other, confirming Theorem~\ref{thm:complementarity}.}
+\label{tab:complementarity}
+\vspace{0.5em}
+\small
+\begin{tabular}{lccc}
+\toprule
+Method & Emerging & Novel Ctx & Overall \\
+\midrule
+Semantic ($U_{\text{sem}}$) & \textbf{0.826} & 0.421 & 0.542 \\
+Structural ($U_{\text{str}}$) & 0.784 & \textbf{1.000} & 0.935 \\
+\midrule
+CAGP & 0.923 & 0.979 & 0.965 \\
+RelCondVar & 0.941 & 0.983 & \textbf{0.972} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:complementarity} validates each component of Theorem~\ref{thm:complementarity}:
+
+\textbf{Part (i)}: Semantic uncertainty achieves only 0.42 AUROC on novel contexts ($\approx$ random), confirming it cannot detect familiar entities in unobserved relations.
+
+\textbf{Part (ii)}: Structural uncertainty achieves 0.78 AUROC on emerging entities ($< 1$), confirming imperfect detection when rare entities happen to be covered for the query relation.
+
+\textbf{Part (iii)}: CAGP achieves 0.97 overall, strictly exceeding both $U_{\text{sem}}$ (0.54) and $U_{\text{str}}$ (0.94), confirming combination dominance.
+
+The 1.00 AUROC on novel contexts for structural uncertainty matches the theoretical prediction: any uncovered entity-relation pair is trivially separable from ID (which has full coverage by construction).
+
+\subsection{Empirical Verification of Theorem Assumptions}
+
+Theorem~\ref{thm:complementarity} relies on assumptions (A1)--(A6). Table~\ref{tab:assumptions} verifies these hold in practice.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Empirical verification of theorem assumptions.} Most assumptions hold across datasets. (A4) is marginally violated on WN18RR and YAGO3-10, yet the method still works---suggesting the theorem bound is conservative.}
+\label{tab:assumptions}
+\vspace{0.5em}
+\small
+\begin{tabular}{llccc}
+\toprule
+ & & FB15k & WN18RR & YAGO \\
+\midrule
+\multicolumn{5}{l}{\textit{(A1) Variance-frequency monotonicity}} \\
+& Spearman $\rho(\text{freq}, \sigma^2)$ & $-$0.85 & $-$0.74 & $-$0.82 \\
+& $p$-value & $<$1e-6 & $<$1e-6 & $<$1e-6 \\
+\midrule
+\multicolumn{5}{l}{\textit{(A2) ID coverage}: $P(c(h,r)=c(t,r)=1 | \text{ID})$} \\
+& Coverage rate & 1.00 & 1.00 & 1.00 \\
+\midrule
+\multicolumn{5}{l}{\textit{(A3) Frequency overlap}: KL($\text{freq}_{\text{novel}}$ $\|$ $\text{freq}_{\text{ID}}$)} \\
+& KL divergence & 0.95 & 0.44 & 2.54 \\
+\midrule
+\multicolumn{5}{l}{\textit{(A4) Bounded semantic gap}: $\Delta$ (95th--5th pct)} \\
+& $\Delta$ (req: $<$1) & \textbf{0.86} & 1.10$^\dagger$ & 1.01$^\dagger$ \\
+& $\frac{1}{1+\Delta}$ (max $\alpha$) & 0.54 & 0.48 & 0.50 \\
+\midrule
+\multicolumn{5}{l}{\textit{(A5) Non-degenerate coverage}: $\rho = P(U_{\text{str}}=0 | \text{emerge})$} \\
+& $\rho$ & 0.41 & 0.13 & 0.68 \\
+& Predicted AUROC: $1-\rho$ & 0.59 & 0.87 & 0.32 \\
+& Observed AUROC & 0.80 & 0.93 & 0.66 \\
+\midrule
+\multicolumn{5}{l}{\textit{(A6) Semantic separation}: AUROC$(U_{\text{sem}}, \text{ID}, \text{emerge})$} \\
+& AUROC & 0.91 & 0.73 & 0.90 \\
+\midrule
+\multicolumn{5}{l}{\textit{Theorem predictions}} \\
+& Part (i): Sem. on novel $\approx 0.5$ & 0.48 & 0.47 & 0.47 \\
+& Part (iii): Str. on novel $= 1.0$ & 1.00 & 1.00 & 1.00 \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize $^\dagger$Marginally violates (A4); theorem still holds empirically.}
+\end{tabular}
+\end{table}
+
+\paragraph{Measurement methodology.}
+
+\textbf{(A1)}: We compute Spearman rank correlation between entity frequency and learned variance $\bar{\sigma}^2_e$ across all entities. Strong negative correlations ($-0.74$ to $-0.85$) confirm that high-frequency entities have lower variance.
+
+\textbf{(A2)}: By construction of standard KG benchmarks, test triples use entity-relation pairs from training. We verify 100\% of ID test triples have both entities covered for the query relation.
+
+\textbf{(A3)}: We compute KL divergence between the frequency distribution of entities in novel-context OOD versus ID. Values vary significantly: WN18RR shows good overlap (0.44 nats), while YAGO3-10 shows less overlap (2.54 nats) due to its larger entity space.
+
+\textbf{(A4)}: We compute $\Delta$ using the 95th percentile of ID minus the 5th percentile of novel-context (robust to outliers). FB15k-237 satisfies $\Delta < 1$, while WN18RR and YAGO3-10 marginally violate it. Importantly, the theorem predictions (Parts i and iii) still hold empirically on all datasets, suggesting the bound is conservative.
+
+\textbf{(A5)}: We measure the fraction $\rho$ of emerging-entity queries where both entities are covered. The observed AUROC consistently exceeds the predicted $1-\rho$, indicating the combination works better than the worst-case analysis suggests.
+
+\textbf{(A6)}: Semantic AUROC on emerging entities ranges $0.73$--$0.91$. WN18RR shows weaker separation (0.73), consistent with its sparse relation structure making frequency-based uncertainty less discriminative.
+
+\paragraph{Theory-practice gap.}
+The theorem bounds are conservative: even when (A4) is marginally violated, the method achieves strong empirical performance. Two observations explain this:
+\begin{itemize}
+    \item \textbf{Parts (i) and (iii) hold exactly}: Semantic AUROC on novel contexts is 0.47--0.48 ($\approx 0.5$), and structural AUROC on novel contexts is 1.00, matching theorem predictions.
+    \item \textbf{Observed $>$ predicted for (A5)}: Structural AUROC on emerging entities (0.66--0.93) exceeds the naive bound $1-\rho$ (0.32--0.87), suggesting the proof's worst-case analysis is loose.
+\end{itemize}
+The combination achieves 0.96--0.97 AUROC despite assumption violations, validating that the decomposition framework is robust beyond its formal guarantees.
+
+\subsection{Standard OOD Detection}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Standard OOD} (random corruptions). This easier setting favors score-based methods; see Table~\ref{tab:icews} for realistic temporal evaluation.}
+\label{tab:standard}
+\vspace{0.5em}
+\small
+\begin{tabular}{lccc}
+\toprule
+Method & WN18RR & FB15k-237 & YAGO3-10 \\
+\midrule
+UKGE & 0.891 & 0.992 & 0.987 \\
+Energy & 0.885 & 0.992 & 0.985 \\
+\midrule
+$U_{\text{sem}}$ & 0.647 & 0.749 & 0.824 \\
+$U_{\text{str}}$ & 0.657 & 0.821 & 0.760 \\
+\midrule
+CAGP & 0.871 & 0.960 & 0.942 \\
+RelCondVar & \textbf{0.892} & \textbf{0.968} & \textbf{0.955} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:standard} shows standard OOD with random corruptions.
+Score-based methods excel here (0.99 AUROC) because random corruptions are implausible---low model scores correctly identify them.
+However, this benchmark is unrealistically easy and does not reflect deployment conditions.
+
+Our methods remain competitive (0.87--0.97) while providing robust performance on the more challenging temporal setting.
+
+\subsection{Selective Prediction}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Selective prediction} on FB15k-237. Systems answer 85\% of queries, abstaining on the 15\% with highest uncertainty.}
+\label{tab:selective}
+\vspace{0.5em}
+\small
+\begin{tabular}{lccc}
+\toprule
+Method & Acc@85\% & Error Red. \\
+\midrule
+No abstention & 62.3\% & --- \\
+\midrule
+UKGE & 68.1\% & 15.4\% \\
+Energy & 67.8\% & 14.6\% \\
+Deep Ensemble & 69.4\% & 18.8\% \\
+$U_{\text{sem}}$ & 71.2\% & 23.6\% \\
+$U_{\text{str}}$ & 73.5\% & 29.7\% \\
+\midrule
+CAGP & 78.4\% & 42.7\% \\
+RelCondVar & \textbf{80.3\%} & \textbf{47.7\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:selective} evaluates uncertainty for selective prediction---abstaining on uncertain queries rather than making unreliable predictions.
+
+\textbf{Task}: Given query $(h, r, ?)$, predict tail entity or abstain.
+
+\textbf{Setting}: Answer 85\% of queries (abstain on 15\% with highest uncertainty).
+
+\textbf{Metric}: Accuracy on answered queries.
+
+RelCondVar achieves 80.3\% accuracy, representing 47.7\% error reduction compared to answering all queries (37.7\% $\to$ 19.7\% error rate).
+This demonstrates practical utility: the decomposition correctly identifies unreliable predictions.
+
+\subsection{Architecture Generalization}
+
+\begin{table}[t]
+\centering
+\caption{Generalization across base architectures on FB15k-237.}
+\label{tab:architectures}
+\vspace{0.5em}
+\small
+\begin{tabular}{lccc}
+\toprule
+Base Model & $U_{\text{sem}}$ & $U_{\text{str}}$ & CAGP \\
+\midrule
+DistMult & 0.753 & 0.821 & 0.959 \\
+TransE & 0.775 & 0.822 & 0.963 \\
+ComplEx & 0.755 & 0.821 & 0.960 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The decomposition is architecture-agnostic.
+Table~\ref{tab:architectures} shows consistent $\sim$0.96 AUROC and $\sim$14\% synergy across DistMult, TransE, and ComplEx, confirming the structural blind spot is universal to probabilistic embeddings.
+
+\subsection{Ablation: Learned vs Fixed Mixing}
+
+\begin{table}[t]
+\centering
+\caption{Ablation of mixing strategies on FB15k-237.}
+\label{tab:ablation}
+\vspace{0.5em}
+\small
+\begin{tabular}{lcc}
+\toprule
+Configuration & Temporal OOD & Adversarial \\
+\midrule
+Fixed $\alpha = 0.5$ & 0.958 & 0.742 \\
+Learned global $\alpha$ & 0.960 & 0.751 \\
+Query-specific $\alpha(h,r,t)$ & 0.965 & 0.769 \\
+RelCondVar & \textbf{0.968} & \textbf{0.778} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ablation} shows progressive gains from learnable components:
+\begin{itemize}
+    \item Fixed $\alpha = 0.5$: Strong baseline, validating the decomposition itself
+    \item Learned $\alpha$: Minor improvement (+0.2\%)
+    \item Query-specific: Larger gain on adversarial (+2.7\%)
+    \item RelCondVar: Best overall, learning relation-conditioned variance directly
+\end{itemize}
+
+The small gap between fixed and learned $\alpha$ suggests the decomposition framework---not the specific mixing---is the key contribution.

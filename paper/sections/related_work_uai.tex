@@ -1,0 +1,41 @@
+% Related Work - UAI version
+
+\paragraph{Uncertainty in Knowledge Graph Embeddings.}
+Probabilistic approaches to KG embeddings have gained attention for capturing epistemic uncertainty.
+UKGE~\citep{chen2019embedding} associates confidence scores with triples, modeling triple-level reliability.
+BEUrRE~\citep{chen2021probabilistic} uses box embeddings where box volume indicates uncertainty.
+GP-KGE~\citep{Chen2021PERM} learns Gaussian distributions over entity embeddings.
+The limitation identified in this work---that learned variances are relation-agnostic---applies to all these methods, explaining their poor performance on temporal distribution shift.
+
+\paragraph{OOD Detection.}
+MC Dropout~\citep{gal2016dropout} approximates Bayesian inference via dropout at test time.
+Deep Ensembles~\citep{lakshminarayanan2017simple} aggregate predictions from independently trained models.
+Energy-based methods~\citep{liu2020energy} use output magnitudes for OOD scoring.
+When applied to KG embeddings, these methods inherit relation-agnostic uncertainty: they capture model uncertainty but not structural observation patterns.
+Our work shows that for KGs specifically, structural uncertainty from co-occurrence patterns is essential.
+
+\paragraph{Graph-Based Uncertainty.}
+Graph Posterior Networks~\citep{stadler2021graph} propagate uncertainty through graph structure for node classification.
+GGPN~\citep{chen2022graph} extends this to knowledge graphs.
+These methods treat edges homogeneously, missing the heterogeneous nature of KG relations.
+An entity may be well-observed for some relations but completely unseen for others---a distinction homogeneous propagation cannot capture.
+
+\paragraph{Calibration.}
+Calibration ensures predicted probabilities match empirical frequencies~\citep{guo2017calibration}.
+Recent work~\citep{rao2024knowledge} studies calibration specifically for KG link prediction.
+Our decomposition is orthogonal to calibration: we separate uncertainty sources, while calibration adjusts confidence magnitudes.
+The approaches are complementary---CAGP could be post-hoc calibrated.
+
+\paragraph{Coverage and Sparsity.}
+Entity coverage statistics are used for negative sampling~\citep{sun2019rotate} and bias analysis~\citep{akrami2020realistic}.
+Prior work notes that KG incompleteness affects evaluation~\citep{safavi2020codex}.
+We repurpose coverage as a first-class uncertainty signal, showing it captures structural uncertainty that learned variances miss.
+
+\paragraph{Temporal Knowledge Graphs.}
+Temporal KG reasoning~\citep{garcia2018learning} models time-evolving facts.
+Our work addresses a different problem: detecting when queries fall outside the training distribution due to temporal shift, rather than explicitly modeling temporal dynamics.
+
+\paragraph{Positioning.}
+Prior work treats uncertainty as a single quantity to learn end-to-end.
+We show KG uncertainty decomposes into semantic (entity-level) and structural (relation-specific) components.
+The decomposition is not merely empirically useful but theoretically grounded: Theorem~\ref{thm:complementarity} proves neither signal alone suffices and characterizes when combination helps.
