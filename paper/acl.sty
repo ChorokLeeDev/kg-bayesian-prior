@@ -37,9 +37,8 @@
   % https://texblog.org/2012/02/08/adding-line-numbers-to-documents/
   \usepackage[switch,mathlines]{lineno}
 
-  % Line numbers in gray Helvetica 8pt
-  \font\aclhv = phvb at 8pt
-  \renewcommand\linenumberfont{\aclhv\color{lightgray}}
+  % Line numbers in gray (using default font instead of Helvetica)
+  \renewcommand\linenumberfont{\normalfont\scriptsize\color{lightgray}}
 
   % Zero-fill line numbers
   % NUMBER with left flushed zeros  \fillzeros[<WIDTH>]<NUMBER>
