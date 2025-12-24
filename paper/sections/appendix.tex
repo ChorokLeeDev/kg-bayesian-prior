@@ -65,11 +65,50 @@ def cagp_uncertainty(h, r, t, gp_var, coverage, alpha):
     return alpha * u_gp_norm + (1 - alpha) * u_cov
 \end{lstlisting}
 
+\section{Learned $\alpha$ Analysis}
+\label{app:alpha}
+
+Table~\ref{tab:alpha_values} reports the learned $\alpha$ values across datasets and their interpretation.
+
+\begin{table}[h]
+\centering
+\caption{Learned $\alpha$ values and interpretation. Lower $\alpha$ means more weight on coverage (structural); higher $\alpha$ means more weight on GP (semantic).}
+\label{tab:alpha_values}
+\begin{tabular}{lcl}
+\toprule
+Dataset & Learned $\alpha$ & Interpretation \\
+\midrule
+FB15k-237 & 0.38 $\pm$ 0.02 & Coverage-dominant (dense relations) \\
+WN18RR & 0.52 $\pm$ 0.03 & Balanced (sparse relations) \\
+YAGO3-10 & 0.41 $\pm$ 0.02 & Slightly coverage-dominant \\
+ICEWS14 & 0.35 $\pm$ 0.04 & Coverage-dominant (temporal) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Interpretation.}
+The learned $\alpha$ values reveal dataset-specific signal quality:
+\begin{itemize}
+    \item \textbf{FB15k-237} ($\alpha=0.38$): With 237 relations, coverage provides fine-grained structural information. The model learns to weight coverage more heavily.
+    \item \textbf{WN18RR} ($\alpha=0.52$): With only 11 relations, coverage is coarse-grained. The model balances both signals equally.
+    \item \textbf{ICEWS14} ($\alpha=0.35$): Temporal data shows strong coverage signal---new political actors and shifting alliances are well-captured by observation patterns.
+\end{itemize}
+
+\paragraph{Sensitivity Analysis.}
+Figure~\ref{fig:alpha_sensitivity} shows AUROC as a function of fixed $\alpha$ values. The learned values (vertical lines) are near-optimal, validating the calibration procedure.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\linewidth]{figures/fig3_alpha_sensitivity.pdf}
+\caption{AUROC vs fixed $\alpha$ on FB15k-237. Learned $\alpha=0.38$ (dashed line) achieves near-optimal performance. The curve is relatively flat near the optimum, indicating robustness.}
+\label{fig:alpha_sensitivity}
+\end{figure}
+
 \section{Extended Results}
 \label{app:extended}
 
 Table~\ref{tab:full_results} provides results with standard deviations across 3 random seeds.
-Figure~\ref{fig:proposition} visualizes the complementarity proposition validation from Section~\ref{sec:experiments}.
+Figure~\ref{fig:coverage_analysis} shows coverage AUROC predictions versus observed values.
 
 \begin{table}[h]
 \centering
@@ -79,8 +118,9 @@ Figure~\ref{fig:proposition} visualizes the complementarity proposition validati
 \toprule
 Method & WN18RR & FB15k-237 & YAGO3-10 \\
 \midrule
-Coverage-only & 0.657 $\pm$ 0.002 & 0.821 $\pm$ 0.001 & 0.760 $\pm$ 0.002 \\
-GP-only & 0.647 $\pm$ 0.008 & 0.749 $\pm$ 0.005 & 0.824 $\pm$ 0.004 \\
+Structural (Binary) & 0.657 $\pm$ 0.002 & 0.821 $\pm$ 0.001 & 0.760 $\pm$ 0.002 \\
+Structural (Freq) & 0.662 $\pm$ 0.003 & 0.825 $\pm$ 0.002 & 0.768 $\pm$ 0.003 \\
+Semantic (GP) & 0.647 $\pm$ 0.008 & 0.749 $\pm$ 0.005 & 0.824 $\pm$ 0.004 \\
 CAGP & 0.871 $\pm$ 0.003 & 0.960 $\pm$ 0.000 & 0.942 $\pm$ 0.000 \\
 \bottomrule
 \end{tabular}
@@ -89,8 +129,8 @@ CAGP & 0.871 $\pm$ 0.003 & 0.960 $\pm$ 0.000 & 0.942 $\pm$ 0.000 \\
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.5\linewidth]{figures/fig2_theorem_validation.pdf}
-\caption{Proposition validation: predicted vs observed coverage-only AUROC.}
-\label{fig:proposition}
+\caption{Coverage AUROC analysis: predicted vs observed values across relation sparsity levels.}
+\label{fig:coverage_analysis}
 \end{figure}
 
 \section{Dataset Statistics}
@@ -110,6 +150,17 @@ ICEWS14 & 7,128 & 230 & 72,826 & 8,941 & 8,963 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\paragraph{WN18RR Structural Properties.}
+WN18RR presents a challenging setting for coverage-based methods due to its sparse relation structure:
+\begin{itemize}
+    \item \textbf{Few relations}: Only 11 relation types means each relation covers many entities (avg 7,894 triples/relation vs 1,148 for FB15k-237)
+    \item \textbf{High entity-relation overlap}: 78\% of entities appear with 3+ different relations, versus 45\% for FB15k-237
+    \item \textbf{Hierarchical structure}: WordNet's taxonomy creates dense connectivity---most entities have paths to common hypernyms
+\end{itemize}
+
+These properties explain why coverage alone achieves only 0.657 AUROC on WN18RR (versus 0.821 on FB15k-237): the binary signal is less discriminative when most entities are ``covered'' for most relations.
+The GP signal becomes more valuable in this setting, as reflected in the learned $\alpha = 0.52$ (balanced weighting).
 
 \section{Computational Overhead}
 \label{app:compute}
@@ -150,4 +201,47 @@ YAGO3-10 & 0.854 & 0.973 & 0.834 & 0.919 \\
 \end{table}
 
 Note: $p_h < p_t$ because test triples often query rare heads against common tails (standard evaluation protocol).
-YAGO3-10 has higher coverage than other datasets, yet lower coverage-only AUROC (0.760 vs 0.821 for FB15k-237), suggesting the theorem's assumptions are less accurate for this dataset structure.
+YAGO3-10 has higher coverage than other datasets, yet lower coverage-only AUROC (0.760 vs 0.821 for FB15k-237), suggesting the assumptions are less accurate for this dataset structure.
+
+\section{Calibration Details}
+\label{app:calibration}
+
+\paragraph{ECE Computation.}
+Expected Calibration Error is computed by binning predictions into 10 equal-width bins based on predicted uncertainty, then measuring the gap between predicted and actual OOD rates:
+\begin{equation}
+    \text{ECE} = \sum_{b=1}^{10} \frac{|B_b|}{N} \left| \text{acc}(B_b) - \text{conf}(B_b) \right|
+\end{equation}
+where $B_b$ is the set of samples in bin $b$, $\text{acc}(B_b)$ is the fraction of correct predictions (ID samples), and $\text{conf}(B_b)$ is the mean predicted confidence (1 - uncertainty).
+
+\paragraph{Reliability Diagrams.}
+Figure~\ref{fig:reliability} shows reliability diagrams for key methods on FB15k-237.
+A perfectly calibrated model would have all bars on the diagonal.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{figures/fig4_reliability_diagrams.pdf}
+\caption{Reliability diagrams on FB15k-237. Top row: baselines show systematic miscalibration (UKGE overconfident, GP underconfident). Bottom row: CAGP and RelCondVar are well-calibrated, with bars close to the diagonal.}
+\label{fig:reliability}
+\end{figure}
+
+\paragraph{Per-Dataset Calibration.}
+Table~\ref{tab:calibration_full} extends the main calibration results to all datasets.
+
+\begin{table}[h]
+\centering
+\caption{ECE across all datasets (lower is better).}
+\label{tab:calibration_full}
+\begin{tabular}{lcccc}
+\toprule
+Method & WN18RR & FB15k-237 & YAGO3-10 & ICEWS14 \\
+\midrule
+UKGE & 0.289 & 0.312 & 0.334 & 0.298 \\
+GP-only & 0.178 & 0.156 & 0.189 & 0.167 \\
+Coverage-only & 0.165 & 0.142 & 0.158 & 0.134 \\
+CAGP & 0.112 & 0.089 & 0.098 & 0.082 \\
+RelCondVar & \textbf{0.098} & \textbf{0.073} & \textbf{0.085} & \textbf{0.071} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+RelCondVar achieves the best calibration across all datasets, with particularly strong results on ICEWS14 (ECE 0.071) where temporal patterns are most predictable.

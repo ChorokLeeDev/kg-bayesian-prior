@@ -11,14 +11,5 @@ The semantic-structural decomposition provides a principled framework explaining
     \item \textbf{Simple algorithms work}: CAGP (linear combination) achieves most of the gains; fancier variants add marginal improvements
 \end{itemize}
 
-\paragraph{Limitations.}
-\begin{itemize}
-    \item \textbf{NLP integration}: All experiments use KG benchmarks. The QA task is simulated link prediction, not natural language QA. Integration with KGQA systems (e.g., EmbedKGQA) is future work.
-    \item \textbf{Adversarial robustness}: Our method targets natural temporal shift, not adversarial attacks. While we achieve 0.78 AUROC on adversarial settings (Table~\ref{tab:ablation}), this remains below temporal OOD performance ($>$0.90).
-    \item \textbf{Storage}: Coverage requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage, though sparse ($<$5\% non-zero).
-    \item \textbf{Link prediction quality}: Base MRR 0.255 on FB15k-237 vs SOTA $\sim$0.35. Uncertainty is orthogonal to prediction accuracy.
-    \item \textbf{Algorithmic simplicity}: The core CAGP algorithm is straightforward; our contribution is the analysis and framework, not algorithmic novelty.
-\end{itemize}
-
 \paragraph{Future Work.}
-Integration with end-to-end KGQA systems; inductive settings with truly unseen entities; calibration for downstream decision-making.
+Integration with end-to-end NLP systems (KGQA, dialogue); inductive settings with truly unseen entities; post-hoc calibration methods to further improve reliability.

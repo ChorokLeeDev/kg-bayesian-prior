@@ -1,8 +1,8 @@
 % Introduction for EMNLP - Temporal OOD focus
 
-Knowledge graphs (KGs) are foundational to many NLP systems.
+Knowledge graph (KG) embeddings underpin many downstream applications.
 Question answering systems retrieve facts from Freebase and Wikidata~\citep{bordes2015large}, dialogue agents ground responses in structured knowledge~\citep{moon2019opendialkg}, and fact verification systems check claims against knowledge bases~\citep{thorne2018fever}.
-Recent advances integrate KGs with language models for knowledge-intensive generation~\citep{liu2020k,wang2021kepler}.
+The reliability of these applications depends on knowing \emph{when KG predictions are trustworthy}---yet uncertainty quantification for KG embeddings remains underexplored.
 
 \paragraph{The Temporal Shift Problem.}
 Unlike static benchmarks, real-world KGs evolve continuously, creating two distinct OOD scenarios that require different detection strategies:
@@ -13,10 +13,10 @@ Unlike static benchmarks, real-world KGs evolve continuously, creating two disti
 NLP systems must detect \emph{both} failure modes and abstain rather than hallucinate.
 This motivates \textbf{uncertainty-aware KG reasoning} that can detect temporal distribution shifts---but as we show, existing methods conflate these two scenarios and fail on both.
 
-\paragraph{Scope and Positioning.}
-This paper addresses uncertainty quantification for KG embeddings---the foundation underlying KG-enhanced NLP systems.
-We evaluate on standard KG benchmarks (FB15k-237, WN18RR, YAGO3-10) and a temporally-stamped dataset (ICEWS14), with a simulated QA task to demonstrate downstream utility.
-Full integration with end-to-end NLP systems (e.g., KGQA, dialogue) is future work; our contribution is the uncertainty framework itself.
+\paragraph{Scope.}
+This paper addresses uncertainty quantification for KG embeddings under temporal distribution shift.
+We evaluate on standard KG benchmarks (FB15k-237, WN18RR, YAGO3-10) and a temporally-stamped dataset (ICEWS14), with a selective prediction task to demonstrate practical utility.
+Integration with end-to-end NLP systems (e.g., KGQA, dialogue) is future work; our contribution is the uncertainty framework for KG embeddings.
 
 \paragraph{Why Current Methods Fail.}
 Probabilistic KG embeddings~\citep{Chen2021PERM,chen2021probabilistic} learn a variance $\sigma^2_e$ for each entity, capturing uncertainty about entity representations.
@@ -43,19 +43,22 @@ Our primary contribution is \emph{analytical}: we identify and formalize a funda
 \begin{enumerate}
     \item \textbf{Analysis}: We show that all entity-level variance methods (GP-KGE, BEUrRE, UKGE) are relation-agnostic, explaining their systematic failure on temporal OOD (\S\ref{sec:method}).
 
-    \item \textbf{Framework}: We formalize the semantic-structural decomposition with a complementarity result showing neither signal alone suffices (\S\ref{sec:method}).
+    \item \textbf{Framework}: We formalize the semantic-structural decomposition and empirically demonstrate complementarity---each signal captures failure modes the other misses (\S\ref{sec:method}).
 
     \item \textbf{Empirical validation}: Score-based methods achieving 0.99 AUROC on standard benchmarks drop to 0.52--0.55 on temporal OOD; our framework achieves 0.87--0.97 across FB15k-237, WN18RR, YAGO3-10, and ICEWS14 with real timestamps (\S\ref{sec:experiments}).
 
-    \item \textbf{Practical impact}: 48\% error reduction on QA abstention at 85\% coverage (\S\ref{sec:experiments}).
+    \item \textbf{Practical impact}: 48\% error reduction on selective link prediction at 85\% coverage (\S\ref{sec:experiments}).
 \end{enumerate}
 
 Our code and evaluation protocols are publicly available.\footnote{URL anonymized for review.}
+
+Figure~\ref{fig:main_results} summarizes our main results: decomposition-based methods (CAGP, RelCondVar) achieve 0.87--0.97 AUROC across all datasets, substantially outperforming both single-signal baselines (GP-only, Coverage-only) and score-based methods (UKGE, Energy).
+The gap is largest on temporal OOD, where score-based methods drop to near-random performance.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/fig1_main_results.pdf}
 \vspace{-1em}
-\caption{OOD detection AUROC across methods and datasets. Our decomposition-based approaches (CAGP variants) consistently outperform single-signal baselines.}
+\caption{OOD detection AUROC across methods and datasets. Our decomposition-based approaches (CAGP variants) consistently outperform single-signal baselines. Error bars show $\pm$1 standard deviation across 3 seeds.}
 \label{fig:main_results}
 \end{figure}

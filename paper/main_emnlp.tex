@@ -45,7 +45,7 @@
 \newcommand{\mat}[1]{\mathbf{#1}}
 % \newcommand{\ours}{\textsc{CAGP}}  % Unused, keeping for potential future use
 
-\title{Semantic-Structural Decomposition for Uncertainty Quantification in Knowledge Graph-Enhanced NLP}
+\title{Semantic-Structural Decomposition for Out-of-Distribution Detection in Knowledge Graph Embeddings}
 
 \author{
   Anonymous Submission
@@ -83,7 +83,13 @@
 \input{sections/conclusion}
 
 \section*{Limitations}
-Limitations are discussed in Section~\ref{sec:conclusion}.
+\begin{itemize}
+    \item \textbf{NLP integration}: All experiments use KG benchmarks with structured queries. Integration with end-to-end NLP systems (e.g., KGQA, dialogue grounding) remains future work.
+    \item \textbf{Transductive setting}: We assume all test entities appear in training. Inductive settings with truly unseen entities require different approaches (e.g., entity descriptions, neighborhood aggregation).
+    \item \textbf{Storage overhead}: Coverage requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage. While sparse in practice ($<$5\% non-zero), this may be prohibitive for very large KGs (e.g., Wikidata with 100M+ entities).
+    \item \textbf{Link prediction quality}: Our base model achieves MRR 0.255 on FB15k-237 versus state-of-the-art $\sim$0.35. Uncertainty quantification is orthogonal to prediction accuracy, but stronger base models may yield different uncertainty characteristics.
+    \item \textbf{Adversarial robustness}: Our method targets natural temporal shift. On adversarial corruptions (high-scoring false triples), performance drops to 0.78 AUROC---below temporal OOD performance ($>$0.90).
+\end{itemize}
 
 \section*{Ethics Statement}
 This work focuses on uncertainty quantification for knowledge graph systems, which can help NLP applications abstain from unreliable predictions rather than generating misinformation. We do not foresee negative societal impacts.
