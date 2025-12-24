@@ -2,6 +2,9 @@
 
 \subsection{The Limitation of Relation-Agnostic Variance}
 
+Recall from \S\ref{sec:background} that GP-KGE uncertainty averages entity variances: $U_{\text{GP}}(h, r, t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)$ where $\bar{\sigma}^2_e$ depends only on entity $e$'s learned parameters.
+This formulation has a critical limitation:
+
 \begin{proposition}[Relation-Agnostic]
 \label{prop:relation_agnostic}
 GP-KGE uncertainty (Eq.~\ref{eq:gp_uncertainty}) is relation-agnostic: for any entity $e$ and relations $r_1, r_2$,
@@ -9,6 +12,11 @@ GP-KGE uncertainty (Eq.~\ref{eq:gp_uncertainty}) is relation-agnostic: for any e
     U_{\text{GP}}(e, r_1, \cdot) = U_{\text{GP}}(e, r_2, \cdot)
 \end{equation}
 \end{proposition}
+
+\begin{proof}
+From Eq.~\ref{eq:gp_uncertainty}, $U_{\text{GP}}(h, r, t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)$ where $\bar{\sigma}^2_e = \frac{1}{d}\sum_j \exp(\ell_{e,j})$ is the mean variance for entity $e$.
+Since $\bar{\sigma}^2_e$ depends only on entity parameters $\ell_e$ and not on any relation $r$, we have $U_{\text{GP}}(h, r_1, t) = U_{\text{GP}}(h, r_2, t)$ for all $r_1, r_2 \in \mathcal{R}$.
+\end{proof}
 
 This limitation is fundamental to all entity-level uncertainty methods, including BEUrRE~\citep{chen2021probabilistic} and UKGE~\citep{chen2019embedding}.
 Making variance relation-aware naively would require $|\mathcal{E}| \times |\mathcal{R}| \times d$ parameters---infeasible for typical KG sizes.
@@ -18,7 +26,7 @@ We address this through four increasingly sophisticated approaches.
 
 The simplest fix is an explicit structural signal that captures entity-relation co-occurrence.
 
-\begin{definition}[Coverage]
+\begin{definition}[Binary Coverage]
 For entity $e$ and relation $r$:
 \begin{equation}
     c(e, r) = \mathbb{1}\left[\exists (h', r, t') \in \mathcal{T} : h' = e \lor t' = e\right]
@@ -31,6 +39,15 @@ Structural uncertainty is then:
     U_{\text{cov}}(h, r, t) = 2 - c(h, r) - c(t, r)
 \end{equation}
 
+\paragraph{Frequency-Based Alternative.}
+A natural extension replaces binary coverage with normalized frequency:
+\begin{equation}
+    c_{\text{freq}}(e, r) = \frac{\text{count}(e, r)}{\max_{e'} \text{count}(e', r)}
+\end{equation}
+where $\text{count}(e, r)$ is the number of training triples containing entity $e$ with relation $r$.
+This distinguishes ``seen once'' from ``seen 1000 times.''
+We compare both variants in \S\ref{sec:experiments}; binary coverage performs comparably, suggesting the observation/non-observation distinction matters more than frequency.
+
 \paragraph{CAGP: Linear Combination.}
 Our \textbf{C}overage-\textbf{A}ugmented \textbf{G}aussian \textbf{P}rocess (CAGP) approach linearly mixes both signals:
 \begin{equation}
@@ -40,7 +57,12 @@ where $\alpha \in [0,1]$ is learned and $\tilde{U}_{\text{GP}}$ is normalized to
 \begin{equation}
     \tilde{U}_{\text{GP}}(h,r,t) = U_{\text{GP}}(h,r,t) \cdot \frac{\bar{U}_{\text{cov}}}{\bar{U}_{\text{GP}}}
 \end{equation}
-with $\bar{U}_{\text{cov}}$ and $\bar{U}_{\text{GP}}$ denoting dataset means. This ensures both signals contribute equally when $\alpha = 0.5$.
+with $\bar{U}_{\text{cov}}$ and $\bar{U}_{\text{GP}}$ denoting means computed over training triples (fixed at inference time). This ensures both signals contribute equally when $\alpha = 0.5$.
+
+\paragraph{Training $\alpha$.}
+We parameterize $\alpha = \sigma(\alpha_{\text{logit}})$ where $\sigma$ is the sigmoid function and $\alpha_{\text{logit}} \in \mathbb{R}$ is a learnable scalar initialized to 0 (i.e., $\alpha_0 = 0.5$).
+After training the base GP-KGE model, we freeze embeddings and optimize $\alpha_{\text{logit}}$ on a held-out calibration set (10\% of validation data) using binary cross-entropy between predicted uncertainty and OOD labels.
+Learned values vary by dataset structure: $\alpha = 0.38$ (FB15k-237), $\alpha = 0.52$ (WN18RR), $\alpha = 0.41$ (YAGO3-10)---see Appendix~\ref{app:alpha} for analysis.
 
 While effective, this approach has limitations:
 \begin{itemize}
@@ -110,22 +132,22 @@ The \textbf{GNNUncertainty} architecture consists of:
 
 This is the most computationally expensive variant but captures graph-level uncertainty patterns.
 
-\subsection{Theoretical Analysis: Complementarity}
+\subsection{Complementarity of Signals}
+\label{sec:complementarity}
 
-\begin{proposition}[Complementarity]
-\label{prop:complementarity}
-Semantic (GP) and structural (coverage) uncertainty are not redundant: each correctly identifies OOD samples that the other misses.
-\end{proposition}
+We observe empirically that semantic (GP) and structural (coverage) uncertainty capture \emph{different} failure modes.
+Two illustrative cases demonstrate why neither signal alone suffices:
 
-\begin{proof}
-\textbf{Case 1 (GP fails, Coverage succeeds):} Entity $e$ appears in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$, but never with $r_{11}$.
-GP assigns low $\sigma^2_e$ (well-observed).
-For query $(?, r_{11}, e)$: GP signals low uncertainty, coverage correctly signals high uncertainty.
+\paragraph{Case 1: Coverage succeeds, GP fails.}
+Entity $e$ appears in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$, but never with $r_{11}$.
+GP assigns low variance $\sigma^2_e$ (well-observed entity).
+For query $(?, r_{11}, e)$: GP signals low uncertainty, but the entity-relation pair was never observed---coverage correctly signals high uncertainty.
 
-\textbf{Case 2 (Coverage fails, GP succeeds):} Entity $e'$ appears in exactly one triple $(h, r, e')$.
-Coverage: $c(e', r) = 1$.
-For OOD query $(h', r, e')$ with random $e'$: coverage signals low uncertainty, GP correctly signals high uncertainty due to large $\sigma^2_{e'}$.
-\end{proof}
+\paragraph{Case 2: GP succeeds, Coverage fails.}
+Entity $e'$ appears in exactly one triple $(h, r, e')$.
+Coverage assigns $c(e', r) = 1$ (observed).
+For query $(h', r, e')$ with corrupted head: coverage signals low uncertainty, but GP correctly signals high uncertainty due to large $\sigma^2_{e'}$ from sparse observations.
 
-\noindent\textbf{Intuition.} GP captures \emph{how well an entity is learned} (global), while coverage captures \emph{whether a context was observed} (local).
-Neither alone covers all OOD scenarios.
+\paragraph{Interpretation.}
+GP captures \emph{how well an entity is learned} (global observation frequency), while coverage captures \emph{whether a specific context was observed} (local relation-specific).
+These are orthogonal axes: Table~\ref{tab:temporal} validates this empirically, showing GP excels on emerging entities (0.83 AUROC) while coverage excels on novel contexts (1.00 AUROC).

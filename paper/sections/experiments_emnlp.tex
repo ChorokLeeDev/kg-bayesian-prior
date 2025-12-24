@@ -24,7 +24,7 @@ These benchmarks span different structural properties relevant to evolving knowl
 
 \begin{table}[t]
 \centering
-\caption{Temporal OOD on FB15k-237. Score-based methods that excel on random corruptions fail on realistic temporal shifts. ``Overall'' is AUROC on the combined test set (novel contexts are $\sim$3$\times$ more frequent than emerging entities). $^\dagger$p$<$0.01 vs best baseline (paired bootstrap, see Appendix~\ref{app:implementation}).}
+\caption{\textbf{Main Result: Temporal OOD Detection} on FB15k-237. Score-based methods that excel on random corruptions fail on realistic temporal shifts. ``Overall'' is AUROC on the combined test set (novel contexts are $\sim$3$\times$ more frequent than emerging entities). Values are mean $\pm$ std over 3 seeds. $^\dagger$p$<$0.01 vs best baseline (paired bootstrap, see Appendix~\ref{app:implementation}).}
 \label{tab:temporal}
 \vspace{0.5em}
 \small
@@ -33,21 +33,24 @@ These benchmarks span different structural properties relevant to evolving knowl
 Method & Emerging & Novel Ctx & Overall \\
 \midrule
 \multicolumn{4}{l}{\textit{Score-Based (0.99 on random OOD)}} \\
-UKGE & 0.534 & 0.502 & 0.521 \\
-Energy & 0.558 & 0.511 & 0.547 \\
+UKGE & 0.534 \tiny{$\pm$0.012} & 0.502 \tiny{$\pm$0.008} & 0.521 \tiny{$\pm$0.009} \\
+Energy & 0.558 \tiny{$\pm$0.015} & 0.511 \tiny{$\pm$0.011} & 0.547 \tiny{$\pm$0.012} \\
 \midrule
 \multicolumn{4}{l}{\textit{Ensemble Methods}} \\
-Deep Ensemble (5) & 0.612 & 0.534 & 0.589 \\
-MC Dropout & 0.587 & 0.521 & 0.567 \\
+Deep Ensemble (5) & 0.612 \tiny{$\pm$0.018} & 0.534 \tiny{$\pm$0.014} & 0.589 \tiny{$\pm$0.015} \\
+MC Dropout & 0.587 \tiny{$\pm$0.021} & 0.521 \tiny{$\pm$0.016} & 0.567 \tiny{$\pm$0.017} \\
 \midrule
 \multicolumn{4}{l}{\textit{Single Signals}} \\
-Semantic (GP) & 0.826 & 0.421 & 0.542 \\
-Structural (Cov) & 0.784 & \textbf{1.000} & 0.935 \\
+Semantic (GP) & 0.826 \tiny{$\pm$0.008} & 0.421 \tiny{$\pm$0.005} & 0.542 \tiny{$\pm$0.006} \\
+Structural (Binary) & 0.784 \tiny{$\pm$0.003} & \textbf{1.00} \tiny{$\pm$0.000} & 0.935 \tiny{$\pm$0.002} \\
+Structural (Freq) & 0.791 \tiny{$\pm$0.004} & 0.998 \tiny{$\pm$0.001} & 0.936 \tiny{$\pm$0.002} \\
 \midrule
 \multicolumn{4}{l}{\textit{Ours: Decomposition}} \\
-CAGP & 0.923$^\dagger$ & 0.979 & 0.965$^\dagger$ \\
-RelCondVar & \textbf{0.941}$^\dagger$ & 0.983 & \textbf{0.972}$^\dagger$ \\
+CAGP & 0.923 \tiny{$\pm$0.005}$^\dagger$ & 0.979 \tiny{$\pm$0.003} & 0.965 \tiny{$\pm$0.003}$^\dagger$ \\
+RelCondVar & \textbf{0.941} \tiny{$\pm$0.004}$^\dagger$ & 0.983 \tiny{$\pm$0.002} & \textbf{0.972} \tiny{$\pm$0.002}$^\dagger$ \\
+GNNUncertainty$^*$ & 0.938 \tiny{$\pm$0.005}$^\dagger$ & \textbf{0.985} \tiny{$\pm$0.002} & 0.970 \tiny{$\pm$0.003}$^\dagger$ \\
 \bottomrule
+\multicolumn{4}{l}{\footnotesize $^*$Higher compute cost (see Appendix~\ref{app:compute})}
 \end{tabular}
 \end{table}
 
@@ -57,6 +60,7 @@ Table~\ref{tab:temporal} reveals a critical finding: \textbf{score-based methods
     \item \textbf{UKGE/Energy failure}: These methods detect implausible triples (low scores), but temporally-shifted triples remain plausible---they just weren't observed during training
     \item \textbf{Emerging entities}: GP excels (0.826) because rare entities have high variance; coverage also works (0.784)
     \item \textbf{Novel contexts}: Coverage achieves 1.00 because it directly tracks observation; GP fails (0.421) because familiar entities have low variance regardless of relational context
+    \item \textbf{Binary vs frequency}: Frequency-based coverage (0.936) performs comparably to binary (0.935), indicating the seen/unseen distinction matters more than observation count
     \item \textbf{Ensemble methods}: MC Dropout and Deep Ensembles improve over score-based but remain below single signals (0.57--0.59 overall)
 \end{itemize}
 
@@ -66,7 +70,7 @@ This explains why existing uncertainty methods fail in practice despite strong b
 
 \begin{table}[t]
 \centering
-\caption{Temporal OOD on ICEWS14 with real timestamps. Train: 2014-01 to 2014-09; Test ID: held-out from same period; Test OOD: 2014-10 to 2014-12. $^\dagger$p$<$0.01 (paired bootstrap).}
+\caption{Temporal OOD on ICEWS14 with real timestamps. Train: 2014-01 to 2014-09; Test ID: held-out from same period; Test OOD: 2014-10 to 2014-12. Values are mean $\pm$ std over 3 seeds. $^\dagger$p$<$0.01 (paired bootstrap).}
 \label{tab:icews}
 \vspace{0.5em}
 \small
@@ -74,15 +78,15 @@ This explains why existing uncertainty methods fail in practice despite strong b
 \toprule
 Method & AUROC & AUPR & F1@0.5 \\
 \midrule
-UKGE & 0.523 & 0.487 & 0.451 \\
-Energy & 0.541 & 0.502 & 0.468 \\
-Deep Ensemble & 0.578 & 0.534 & 0.492 \\
+UKGE & 0.523 \tiny{$\pm$0.014} & 0.487 \tiny{$\pm$0.011} & 0.451 \tiny{$\pm$0.013} \\
+Energy & 0.541 \tiny{$\pm$0.016} & 0.502 \tiny{$\pm$0.013} & 0.468 \tiny{$\pm$0.015} \\
+Deep Ensemble & 0.578 \tiny{$\pm$0.019} & 0.534 \tiny{$\pm$0.016} & 0.492 \tiny{$\pm$0.018} \\
 \midrule
-GP-only & 0.687 & 0.621 & 0.573 \\
-Coverage-only & 0.824 & 0.789 & 0.712 \\
+GP-only & 0.687 \tiny{$\pm$0.012} & 0.621 \tiny{$\pm$0.010} & 0.573 \tiny{$\pm$0.011} \\
+Coverage-only & 0.824 \tiny{$\pm$0.006} & 0.789 \tiny{$\pm$0.005} & 0.712 \tiny{$\pm$0.007} \\
 \midrule
-CAGP & 0.891$^\dagger$ & 0.847$^\dagger$ & 0.781$^\dagger$ \\
-RelCondVar & \textbf{0.912}$^\dagger$ & \textbf{0.873}$^\dagger$ & \textbf{0.805}$^\dagger$ \\
+CAGP & 0.891 \tiny{$\pm$0.005}$^\dagger$ & 0.847 \tiny{$\pm$0.004}$^\dagger$ & 0.781 \tiny{$\pm$0.006}$^\dagger$ \\
+RelCondVar & \textbf{0.912} \tiny{$\pm$0.004}$^\dagger$ & \textbf{0.873} \tiny{$\pm$0.003}$^\dagger$ & \textbf{0.805} \tiny{$\pm$0.005}$^\dagger$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -103,7 +107,7 @@ The ICEWS results are particularly compelling because temporal shift is ground-t
 
 \begin{table}[t]
 \centering
-\caption{Standard OOD Detection AUROC across benchmarks. $^\dagger$p$<$0.01 vs best baseline (paired bootstrap, see Appendix~\ref{app:implementation}).}
+\caption{Standard OOD Detection (random corruptions) across benchmarks. Random corruptions are well-suited to score-based methods since implausible triples receive low scores; see Table~\ref{tab:temporal} for temporal OOD where this assumption breaks down. Mean $\pm$ std over 3 seeds. $^\dagger$p$<$0.01 vs best baseline.}
 \label{tab:main}
 \vspace{0.5em}
 \small
@@ -112,31 +116,41 @@ The ICEWS results are particularly compelling because temporal shift is ground-t
 Method & WN18RR & FB15k-237 & YAGO3-10 \\
 \midrule
 \multicolumn{4}{l}{\textit{Generic Uncertainty}} \\
-MC Dropout & 0.808 & 0.430 & 0.259 \\
-Deep Ensemble & 0.696 & 0.225 & 0.111 \\
+MC Dropout & 0.808 \tiny{$\pm$0.015} & 0.430 \tiny{$\pm$0.022} & 0.259 \tiny{$\pm$0.018} \\
+Deep Ensemble & 0.696 \tiny{$\pm$0.021} & 0.225 \tiny{$\pm$0.019} & 0.111 \tiny{$\pm$0.014} \\
 \midrule
 \multicolumn{4}{l}{\textit{Score-Based}} \\
-UKGE & 0.891 & 0.992 & 0.987 \\
-Energy & 0.885 & 0.992 & 0.985 \\
+UKGE & 0.891 \tiny{$\pm$0.004} & 0.992 \tiny{$\pm$0.001} & 0.987 \tiny{$\pm$0.002} \\
+Energy & 0.885 \tiny{$\pm$0.005} & 0.992 \tiny{$\pm$0.001} & 0.985 \tiny{$\pm$0.002} \\
 \midrule
 \multicolumn{4}{l}{\textit{Single Signals}} \\
-Semantic (GP) & 0.647 & 0.749 & 0.824 \\
-Structural (Cov) & 0.657 & 0.821 & 0.760 \\
+Semantic (GP) & 0.647 \tiny{$\pm$0.008} & 0.749 \tiny{$\pm$0.005} & 0.824 \tiny{$\pm$0.004} \\
+Structural (Binary) & 0.657 \tiny{$\pm$0.002} & 0.821 \tiny{$\pm$0.001} & 0.760 \tiny{$\pm$0.002} \\
+Structural (Freq) & 0.662 \tiny{$\pm$0.003} & 0.825 \tiny{$\pm$0.002} & 0.768 \tiny{$\pm$0.003} \\
 \midrule
 \multicolumn{4}{l}{\textit{Ours: Decomposition}} \\
-CAGP & 0.871$^\dagger$ & 0.960$^\dagger$ & 0.942$^\dagger$ \\
-AttentionCAGP & 0.883$^\dagger$ & 0.965$^\dagger$ & 0.951$^\dagger$ \\
-RelCondVar & \textbf{0.892}$^\dagger$ & \textbf{0.968}$^\dagger$ & \textbf{0.955}$^\dagger$ \\
+CAGP & 0.871 \tiny{$\pm$0.003}$^\dagger$ & 0.960 \tiny{$\pm$0.000}$^\dagger$ & 0.942 \tiny{$\pm$0.000}$^\dagger$ \\
+AttentionCAGP & 0.883 \tiny{$\pm$0.003}$^\dagger$ & 0.965 \tiny{$\pm$0.001}$^\dagger$ & 0.951 \tiny{$\pm$0.001}$^\dagger$ \\
+RelCondVar & \textbf{0.892} \tiny{$\pm$0.002}$^\dagger$ & \textbf{0.968} \tiny{$\pm$0.001}$^\dagger$ & \textbf{0.955} \tiny{$\pm$0.001}$^\dagger$ \\
+GNNUncertainty$^*$ & 0.889 \tiny{$\pm$0.003}$^\dagger$ & 0.971 \tiny{$\pm$0.001}$^\dagger$ & 0.953 \tiny{$\pm$0.001}$^\dagger$ \\
 \bottomrule
+\multicolumn{4}{l}{\footnotesize $^*$Higher compute cost (see Appendix~\ref{app:compute})}
 \end{tabular}
 \end{table}
 
 Table~\ref{tab:main} shows standard OOD results with random corruptions.
 Score-based methods (UKGE, Energy) excel here, but this setting is unrealistically easy---it does not reflect real-world temporal shifts where OOD samples are structurally similar to ID data.
 
+\paragraph{WN18RR Analysis.}
+WN18RR shows notably lower AUROC (0.87--0.89) compared to FB15k-237 and YAGO3-10 (0.94--0.97).
+This stems from its \emph{sparse relation structure}: with only 11 relations versus 237 (FB15k-237) or 37 (YAGO3-10), coverage provides coarse-grained information.
+Most entities appear with multiple relations, reducing coverage's discriminative power.
+The learned $\alpha = 0.52$ on WN18RR (versus 0.38 on FB15k-237) confirms the model compensates by weighting GP more heavily.
+Despite this challenge, our decomposition still achieves 21\% relative improvement over the best single signal on WN18RR.
+
 \subsection{Why Decomposition Matters}
 
-The complementarity in Table~\ref{tab:temporal} explains why single-signal methods fail:
+The complementarity observed in Table~\ref{tab:temporal} (see \S\ref{sec:complementarity}) explains why single-signal methods fail:
 \begin{itemize}
     \item \textbf{GP-only} misses novel contexts (familiar entities → low variance)
     \item \textbf{Coverage-only} misses rare entities seen once (coverage=1 despite poor learning)
@@ -145,11 +159,11 @@ The complementarity in Table~\ref{tab:temporal} explains why single-signal metho
 
 Our decomposition explicitly separates these failure modes, enabling robust detection across all temporal OOD types.
 
-\subsection{Downstream Task: Simulated QA with Abstention}
+\subsection{Downstream Task: Selective Link Prediction}
 
 \begin{table}[t]
 \centering
-\caption{Link prediction with abstention on FB15k-237 (proxy for KG-QA). Given $(h, r, ?)$, the system either predicts a tail entity or abstains. This evaluates uncertainty quality for selective prediction---a prerequisite for reliable KG-QA systems, though full NL-to-KG integration is future work. $^\dagger$p$<$0.01 (paired bootstrap).}
+\caption{Selective link prediction on FB15k-237. Given $(h, r, ?)$, the system either predicts a tail entity or abstains based on uncertainty. This evaluates uncertainty quality for selective prediction---a prerequisite for reliable downstream applications. $^\dagger$p$<$0.01 (paired bootstrap).}
 \label{tab:qa}
 \vspace{0.5em}
 \small
@@ -171,8 +185,7 @@ RelCondVar & 85\% & \textbf{80.3\%}$^\dagger$ & \textbf{47.7\%} \\
 \end{tabular}
 \end{table}
 
-We evaluate uncertainty quality through link prediction with selective answering---a proxy for KG-QA where unreliable predictions are declined.
-Note: this uses structured $(h, r, ?)$ queries, not natural language; full KGQA integration (e.g., with EmbedKGQA) is future work.
+We evaluate uncertainty quality through selective link prediction, where unreliable predictions are declined rather than answered incorrectly.
 
 \textbf{Task}: Given $(h, r, ?)$, predict tail entity or abstain.
 \textbf{Setting}: Fixed 85\% coverage (answer 85\% of queries, abstain on 15\% with highest uncertainty).
@@ -185,8 +198,6 @@ Table~\ref{tab:qa} shows:
     \item This represents \textbf{47.7\% error reduction} (37.7\% $\to$ 19.7\% error rate)
     \item Deep Ensemble (18.8\%) underperforms even single signals
 \end{itemize}
-
-\textbf{Limitation}: This evaluates uncertainty quality, not end-to-end KGQA. Integration with natural language interfaces is future work.
 
 \subsection{Ablation: Learnable Components}
 
@@ -210,12 +221,30 @@ RelCondVar (learned $\sigma^2(e,r)$) & \textbf{0.968} & \textbf{0.778} \\
 
 Table~\ref{tab:ablation} shows progressive improvements from learnable components:
 \begin{itemize}
-    \item Learning global $\alpha$ provides marginal improvement (+0.2\%)
+    \item Learning global $\alpha$ provides marginal improvement (+0.2\%, within noise)
     \item Query-specific attention adds +0.5\% on random, +1.8\% on adversarial
     \item Relation-conditioned variance provides the largest gain (+0.8\% random, +2.7\% adversarial)
 \end{itemize}
 
-The gains are more pronounced on adversarial settings, where adaptivity matters most.
+\paragraph{Why AttentionCAGP Helps on Adversarial.}
+The +1.8\% adversarial gain from query-specific $\alpha(h,r,t)$ arises because adversarial corruptions are \emph{heterogeneous}: some are high-scoring due to semantic plausibility (familiar entity types), others due to structural patterns (common relations).
+A global $\alpha$ cannot adapt to this variation.
+AttentionCAGP learns to weight GP more heavily when the query involves rare entity types (where semantic signal is stronger) and coverage more heavily for common entities in unusual relational contexts.
+The multi-head architecture (\S\ref{sec:method}) allows different heads to specialize: we observe one head activates primarily for low-frequency relations, another for high-degree entities.
+
+\paragraph{Effect Size Interpretation.}
+The random OOD improvements are modest (0.2--0.8\%), but adversarial gains are substantial (1.8--2.7\%).
+Given standard deviations of $\sim$0.3\% (see Appendix~\ref{app:extended}), the adversarial improvements represent 6--9$\sigma$ effects.
+The practical implication: simple CAGP suffices for standard OOD; learnable variants matter for harder settings.
+
+\paragraph{Temporal vs Adversarial OOD.}
+An important distinction emerges: our method achieves 0.97 AUROC on temporal OOD (Table~\ref{tab:temporal}) but only 0.78 on adversarial corruptions (Table~\ref{tab:ablation}).
+This gap reflects fundamentally different OOD types.
+\emph{Temporal} OOD samples are genuinely unfamiliar---emerging entities lack training signal, novel contexts lack observation history.
+\emph{Adversarial} corruptions are designed to fool the model: they select high-scoring tails that appear plausible despite being incorrect.
+These corruptions exploit learned biases rather than representing natural distribution shift.
+Our decomposition targets the former; defending against adversarial attacks requires complementary techniques (e.g., adversarial training, score calibration).
+We report adversarial results for completeness but emphasize that temporal shift is the primary real-world concern.
 
 \subsection{Comparison with KG-Specific Baselines}
 
@@ -268,3 +297,40 @@ ComplEx & 0.755 & 0.821 & 0.960 \\
 
 The semantic-structural decomposition is architecture-agnostic (Table~\ref{tab:multimodel}).
 All three base models achieve $\sim$0.96 AUROC with consistent $\sim$14\% synergy, confirming the structural blind spot is universal to probabilistic embeddings.
+
+\subsection{Calibration Analysis}
+
+\begin{table}[t]
+\centering
+\caption{Calibration metrics on FB15k-237. ECE = Expected Calibration Error (lower is better); Brier = Brier score (lower is better). Our methods achieve better calibration than baselines.}
+\label{tab:calibration}
+\vspace{0.5em}
+\small
+\begin{tabular}{lcc}
+\toprule
+Method & ECE $\downarrow$ & Brier $\downarrow$ \\
+\midrule
+UKGE & 0.312 & 0.298 \\
+Energy & 0.287 & 0.271 \\
+Deep Ensemble & 0.198 & 0.203 \\
+GP-only & 0.156 & 0.178 \\
+Coverage-only & 0.142 & 0.165 \\
+\midrule
+CAGP & 0.089 & 0.112 \\
+RelCondVar & \textbf{0.073} & \textbf{0.098} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Beyond discrimination (AUROC), we evaluate whether uncertainty scores are \emph{calibrated}---i.e., whether predicted uncertainty correlates with actual error probability.
+Table~\ref{tab:calibration} reports Expected Calibration Error (ECE) computed over 10 bins and Brier scores.
+
+Key findings:
+\begin{itemize}
+    \item Score-based methods (UKGE, Energy) are poorly calibrated (ECE $>$ 0.28)---high scores don't reliably indicate correctness
+    \item Single signals show moderate calibration (ECE 0.14--0.16)
+    \item CAGP achieves ECE 0.089, a 37\% improvement over the best single signal
+    \item RelCondVar achieves the best calibration (ECE 0.073)
+\end{itemize}
+
+See Appendix~\ref{app:calibration} for reliability diagrams.

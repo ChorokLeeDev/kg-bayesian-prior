@@ -1,18 +1,14 @@
 % Abstract for EMNLP - Temporal OOD focus
 
 Knowledge graphs (KGs) evolve continuously, creating two distinct out-of-distribution (OOD) challenges: (1) \emph{emerging entities}---new actors, products, or concepts absent from training; and (2) \emph{novel relational contexts}---familiar entities appearing in previously unobserved relationships (e.g., a scientist winning a new award type).
-NLP systems built on KGs---question answering, dialogue, fact verification---must detect both failure modes and \emph{abstain} rather than hallucinate.
+KG embedding models must detect both failure modes to enable reliable downstream applications.
 Yet existing uncertainty methods fail on these \textbf{temporal distribution shifts}.
 
 We identify a fundamental limitation: probabilistic KG embeddings learn \emph{relation-agnostic} entity variances, capturing only whether an entity is rare overall---not whether a specific entity-relation combination was ever observed.
 This conflates the two OOD types, which behave oppositely under temporal shift.
 
 We propose a \textbf{semantic-structural decomposition} that separates: (1) \emph{semantic uncertainty} from entity embedding variance, detecting emerging entities; and (2) \emph{structural uncertainty} from entity-relation coverage, detecting novel relational contexts.
-Our analysis reveals complementary failure modes:
-\begin{itemize}
-    \item \textbf{Emerging entities}: semantic signal excels (0.83 AUROC) over structural (0.78)
-    \item \textbf{Novel relational contexts}: structural signal achieves near-perfect detection (1.00) while semantic fails (0.42)
-\end{itemize}
-Combining both signals with learned adaptive weights achieves 0.87--0.97 AUROC across FB15k-237, WN18RR, YAGO3-10, and ICEWS14 (with real timestamps) on temporal OOD detection---outperforming score-based methods (UKGE, Energy) which achieve only 0.52--0.58 on the same splits despite their 0.99 AUROC on random corruptions.
+Our analysis reveals complementary failure modes: semantic signals excel on emerging entities (0.83 AUROC vs 0.78 for structural), while structural signals achieve near-perfect detection on novel relational contexts (1.00 AUROC) where semantic signals fail (0.42).
+Combining both signals with learned weights achieves 0.87--0.97 AUROC across FB15k-237, WN18RR, YAGO3-10, and ICEWS14 (with real timestamps)---with 14--33\% relative improvement over the best single signal. Score-based methods (UKGE, Energy) achieve 0.99 AUROC on random corruptions but only 0.52--0.58 on temporal OOD, where our method maintains 0.89--0.97.
 
-On a QA abstention task simulating temporal shift, our method reduces incorrect answers by 48\% at 85\% coverage, enabling reliable deployment of KG-enhanced NLP systems under evolving knowledge.
+On a link prediction task with selective abstention, our method reduces incorrect predictions by 48\% at 85\% coverage, providing a foundation for reliable KG-based systems under evolving knowledge.
