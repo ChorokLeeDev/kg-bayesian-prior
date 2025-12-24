@@ -262,35 +262,54 @@ Therefore, the combination correctly separates ALL emerging-entity OOD from ID:
     \text{AUROC}(U_{\text{comb}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{emerge}}) = 1
 \end{equation}
 
-\textbf{Step 3: Overall AUROC.}
+\textbf{Step 3: Overall AUROC improvement.}
 
-AUROC decomposes linearly over OOD mixtures:
+From Steps 1 and 2, we have established that for any pair $(x, x')$ with $x \in \mathcal{D}_{\text{OOD}}$ and $x' \in \mathcal{D}_{\text{ID}}$:
 \begin{equation}
-    \text{AUROC}(U, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{OOD}}) = p_E \cdot \text{AUROC}_E + p_N \cdot \text{AUROC}_N
+    U_{\text{comb}}(x) > U_{\text{comb}}(x')
 \end{equation}
 
-For the combination:
+This holds for both novel contexts (Step 1) and emerging entities (Step 2, both cases).
+
+Therefore, by definition of AUROC as $P(U(x_{\text{OOD}}) > U(x_{\text{ID}}))$:
 \begin{equation}
-    \text{AUROC}(U_{\text{comb}}) = p_E \cdot 1 + p_N \cdot 1 = 1
+    \text{AUROC}(U_{\text{comb}}, \mathcal{D}_{\text{ID}}, \mathcal{D}_{\text{OOD}}) = 1
 \end{equation}
 
-For semantic uncertainty alone (using Parts i and applying A6 to emerging):
-\begin{equation}
-    \text{AUROC}(U_{\text{sem}}) = p_E \cdot 1 + p_N \cdot \frac{1}{2} = 1 - \frac{p_N}{2} < 1
-\end{equation}
-
-For structural uncertainty alone (using Parts ii and iii):
-\begin{equation}
-    \text{AUROC}(U_{\text{str}}) = p_E \cdot (1-\rho) + p_N \cdot 1 = 1 - p_E \rho < 1
-\end{equation}
-
-Since $p_N > 0$ and $p_E \rho > 0$ (by A5), both single signals achieve $< 1$.
+For the single signals, Parts (i)--(iii) establish strict limitations:
+\begin{itemize}
+    \item Semantic: $\text{AUROC}(\mathcal{D}_{\text{novel}}) = \frac{1}{2}$, so overall AUROC $< 1$
+    \item Structural: $\text{AUROC}(\mathcal{D}_{\text{emerge}}) = 1 - \rho < 1$, so overall AUROC $< 1$
+\end{itemize}
 
 Therefore:
 \begin{equation}
     \text{AUROC}(U_{\text{comb}}) = 1 > \max(\text{AUROC}(U_{\text{sem}}), \text{AUROC}(U_{\text{str}}))
 \end{equation}
 \end{proof}
+
+\begin{remark}[On AUROC and mixture distributions]
+\label{rmk:auroc_mixture}
+Note that AUROC over a mixture OOD distribution $\mathcal{D}_{\text{OOD}} = p_E \mathcal{D}_E + p_N \mathcal{D}_N$ does \emph{not} decompose as a simple weighted average of component AUROCs. The proof above avoids this pitfall by directly showing that the combination achieves perfect separation on \emph{every} OOD sample, regardless of which component it belongs to.
+\end{remark}
+
+\begin{corollary}[Improvement Lower Bound]
+\label{cor:improvement}
+Under the assumptions of Theorem~\ref{thm:complementarity}, define:
+\begin{align}
+    \Delta_E &= A^{\text{sem}}_E - A^{\text{str}}_E & \text{(semantic advantage on emerging)} \\
+    \Delta_N &= A^{\text{str}}_N - A^{\text{sem}}_N & \text{(structural advantage on novel)}
+\end{align}
+where $A^{\cdot}_{\cdot}$ denotes AUROC of the indicated signal on the indicated OOD type.
+
+If $\Delta_E > 0$ and $\Delta_N > 0$, the improvement from combination satisfies:
+\begin{equation}
+    \text{AUROC}(U_{\text{comb}}) - \max(A_{\text{sem}}, A_{\text{str}}) \geq \min(p_E \cdot \Delta_E, \, p_N \cdot \Delta_N)
+\end{equation}
+where $p_E, p_N$ are the mixture weights of emerging and novel OOD samples.
+\end{corollary}
+
+This bound is constructive: with empirical values $\Delta_E \approx 0.05$ (0.83 vs 0.78 on emerging) and $\Delta_N \approx 0.58$ (1.00 vs 0.42 on novel), even small mixture weights yield guaranteed improvement.
 
 \begin{remark}[Practical interpretation of assumptions]
 \begin{itemize}
@@ -313,6 +332,13 @@ Based on Theorem~\ref{thm:complementarity}, we propose CAGP:
 \begin{equation}
     U_{\text{CAGP}}(h,r,t) = \alpha \cdot \tilde{U}_{\text{sem}}(h,r,t) + (1-\alpha) \cdot U_{\text{str}}(h,r,t)
 \end{equation}
+
+\begin{remark}[On algorithmic simplicity]
+\label{rmk:simplicity}
+The linear combination is intentionally simple---the theoretical contribution is the \emph{decomposition framework}, not the mixing algorithm.
+We show empirically that fixed $\alpha = 0.5$ captures most gains (Table~\ref{tab:ablation}); learned variants provide marginal improvements.
+Coverage (structural uncertainty) is the primary contributor on temporal OOD where novel contexts dominate; semantic uncertainty provides complementary value on emerging entities.
+\end{remark}
 
 The mixing weight $\alpha = \sigma(\lambda)$ is learned jointly with embedding parameters via:
 \begin{equation}

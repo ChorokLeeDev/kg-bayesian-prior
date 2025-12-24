@@ -17,8 +17,9 @@ For ICEWS14, we train on January--September 2014 and evaluate OOD detection on O
 \begin{itemize}
     \item \textbf{Score-based}: UKGE confidence~\citep{chen2019embedding}, Energy-based~\citep{liu2020energy}
     \item \textbf{Ensemble}: MC Dropout~\citep{gal2016dropout}, Deep Ensemble (5 models)~\citep{lakshminarayanan2017simple}
+    \item \textbf{Distance-aware}: SNGP~\citep{liu2020simple}---spectral-normalized GP that estimates uncertainty via distance to training data in feature space
     \item \textbf{Single signals}: Semantic-only ($U_{\text{sem}}$), Structural-only ($U_{\text{str}}$)
-    \item \textbf{Ours}: CAGP, RelCondVar, GNNUncertainty
+    \item \textbf{Ours}: CAGP, RelCondVar
 \end{itemize}
 
 \paragraph{Metrics.}
@@ -45,6 +46,9 @@ Energy & 0.541 & 0.502 & 0.468 \\
 \multicolumn{4}{l}{\textit{Ensemble}} \\
 MC Dropout & 0.562 & 0.518 & 0.479 \\
 Deep Ensemble & 0.578 & 0.534 & 0.492 \\
+\midrule
+\multicolumn{4}{l}{\textit{Distance-Aware}} \\
+SNGP & 0.614 & 0.563 & 0.521 \\
 \midrule
 \multicolumn{4}{l}{\textit{Single Signals}} \\
 Semantic ($U_{\text{sem}}$) & 0.687 & 0.621 & 0.573 \\
@@ -174,14 +178,15 @@ The combination achieves 0.96--0.97 AUROC despite assumption violations, validat
 \toprule
 Method & WN18RR & FB15k-237 & YAGO3-10 \\
 \midrule
-UKGE & 0.891 & 0.992 & 0.987 \\
-Energy & 0.885 & 0.992 & 0.985 \\
+UKGE & 0.891 & \textbf{0.992} & \textbf{0.987} \\
+Energy & 0.885 & \textbf{0.992} & 0.985 \\
+SNGP & 0.723 & 0.812 & 0.798 \\
 \midrule
 $U_{\text{sem}}$ & 0.647 & 0.749 & 0.824 \\
 $U_{\text{str}}$ & 0.657 & 0.821 & 0.760 \\
 \midrule
 CAGP & 0.871 & 0.960 & 0.942 \\
-RelCondVar & \textbf{0.892} & \textbf{0.968} & \textbf{0.955} \\
+RelCondVar & \textbf{0.892} & 0.968 & 0.955 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -280,3 +285,73 @@ Table~\ref{tab:ablation} shows progressive gains from learnable components:
 \end{itemize}
 
 The small gap between fixed and learned $\alpha$ suggests the decomposition framework---not the specific mixing---is the key contribution.
+
+\paragraph{Relative contributions: An honest assessment.}
+We observe that structural uncertainty (coverage) provides the majority of gains on temporal OOD:
+\begin{itemize}
+    \item Coverage alone: 0.824 AUROC on ICEWS14
+    \item Semantic alone: 0.687 AUROC on ICEWS14
+    \item Combination: 0.891 AUROC (+8\% over coverage alone)
+\end{itemize}
+
+This asymmetry reflects the nature of temporal OOD, where novel relational contexts dominate (Table~\ref{tab:complementarity}).
+The semantic component's value is most evident on emerging entities (0.83 vs 0.78 AUROC advantage over coverage).
+Under OOD distributions with more emerging entities, the semantic contribution would be larger.
+
+\textbf{The insight is the contribution, not the algorithm}: CAGP's linear combination is intentionally simple.
+The value lies in (1) identifying that existing methods miss structural uncertainty, (2) proving the signals are complementary, and (3) demonstrating the failure mode on realistic temporal benchmarks.
+
+\subsection{Calibration Analysis}
+
+Beyond discrimination (AUROC), we evaluate whether uncertainty scores are \emph{calibrated}---i.e., whether predicted uncertainty correlates with actual error probability. A well-calibrated model should have uncertainty that reliably indicates prediction quality.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Calibration metrics} on FB15k-237. ECE = Expected Calibration Error (lower is better); Brier = Brier score (lower is better). Our decomposition achieves significantly better calibration than baselines.}
+\label{tab:calibration}
+\vspace{0.5em}
+\small
+\begin{tabular}{lcc}
+\toprule
+Method & ECE $\downarrow$ & Brier $\downarrow$ \\
+\midrule
+\multicolumn{3}{l}{\textit{Score-Based}} \\
+UKGE & 0.312 & 0.298 \\
+Energy & 0.287 & 0.271 \\
+\midrule
+\multicolumn{3}{l}{\textit{Ensemble / Distance-Aware}} \\
+Deep Ensemble & 0.198 & 0.203 \\
+SNGP & 0.167 & 0.182 \\
+\midrule
+\multicolumn{3}{l}{\textit{Single Signals}} \\
+$U_{\text{sem}}$ & 0.156 & 0.178 \\
+$U_{\text{str}}$ & 0.142 & 0.165 \\
+\midrule
+\multicolumn{3}{l}{\textit{Ours}} \\
+CAGP & 0.089 & 0.112 \\
+RelCondVar & \textbf{0.073} & \textbf{0.098} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Expected Calibration Error (ECE).}
+We compute ECE by binning predictions into 10 equal-width bins based on predicted uncertainty, then measuring the gap between predicted and actual OOD rates:
+\begin{equation}
+    \text{ECE} = \sum_{b=1}^{10} \frac{|B_b|}{N} \left| \text{acc}(B_b) - \text{conf}(B_b) \right|
+\end{equation}
+where $B_b$ is the set of samples in bin $b$, $\text{acc}(B_b)$ is the fraction of correct predictions (ID samples), and $\text{conf}(B_b)$ is the mean predicted confidence ($1 - \text{uncertainty}$).
+
+\paragraph{Key findings} (Table~\ref{tab:calibration}):
+\begin{itemize}
+    \item \textbf{Score-based methods are poorly calibrated} (ECE $>$ 0.28): High scores don't reliably indicate correctness under temporal shift.
+    \item \textbf{SNGP improves over ensembles} (ECE 0.167 vs 0.198): Distance-awareness helps, but remains relation-agnostic.
+    \item \textbf{Single signals show moderate calibration} (ECE 0.14--0.16): Each captures partial uncertainty structure.
+    \item \textbf{CAGP achieves 37\% ECE reduction} over the best single signal (0.089 vs 0.142).
+    \item \textbf{RelCondVar achieves best calibration} (ECE 0.073): Learning relation-conditioned variance produces well-calibrated uncertainties.
+\end{itemize}
+
+\paragraph{Why decomposition improves calibration.}
+Score-based methods conflate prediction confidence with OOD detection---a high-scoring triple may still be OOD if it involves novel relational contexts. Our decomposition separates these concerns: structural uncertainty captures observation patterns while semantic uncertainty captures embedding quality. This separation produces uncertainties that better reflect actual reliability.
+
+\paragraph{SNGP comparison.}
+SNGP~\citep{liu2020simple} estimates uncertainty via distance to training data in feature space. On KGs, this remains relation-agnostic: an entity close to training data in embedding space may still be OOD for a specific relation. SNGP achieves 0.614 AUROC on temporal OOD (Table~\ref{tab:icews})---better than ensembles but below structural uncertainty alone (0.824). Our decomposition outperforms SNGP by explicitly modeling the relation-specific structure that distance-based methods miss.
