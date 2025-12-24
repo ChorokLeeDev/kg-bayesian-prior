@@ -76,3 +76,4 @@ project.zip
 *.fdb_latexmk
 *.synctex.gz
 paper/main_emnlp.pdf
+paper/main_uai.pdf
