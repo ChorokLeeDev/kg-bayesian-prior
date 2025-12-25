@@ -15,6 +15,7 @@ Fix threshold $\tau > 0$. OOD queries partition into:
 \item \textbf{Emerging entities} $\mathcal{D}_{\text{emerge}}$: $\min(\freq(h), \freq(t)) < \tau$.
 \item \textbf{Novel contexts} $\mathcal{D}_{\text{novel}}$: $\min(\freq(h), \freq(t)) \geq \tau$ and ($c(h,r)=0$ or $c(t,r)=0$).
 \end{itemize}
+We set $\tau$ to the 10th percentile of entity frequencies (robust to outliers; see Appendix~\ref{app:implementation} for sensitivity analysis).
 \end{definition}
 
 \subsection{Uncertainty Signals}
@@ -50,4 +51,4 @@ The mixing weight $\alpha = \sigma(\lambda)$ is learned jointly with embedding p
 
 \paragraph{Computational cost.} Coverage matrix $\mat{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ is precomputed once. At inference, $U_{\text{str}}$ requires two lookups ($<$2\% overhead).
 
-\paragraph{Extension: RelCondVar.} We also evaluate relation-conditioned variance $\sigma^2(e,r) = \text{softplus}(\text{MLP}([\mathbf{e}; \mathbf{r}]))$, which learns relation-specific uncertainty directly. This provides modest improvements over CAGP.
+\paragraph{Extension: RelCondVar.} We also evaluate relation-conditioned variance $\sigma^2(e,r) = \text{softplus}(\text{MLP}([\mathbf{e}; \mathbf{r}]))$, which learns relation-specific uncertainty directly. The MLP (2 layers, hidden dim 64) is trained jointly with the KGE loss, with an auxiliary objective encouraging high variance for OOD-like negative samples. This provides modest improvements over CAGP (see Appendix~\ref{app:ablation}).

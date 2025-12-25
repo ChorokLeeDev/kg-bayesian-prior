@@ -18,8 +18,9 @@ We identify two distinct scenarios:
 
 \paragraph{Contribution.}
 We decompose KG uncertainty into \textbf{semantic} (embedding variance) and \textbf{structural} (entity-relation coverage) components.
-Theorem~\ref{thm:complementarity} proves: (i) semantic uncertainty cannot detect novel contexts, (ii) structural uncertainty cannot detect all emerging entities, (iii) combination strictly dominates.
-Empirically, our method achieves 0.87--0.97 AUROC on temporal OOD across four benchmarks, vs 0.52--0.58 for baselines.
+While coverage trivially detects novel contexts by construction, the non-obvious insight is that \emph{learned probabilistic embeddings fail to discover this signal}---despite having access to the same training data.
+Theorem~\ref{thm:complementarity} formalizes when each signal is necessary and proves combination strictly dominates.
+Empirically, our method achieves 0.87--0.97 AUROC on temporal OOD across four benchmarks, vs 0.52--0.58 for baselines (including baselines augmented with coverage, Table~\ref{tab:baseline_coverage}).
 
 \begin{figure}[t]
 \centering

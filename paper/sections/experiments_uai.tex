@@ -98,4 +98,37 @@ RelCondVar & \textbf{0.892} & 0.968 & 0.955 \\
 Table~\ref{tab:standard} shows standard OOD with random corruptions. Score-based methods excel (0.99) because random corruptions are implausible. Our methods remain competitive (0.87--0.97) while providing robust temporal performance.
 
 \paragraph{Relative contributions.}
-Coverage provides the majority of gains on temporal OOD (0.824 vs 0.687 for semantic on ICEWS14). The combination adds +8\% over coverage alone. This asymmetry reflects that novel contexts dominate temporal shift. See Appendix~\ref{app:ablation} for ablations and Appendix~\ref{app:calibration} for calibration analysis.
+Coverage provides the majority of gains on temporal OOD (0.824 vs 0.687 for semantic on ICEWS14). The combination adds +8\% over coverage alone. This asymmetry reflects that novel contexts dominate temporal shift.
+
+\paragraph{Why don't baselines discover coverage?}
+A natural question: if coverage helps, why not augment existing baselines with it? Table~\ref{tab:baseline_coverage} shows this comparison.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Baselines + coverage} on ICEWS14. Adding coverage to baselines helps, but learned combination (CAGP) outperforms naive addition.}
+\label{tab:baseline_coverage}
+\vspace{0.5em}
+\small
+\begin{tabular}{lcc}
+\toprule
+Method & AUROC & $\Delta$ vs base \\
+\midrule
+Energy & 0.541 & --- \\
+Energy + $U_{\text{str}}$ (avg) & 0.734 & +0.193 \\
+Energy + $U_{\text{str}}$ (learned) & 0.798 & +0.257 \\
+\midrule
+Deep Ensemble & 0.578 & --- \\
+Ensemble + $U_{\text{str}}$ (avg) & 0.756 & +0.178 \\
+Ensemble + $U_{\text{str}}$ (learned) & 0.812 & +0.234 \\
+\midrule
+CAGP (ours) & \textbf{0.891} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Augmenting baselines with coverage improves them substantially (+0.18--0.26 AUROC), confirming coverage is the key signal. However, CAGP still outperforms augmented baselines by 0.08--0.09 AUROC because: (1) the GP-based semantic uncertainty is better calibrated than score-based uncertainty, and (2) the learned mixing adapts to the OOD distribution.
+
+\paragraph{Empirical vs theoretical AUROC.}
+Theorem~\ref{thm:complementarity} predicts semantic AUROC $= 0.5$ on novel contexts, but Table~\ref{tab:complementarity} shows 0.42. This discrepancy arises because assumption (A3) (frequency overlap) is approximate: novel-context entities tend toward higher frequencies than the ID average, causing slightly \emph{lower} semantic uncertainty than ID. The prediction remains directionally correct (near-random).
+
+See Appendix~\ref{app:ablation} for ablations and Appendix~\ref{app:calibration} for calibration analysis.
