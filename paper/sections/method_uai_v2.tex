@@ -13,7 +13,7 @@ We define key quantities for analyzing KG uncertainty.
 Fix threshold $\tau > 0$. OOD queries partition into:
 \begin{itemize}
 \item \textbf{Emerging entities} $\mathcal{D}_{\text{emerge}}$: $\min(\freq(h), \freq(t)) < \tau$.
-\item \textbf{Novel contexts} $\mathcal{D}_{\text{novel}}$: high-frequency entities ($\geq \tau$) with missing coverage.
+\item \textbf{Novel contexts} $\mathcal{D}_{\text{novel}}$: $\min(\freq(h), \freq(t)) \geq \tau$ and ($c(h,r)=0$ or $c(t,r)=0$).
 \end{itemize}
 \end{definition}
 
@@ -38,7 +38,7 @@ Under mild assumptions (variance decreases with frequency, ID triples have full 
 \end{enumerate}
 \end{theorem}
 
-\textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities with the same frequency---semantic uncertainty cannot distinguish them. Part (ii): Some emerging entities happen to be covered for the query relation, making them indistinguishable from ID via coverage alone. Part (iii): Novel contexts have missing coverage by definition, while ID has full coverage. Part (iv): The combination uses semantic uncertainty to catch emerging entities that structural misses, and structural to catch novel contexts that semantic misses. Full proof in Appendix~\ref{app:proof}.
+\textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities---semantic uncertainty cannot distinguish them. Part (ii): Emerging entities are defined by low \emph{frequency}, but may still have \emph{coverage} for the specific query relation, making some indistinguishable from ID via coverage alone. Part (iii): Novel contexts have missing coverage by definition, while ID has full coverage. Part (iv): The combination uses semantic to catch emerging entities that structural misses (those with coverage), and structural to catch novel contexts that semantic misses. Full proof in Appendix~\ref{app:proof}.
 
 \subsection{CAGP: Coverage-Augmented Gaussian Process}
 

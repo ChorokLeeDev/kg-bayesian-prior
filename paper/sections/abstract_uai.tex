@@ -8,7 +8,7 @@ We prove that relation-agnostic variance methods---including Gaussian process em
 Under temporal distribution shift containing both OOD types, these methods achieve near-random performance (0.52--0.58 AUROC).
 
 We formalize uncertainty decomposition into complementary components: \emph{semantic uncertainty} from entity embedding variance (detecting emerging entities) and \emph{structural uncertainty} from entity-relation co-occurrence (detecting novel contexts).
-Our main theoretical result proves these signals are non-redundant: semantic uncertainty achieves 0.83 AUROC on emerging entities versus 0.42 on novel contexts, while structural uncertainty achieves 1.00 on novel contexts versus 0.78 on emerging entities.
+Our main theoretical result proves these signals are non-redundant: semantic uncertainty achieves high AUROC on emerging entities but near-random on novel contexts, while structural uncertainty achieves perfect detection on novel contexts but imperfect on emerging entities.
 We prove that any convex combination strictly dominates either signal alone when both OOD types are present.
 
 Combining signals via learned weights yields 0.87--0.97 AUROC across four benchmarks, including ICEWS14 with ground-truth temporal splits.

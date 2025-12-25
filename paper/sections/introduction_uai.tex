@@ -9,7 +9,7 @@ But these variances are \emph{relation-agnostic}: entity $e$ receives a single v
 Consider $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
 The model assigns low variance (well-observed), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions.
 
-This causes systematic failures: score-based methods achieve 0.99 AUROC on random corruptions but only 0.52--0.58 on temporal shift.
+This causes systematic failures: score-based methods achieve 0.99 AUROC detecting random corruptions (implausible triples) but only 0.52--0.58 on temporal distribution shift (queries from future time periods with new entities and relationships).
 
 \paragraph{Two OOD Types.}
 We identify two distinct scenarios:
