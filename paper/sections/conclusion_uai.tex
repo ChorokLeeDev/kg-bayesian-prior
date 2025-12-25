@@ -1,29 +1,12 @@
-% Conclusion - UAI version
+% Conclusion - UAI version (condensed)
 
-We identified a fundamental limitation in probabilistic knowledge graph embeddings: learned variances are relation-agnostic and cannot capture structural uncertainty about entity-relation co-occurrence.
-This explains systematic failures of existing uncertainty methods under temporal distribution shift, where they achieve near-random performance despite strong results on artificial benchmarks.
+We identified a fundamental limitation in probabilistic KG embeddings: learned variances are relation-agnostic and cannot capture structural uncertainty.
+This explains why existing methods achieve 0.99 AUROC on random corruptions but only 0.52--0.58 on temporal shift.
 
-\paragraph{Theoretical Contribution.}
-We formalized two distinct OOD types (emerging entities, novel contexts) and proved they require complementary detection strategies (Theorem~\ref{thm:complementarity}).
-Semantic uncertainty from embedding variance detects emerging entities; structural uncertainty from coverage detects novel contexts.
-Neither alone suffices; combination strictly dominates.
-
-\paragraph{Empirical Findings.}
-\begin{itemize}
-    \item Score-based methods achieving 0.99 AUROC on random corruptions drop to 0.52--0.58 on temporal OOD
-    \item Our decomposition achieves 0.87--0.97 AUROC across four benchmarks including ICEWS14 with ground-truth temporal splits
-    \item Selective prediction reduces errors by 48\% at 85\% answer rate
-    \item The framework generalizes across DistMult, TransE, and ComplEx architectures
-\end{itemize}
-
-\paragraph{Practical Implications.}
-The decomposition is computationally lightweight: coverage is precomputed once from training triples, adding negligible overhead.
-For practitioners deploying KG embeddings, augmenting any probabilistic embedding with structural uncertainty provides substantial robustness gains with minimal implementation effort.
+We formalized two OOD types (emerging entities, novel contexts) and proved they require complementary detection strategies (Theorem~\ref{thm:complementarity}).
+Our decomposition achieves 0.87--0.97 AUROC on temporal OOD across four benchmarks.
+The framework is architecture-agnostic and computationally lightweight (coverage is precomputed once).
 
 \paragraph{Limitations.}
-Coverage is binary (observed/not), missing gradations between entities seen once versus frequently.
-The framework assumes transductive settings; inductive scenarios with truly novel entities require different approaches.
-Our base model underperforms state-of-the-art link prediction; stronger base models may exhibit different uncertainty characteristics.
-
-\paragraph{Future Work.}
-Extensions include: calibration for downstream decision-making; continuous relaxations of binary coverage; integration with inductive KG methods; and application to knowledge-grounded language models where hallucination detection is critical.
+Coverage is binary; the framework assumes transductive settings; our base model underperforms state-of-the-art link prediction.
+Future work includes continuous coverage relaxations, inductive extensions, and application to knowledge-grounded language models.

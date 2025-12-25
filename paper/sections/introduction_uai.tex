@@ -1,59 +1,30 @@
-% Introduction for UAI - Uncertainty focus
+% Introduction for UAI - condensed
 
-Knowledge graph (KG) embeddings map entities and relations to continuous vector spaces, enabling efficient reasoning over large-scale structured knowledge~\citep{bordes2013translating,trouillon2016complex,sun2019rotate}.
-These embeddings underlie applications from question answering~\citep{huang2019knowledge} to drug discovery~\citep{mohamed2020discovering}.
-As KGs evolve---new entities emerge, existing entities participate in novel relationships---robust uncertainty quantification becomes critical for reliable deployment.
+Knowledge graph (KG) embeddings enable efficient reasoning over structured knowledge~\citep{bordes2013translating,trouillon2016complex}.
+As KGs evolve---new entities emerge, existing entities appear in novel relationships---robust uncertainty quantification becomes critical.
 
-\paragraph{Probabilistic Embeddings.}
-Recent work addresses uncertainty by learning distributions over embeddings rather than point estimates.
-GP-KGE~\citep{Chen2021PERM} places Gaussian distributions over entity representations; BEUrRE~\citep{chen2021probabilistic} uses box embeddings where box size indicates uncertainty; UKGE~\citep{chen2019embedding} associates confidence scores with triples.
-The intuition is sound: rare entities, observed in few training triples, should have higher variance reflecting epistemic uncertainty about their true representations.
+\paragraph{The Relation-Agnostic Limitation.}
+Recent probabilistic methods learn distributions over embeddings~\citep{chen2019embedding,chen2021probabilistic,Chen2021PERM}, where rare entities have higher variance.
+But these variances are \emph{relation-agnostic}: entity $e$ receives a single variance $\sigma^2_e$ regardless of relational context.
+Consider $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
+The model assigns low variance (well-observed), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions.
 
-\paragraph{A Fundamental Limitation.}
-These methods share a critical blind spot: learned variances are \emph{relation-agnostic}.
-An entity $e$ receives a single variance $\sigma^2_e$ regardless of relational context.
-Consider entity $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
-The model assigns low variance (well-observed entity), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions---the entity-relation combination was never observed.
+This causes systematic failures: score-based methods achieve 0.99 AUROC on random corruptions but only 0.52--0.58 on temporal shift.
 
-This limitation has measurable consequences.
-Score-based uncertainty methods (using prediction confidence) achieve 0.99 AUROC detecting random corruptions---but only 0.52--0.58 on temporally-shifted queries where OOD samples are structurally similar to training data.
-The methods optimize for the wrong distribution shift.
+\paragraph{Two OOD Types.}
+We identify two distinct scenarios:
+(1) \textbf{Emerging entities}: New/rare entities with poorly-constrained embeddings---high variance correctly signals uncertainty.
+(2) \textbf{Novel contexts}: Well-observed entities in unobserved relations---variance is low (falsely confident), but the entity-relation pair was never trained.
 
-\paragraph{Two Types of OOD.}
-We identify two distinct OOD scenarios requiring different detection strategies:
-\begin{enumerate}
-    \item \textbf{Emerging entities}: New entities (or rarely-observed ones) with poorly-constrained embeddings. High entity variance correctly signals uncertainty.
-    \item \textbf{Novel relational contexts}: Well-observed entities in unobserved relational contexts. Entity variance is low (falsely confident), but the specific entity-relation pair was never trained.
-\end{enumerate}
-
-Under temporal distribution shift---the realistic scenario where KGs evolve---both types occur.
-Conflating them causes systematic failures.
-
-\paragraph{Our Contribution.}
-We propose decomposing KG uncertainty into semantic and structural components:
-\begin{itemize}
-    \item \textbf{Semantic uncertainty} $U_{\text{sem}}$: Derived from entity embedding variance. Captures how well each entity is learned.
-    \item \textbf{Structural uncertainty} $U_{\text{str}}$: Derived from entity-relation co-occurrence (coverage). Captures whether a specific relational context was observed.
-\end{itemize}
-
-Our main theoretical result (Theorem~\ref{thm:complementarity}) proves these signals are complementary:
-\begin{enumerate}
-    \item Semantic uncertainty cannot detect novel contexts (achieves $\leq 0.5 + \epsilon$ AUROC)
-    \item Structural uncertainty cannot reliably detect all emerging entities (achieves $< 1$ AUROC)
-    \item Any convex combination strictly dominates either signal alone when both OOD types are present
-\end{enumerate}
-
-\paragraph{Empirical Validation.}
-We validate on four benchmarks: FB15k-237, WN18RR, YAGO3-10, and ICEWS14 (with ground-truth temporal splits).
-Our decomposition achieves 0.87--0.97 AUROC on temporal OOD, compared to 0.52--0.58 for existing uncertainty methods.
-On selective prediction, abstaining on 15\% of queries with highest uncertainty reduces errors by 48\%.
-
-The framework is architecture-agnostic (improving DistMult, TransE, ComplEx uniformly) and computationally lightweight (coverage is precomputed once from training data).
+\paragraph{Contribution.}
+We decompose KG uncertainty into \textbf{semantic} (embedding variance) and \textbf{structural} (entity-relation coverage) components.
+Theorem~\ref{thm:complementarity} proves: (i) semantic uncertainty cannot detect novel contexts, (ii) structural uncertainty cannot detect all emerging entities, (iii) combination strictly dominates.
+Empirically, our method achieves 0.87--0.97 AUROC on temporal OOD across four benchmarks, vs 0.52--0.58 for baselines.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/fig1_main_results.pdf}
 \vspace{-1em}
-\caption{Temporal OOD detection AUROC. Existing methods (UKGE, Energy, Ensembles) fail on realistic distribution shift. Our decomposition (CAGP, RelCondVar) combines complementary signals for robust detection.}
+\caption{Temporal OOD detection. Existing methods fail on realistic distribution shift. Our decomposition (CAGP, RelCondVar) combines complementary signals.}
 \label{fig:main_results}
 \end{figure}
