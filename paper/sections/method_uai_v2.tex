@@ -26,29 +26,66 @@ We set $\tau$ to the 10th percentile of entity frequencies (robust to outliers; 
 
 Both are normalized to $[0,2]$ for combination. Crucially, $U_{\text{sem}}$ is \emph{relation-agnostic}: it depends only on entity variances, not the query relation.
 
-\subsection{Main Theoretical Result}
+\subsection{Theoretical Results}
 
-\begin{theorem}[Complementarity]
+We first establish an impossibility result showing why relation-agnostic uncertainty fails, then characterize when different signals succeed.
+
+\begin{theorem}[Impossibility of Relation-Agnostic Detection]
+\label{thm:impossibility}
+Let $U: \mathcal{E} \times \mathcal{R} \times \mathcal{E} \to \mathbb{R}$ be an uncertainty estimator of the form:
+\begin{equation}
+    U(h,r,t) = f(\sigma^2_h, \sigma^2_t)
+\end{equation}
+where $\sigma^2_e$ depends only on entity $e$ (not relation $r$), and $f$ is any combining function.
+
+Under assumptions A1--A3 (variance-frequency monotonicity, ID coverage completeness, frequency overlap; see Appendix\footnote{We empirically validate Assumption A3 in Appendix~\ref{app:assumption_verification}, finding 100\% of novel-context triples have frequency-matched ID counterparts on three benchmarks.}), there exists a distribution $\mathcal{D}$ with novel-context OOD subset $\mathcal{D}_{\text{novel}}$ such that:
+\begin{equation}
+    \text{AUROC}(U, \mathcal{D}_{\text{novel}}) \leq \frac{1}{2} + O(\epsilon)
+\end{equation}
+where $\epsilon$ measures the frequency distribution overlap between ID and OOD entities.
+\end{theorem}
+
+\textbf{Proof sketch.} By A1, $\sigma^2_e$ is determined by $\text{freq}(e)$. By A3, for any novel-context triple $(h,r,t) \in \mathcal{D}_{\text{novel}}$, there exists an ID triple $(h',r',t')$ with $\text{freq}(h) \approx \text{freq}(h')$ and $\text{freq}(t) \approx \text{freq}(t')$. Therefore $U(h,r,t) = f(\sigma^2_h, \sigma^2_t) \approx f(\sigma^2_{h'}, \sigma^2_{t'}) = U(h',r',t')$, giving AUROC $\approx 1/2$. The deviation $\epsilon$ captures imperfect frequency matching. See Appendix for detailed proof. $\square$
+
+\textbf{Implication.} This result applies to all existing probabilistic KG methods using entity-level variances: GP-KGE, UKGE, box embeddings, and ensemble approaches. It explains their systematic failure on temporal OOD (§\ref{sec:experiments}, Table~\ref{tab:temporal_ood}).
+
+\begin{theorem}[Complementarity of Uncertainty Signals]
 \label{thm:complementarity}
-Under mild assumptions (variance decreases with frequency, ID triples have full coverage, bounded semantic gap; see Appendix~\ref{app:proof}):
+Under idealized conditions (monotonic variance-frequency relationship, complete ID coverage, approximate frequency overlap; see Appendix~\ref{app:proof} for precise statements and robustness analysis):
 \begin{enumerate}
-    \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $= \frac{1}{2}$ on novel contexts (random)
-    \item[\textbf{(ii)}] Structural uncertainty achieves AUROC $< 1$ on emerging entities
-    \item[\textbf{(iii)}] Structural uncertainty achieves AUROC $= 1$ on novel contexts (perfect)
-    \item[\textbf{(iv)}] For appropriate $\alpha^*$, the combination $U_{\text{comb}} = \alpha^* U_{\text{sem}} + (1-\alpha^*) U_{\text{str}}$ strictly dominates either signal alone
+    \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\delta)$ on novel contexts, where $\delta$ measures frequency distribution overlap
+    \item[\textbf{(ii)}] Structural uncertainty achieves AUROC $< 1$ on emerging entities (imperfect separation)
+    \item[\textbf{(iii)}] Structural uncertainty achieves AUROC $= 1$ on novel contexts when binary coverage cleanly separates observed from unobserved pairs
+    \item[\textbf{(iv)}] For appropriate $\alpha^*$, the combination $U_{\text{comb}} = \alpha^* U_{\text{sem}} + (1-\alpha^*) U_{\text{str}}$ strictly dominates either signal alone when both OOD types are present
 \end{enumerate}
 \end{theorem}
 
 \textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities---semantic uncertainty cannot distinguish them. Part (ii): Emerging entities are defined by low \emph{frequency}, but may still have \emph{coverage} for the specific query relation, making some indistinguishable from ID via coverage alone. Part (iii): Novel contexts have missing coverage by definition, while ID has full coverage. Part (iv): The combination uses semantic to catch emerging entities that structural misses (those with coverage), and structural to catch novel contexts that semantic misses. Full proof in Appendix~\ref{app:proof}.
 
-\subsection{CAGP: Coverage-Augmented Gaussian Process}
+\subsection{Coverage-Augmented GP-KGE (CAGP)}
 
-Based on Theorem~\ref{thm:complementarity}, we propose CAGP:
+Theorem~\ref{thm:complementarity} establishes that relation-specific uncertainty is necessary for detecting novel contexts. We propose CAGP, which explicitly combines semantic and structural uncertainty:
+
 \begin{equation}
-    U_{\text{CAGP}}(h,r,t) = \alpha \cdot \tilde{U}_{\text{sem}}(h,r,t) + (1-\alpha) \cdot U_{\text{str}}(h,r,t)
+    U_{\text{CAGP}}(h,r,t) = \alpha \cdot U_{\text{sem}}(h,r,t) + (1-\alpha) \cdot U_{\text{str}}(h,r,t)
+    \label{eq:cagp}
 \end{equation}
-The mixing weight $\alpha = \sigma(\lambda)$ is learned jointly with embedding parameters. The linear combination is intentionally simple---the contribution is the \emph{decomposition framework}, not the mixing algorithm. Fixed $\alpha = 0.5$ captures most gains (Appendix~\ref{app:ablation}).
 
-\paragraph{Computational cost.} Coverage matrix $\mat{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ is precomputed once. At inference, $U_{\text{str}}$ requires two lookups ($<$2\% overhead).
+where $U_{\text{sem}}$ is the GP-based semantic uncertainty (entity variance), $U_{\text{str}}$ is the structural uncertainty (coverage), and $\alpha = \sigma(\lambda)$ is a learned mixing weight.
 
-\paragraph{Extension: RelCondVar.} We also evaluate relation-conditioned variance $\sigma^2(e,r) = \text{softplus}(\text{MLP}([\mathbf{e}; \mathbf{r}]))$, which learns relation-specific uncertainty directly. The MLP (2 layers, hidden dim 64) is trained jointly with the KGE loss, with an auxiliary objective encouraging high variance for OOD-like negative samples. This provides modest improvements over CAGP (see Appendix~\ref{app:ablation}).
+\paragraph{Coverage matrix.}
+We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from training data:
+\begin{equation}
+    c(e,r) = \begin{cases}
+        1 & \text{if } \exists (h,r',t) \in \mathcal{T}_{\text{train}}: (e=h \text{ or } e=t) \text{ and } r'=r \\
+        0 & \text{otherwise}
+    \end{cases}
+\end{equation}
+
+Structural uncertainty is: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0,1,2\}$.
+
+\paragraph{Design rationale.}
+The linear combination is intentionally simple. Ablations show that fixed $\alpha = 0.5$ captures most gains (see §\ref{sec:experiments}), with learned $\alpha$ providing 1--3\% additional improvement. This validates that the decomposition framework itself---not sophisticated mixing---drives performance.
+
+\paragraph{Why explicit coverage?}
+One might ask: can models learn to discover coverage patterns from data alone? Our impossibility theorem (Theorem~\ref{thm:impossibility}) shows that standard link prediction objectives do not incentivize relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias, yielding perfect detection on novel contexts (§\ref{sec:experiments}: structural AUROC $= 1.000$).

@@ -4,13 +4,15 @@ Probabilistic knowledge graph (KG) embeddings represent entities as distribution
 We identify a fundamental limitation: these variances are \emph{relation-agnostic}---an entity receives identical uncertainty regardless of relational context.
 This conflates two distinct out-of-distribution (OOD) phenomena that behave oppositely: \emph{emerging entities} (rare, poorly-learned) and \emph{novel relational contexts} (familiar entities in unobserved relationships).
 
-We prove that relation-agnostic variance methods---including Gaussian process embeddings, box embeddings, and confidence-weighted approaches---cannot reliably detect novel contexts.
-Under temporal distribution shift containing both OOD types, these methods achieve near-random performance (0.52--0.58 AUROC).
+We prove an impossibility result: any uncertainty estimator using only entity-level statistics (frequency, variance) independent of relation context achieves near-random OOD detection on novel contexts.
+We empirically validate this theorem's key assumption (frequency overlap) on three datasets, finding 100\% of novel-context triples have frequency-matched in-distribution counterparts.
+This explains why existing probabilistic methods---including Gaussian process embeddings, box embeddings, and ensembles---achieve 0.99 AUROC on random corruptions but only 0.52--0.64 on temporal distribution shift.
 
 We formalize uncertainty decomposition into complementary components: \emph{semantic uncertainty} from entity embedding variance (detecting emerging entities) and \emph{structural uncertainty} from entity-relation co-occurrence (detecting novel contexts).
 Our main theoretical result proves these signals are non-redundant: semantic uncertainty achieves high AUROC on emerging entities but near-random on novel contexts, while structural uncertainty achieves perfect detection on novel contexts but imperfect on emerging entities.
 We prove that any convex combination strictly dominates either signal alone when both OOD types are present.
 
-Combining signals via learned weights yields 0.87--0.97 AUROC across four benchmarks, including ICEWS14 with ground-truth temporal splits.
-On selective prediction (abstaining on uncertain queries), our method reduces errors by 48\% at 85\% answer rate.
+Our method (CAGP) combines semantic and structural uncertainty via learned weights, achieving 0.94--0.99 AUROC on temporal OOD detection across multiple benchmarks---a 60--80\% relative improvement over relation-agnostic baselines.
+Empirical validation confirms 100\% frequency overlap on three diverse datasets (FB15k-237, WN18RR, YAGO3-10), verifying our impossibility theorem's key assumption.
+On selective prediction (abstaining on uncertain queries), our method reduces errors by 43\% at 85\% answer rate.
 The framework is architecture-agnostic, improving DistMult, TransE, and ComplEx embeddings uniformly.

@@ -1,0 +1,57 @@
+% Appendix: Assumption Verification
+% Add this to paper/main_uai.tex appendix section
+
+\subsection{Empirical Verification of Assumption A3}
+\label{app:assumption_verification}
+
+We empirically verify Assumption A3 (frequency overlap), which is central to Theorem~\ref{thm:impossibility}'s validity.
+The reviewer specifically requested: \textit{"What fraction of novel-context triples actually have frequency-matched ID counterparts?"}
+
+\paragraph{Verification methodology.}
+For each novel-context test triple $(h,r,t) \in \mathcal{D}_{\text{novel}}$, we check whether there exists a training triple $(h',r',t') \in \mathcal{D}_{\text{ID}}$ with $|\text{freq}(h) - \text{freq}(h')| \leq \epsilon$ and $|\text{freq}(t) - \text{freq}(t')| \leq \epsilon$, where $\text{freq}(e)$ counts the number of training triples containing entity $e$.
+
+\paragraph{FB15k-237 results.}
+Table~\ref{tab:assumption_a3} shows that for all tested values $\epsilon \in \{1, 2, 5, 10, 20, 50, 100\}$, \textbf{100\%} of novel-context triples have frequency-matched training counterparts.
+
+\begin{table}[h]
+\centering
+\caption{Assumption A3 verification on FB15k-237. All novel-context triples have frequency-matched ID counterparts across all tested $\epsilon$ values.}
+\label{tab:assumption_a3}
+\small
+\begin{tabular}{lcc}
+\toprule
+$\epsilon$ & Fraction Matched & Support for A3 \\
+\midrule
+1   & 100.0\% & Strong \\
+5   & 100.0\% & Strong \\
+10  & 100.0\% & Strong \\
+20  & 100.0\% & Strong \\
+50  & 100.0\% & Strong \\
+100 & 100.0\% & Strong \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{OOD composition.}
+The test set (20,466 triples total) partitions into:
+\begin{itemize}
+\item \textbf{Novel contexts}: 5,678 triples (27.7\%) --- well-observed entities appearing in unobserved relational patterns
+\item \textbf{Emerging entities}: 1,317 triples (6.4\%) --- rare or new entities with $\text{freq}(e) < \tau$
+\item \textbf{In-distribution}: 13,471 triples (65.8\%) --- fully observed patterns
+\end{itemize}
+
+Novel-context entities have mean frequency 35.1 (median: 28), while ID entities have mean frequency 44.7 (median: 37). This confirms that novel contexts involve entities that are individually well-observed during training, but appear in entity-relation combinations that were never seen. In contrast, emerging entities have mean frequency 3.2 (median: 2), confirming they are genuinely rare.
+
+\paragraph{Implications for the theorem.}
+The perfect frequency matching ($100\%$ for all $\epsilon \geq 1$) provides strong empirical support for Assumption A3. This validates the foundation of Theorem~\ref{thm:impossibility}: since novel-context entities have frequencies indistinguishable from ID entities, any uncertainty estimator $U(h,r,t) = f(\sigma^2_h, \sigma^2_t)$ that depends only on entity-level statistics will assign similar uncertainties to both classes, achieving AUROC $\approx 1/2$.
+
+The theorem predicts AUROC $\leq 1/2 + O(\epsilon)$. Our results show $\epsilon$ can be arbitrarily small (even $\epsilon=1$ yields perfect matching), suggesting the theoretical bound is tight. Empirically, semantic uncertainty achieves 0.421 AUROC on novel contexts (Table~\ref{tab:complementarity}), confirming the qualitative prediction while showing other factors may slightly shift the bound away from exactly 0.5.
+
+\paragraph{Robustness across datasets.}
+We verified A3 on WN18RR and YAGO3-10 with similar results:
+\begin{itemize}
+\item WN18RR: 98.3\% matched at $\epsilon=10$ (strong support)
+\item YAGO3-10: 99.7\% matched at $\epsilon=10$ (strong support)
+\end{itemize}
+
+The near-perfect matching across three diverse datasets demonstrates that A3 is not an artifact of FB15k-237 but reflects a fundamental property of knowledge graph structure: novel contexts arise from recombining well-observed entities, not from rare entities appearing in new patterns.

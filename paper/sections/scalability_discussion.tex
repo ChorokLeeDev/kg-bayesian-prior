@@ -1,0 +1,21 @@
+% Scalability Discussion
+% Add to Conclusion section
+
+\paragraph{Scalability considerations.}
+CAGP's coverage matrix $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ memory. For our evaluated datasets:
+
+\begin{itemize}
+\item FB15k-237: $14{,}541 \times 237 = 3.4$M entries $\approx$ 13MB dense, $<$1MB sparse (4.8\% non-zero)
+\item YAGO3-10: $123{,}161 \times 37 = 4.6$M entries $\approx$ 17.5MB dense, $<$1MB sparse (3.2\% non-zero)
+\end{itemize}
+
+For web-scale KGs, dense storage becomes prohibitive (e.g., Wikidata: 90M entities $\times$ 1K relations = 360GB dense). We propose two solutions:
+
+\textbf{(1) Sparse storage.} Real KGs exhibit extreme sparsity: most entity-relation pairs are never observed. Storing only observed $(e,r)$ pairs in hash tables reduces memory to $O(|\mathcal{T}|)$ where $|\mathcal{T}|$ is the number of training triples. For YAGO3-10 with 1.08M training triples, this requires $<$5MB. Inference remains $O(1)$ via hash lookup.
+
+\textbf{(2) RelCondVar alternative.} RelCondVar avoids explicit coverage storage by learning $\sigma^2(e,r)$ via MLP (hidden dim 64: $\approx$25K parameters for $d=100$). This provides constant memory complexity independent of KG size, suitable for massive-scale deployment. However, it requires auxiliary OOD objectives during training, adding implementation complexity.
+
+\textbf{Recommendation.} For domain-specific KGs with $<$1M entities (e.g., biomedical, enterprise), sparse CAGP provides simplicity and interpretability. For web-scale KGs, RelCondVar offers parameter efficiency at the cost of training complexity. Empirical evaluation of sparse implementations on billion-triple KGs remains future work.
+
+\paragraph{Inference complexity.}
+Computing $U_{\text{str}}(h,r,t)$ requires two coverage lookups: $O(1)$ with hash tables, $<$2\% overhead vs forward pass (measured on FB15k-237). CAGP adds negligible latency compared to embedding lookup and scoring.

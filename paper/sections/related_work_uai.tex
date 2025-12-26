@@ -3,6 +3,7 @@
 \paragraph{Probabilistic KG Embeddings.}
 UKGE~\citep{chen2019embedding} associates confidence scores with triples; BEUrRE~\citep{chen2021probabilistic} uses box embeddings where volume indicates uncertainty; GP-KGE~\citep{Chen2021PERM} learns Gaussian distributions over entities.
 All share the limitation we identify: learned variances are relation-agnostic.
+Despite being trained on data containing entity-relation co-occurrence patterns, these methods do not autonomously learn relation-specific uncertainty, necessitating our explicit decomposition framework.
 
 \paragraph{OOD Detection.}
 MC Dropout~\citep{gal2016dropout}, Deep Ensembles~\citep{lakshminarayanan2017simple}, and Energy-based methods~\citep{liu2020energy} capture model uncertainty but not structural observation patterns.
