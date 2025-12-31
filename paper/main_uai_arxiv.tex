@@ -1,7 +1,7 @@
-% UAI 2025 Submission
-% Uses UAI style files from https://www.auai.org/
+% arXiv submission
+% Uses UAI 2024 style files
 
-\documentclass[accepted]{uai2024}  % Change to [accepted] for camera-ready
+\documentclass[accepted]{uai2024}
 
 % Standard packages
 \usepackage{times}
@@ -43,9 +43,8 @@
 \title{Decomposing Uncertainty in Probabilistic Knowledge Graph Embeddings: Why Entity Variance Is Not Enough}
 
 \author{
-  Chorok Lee \\
-  Korea Advanced Institute of Science and Technology (KAIST) \\
-  choroklee@kaist.ac.kr
+  Chorok Lee\thanks{Corresponding author: \texttt{choroklee@kaist.ac.kr}} \\
+  Korea Advanced Institute of Science and Technology (KAIST)
 }
 
 \begin{document}
@@ -83,7 +82,10 @@
 
 \appendix
 
-\section{Theorem Proofs}
+\section{Theoretical Details}
+\label{app:theory}
+
+\subsection{Theorem Proofs}
 \label{app:proof}
 
 We state the full assumptions and prove both theorems.
@@ -149,188 +151,12 @@ Despite these violations, the theorem's qualitative predictions remain valid. Em
 
 The violations affect the \emph{tightness} of guarantees (e.g., semantic AUROC $= 0.42$ vs predicted $0.50$) but not the \emph{direction} of effects. The theorem should be interpreted as providing qualitative insights under idealized conditions rather than quantitative predictions for all datasets.
 
-\section{Ablation Study}
-\label{app:ablation}
-
-\begin{table}[h]
-\centering
-\caption{Ablation of mixing strategies on FB15k-237.}
-\begin{tabular}{lcc}
-\toprule
-Configuration & Temporal OOD & Standard OOD \\
-\midrule
-Fixed $\alpha = 0.5$ & 0.951 & 0.935 \\
-Learned global $\alpha$ (CAGP) & \textbf{0.986} & \textbf{0.960} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Fixed $\alpha = 0.5$ captures most gains (0.95 AUROC), validating the decomposition framework itself. Learned $\alpha$ (CAGP) provides additional improvement (+3.5\% absolute), adapting to dataset characteristics.
-
-\subsection{Binary vs Continuous Coverage}
-\label{app:coverage_ablation}
-
-\begin{table}[h]
-\centering
-\caption{Binary vs continuous coverage on temporal OOD (FB15k-237). Binary achieves perfect detection while continuous variants fail.}
-\label{tab:coverage_ablation}
-\begin{tabular}{lccc}
-\toprule
-Coverage Mode & AUROC & AUPR & Separation \\
-\midrule
-Binary & \textbf{1.0000} & \textbf{1.0000} & 0.360 \\
-Log-scaled & 0.5888 & 0.6119 & 0.058 \\
-TF-IDF & 0.5606 & 0.5733 & 0.046 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\paragraph{Explanation.}
-Binary coverage achieves perfect OOD detection because novel contexts are characterized by \emph{zero} coverage---entity-relation pairs never observed during training. Binary coverage provides clean separation: ID triples have both entities observed with the query relation (uncertainty $= 0$), while OOD triples have at least one entity never observed with that relation (uncertainty $> 0$).
-
-Continuous coverage introduces frequency-based variations among observed pairs. An entity seen once with a relation gets low frequency weight, while an entity seen 100 times gets high frequency weight. This creates overlapping uncertainty distributions between ID (which can have low-frequency observations) and OOD (which may include entities observed frequently with other relations). The result is near-random performance (AUROC $\approx 0.56$--$0.59$).
-
-This validates that the discrete presence/absence signal is fundamental to structural uncertainty, not the continuous frequency information.
-
-\paragraph{Why perfect detection on some temporal splits?}
-Binary coverage achieves perfect AUROC $= 1.0$ on FB15k-237's simulated temporal split (Table~\ref{tab:coverage_ablation} above) but only 0.824 on ICEWS14 (main text Table~1). This discrepancy reflects different temporal split compositions:
-
-\begin{table}[h]
-\centering
-\caption{Temporal OOD composition across datasets. FB15k-237 split is simulated (first 70\% chronologically); ICEWS14 is ground-truth temporal (Oct--Dec 2014).}
-\label{tab:temporal_composition}
-\vspace{0.3em}
-\small
-\begin{tabular}{lcc}
-\toprule
-Dataset & Novel Contexts & Emerging Entities \\
-\midrule
-FB15k-237 (simulated) & $\sim$94\% & $\sim$6\% \\
-ICEWS14 (ground-truth) & $\sim$61\% & $\sim$39\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-FB15k-237's simulated temporal split predominantly creates novel contexts (well-observed entities appearing in new relational patterns), which binary coverage detects perfectly by Theorem~\ref{thm:complementarity} Part (iii). ICEWS14's ground-truth future time period contains substantial emerging entities (39\%)---genuinely new or rare entities that structural uncertainty misses (Theorem Part (ii)). This validates the theorem: when OOD is purely novel contexts, coverage alone suffices; when mixed with emerging entities, semantic uncertainty is necessary.
-
-\section{Calibration Analysis}
-\label{app:calibration}
-
-\begin{table}[h]
-\centering
-\caption{Calibration metrics on FB15k-237. ECE = Expected Calibration Error (lower is better).}
-\begin{tabular}{lcc}
-\toprule
-Method & ECE $\downarrow$ & Brier $\downarrow$ \\
-\midrule
-UKGE & 0.312 & 0.298 \\
-Energy & 0.287 & 0.271 \\
-Deep Ensemble & 0.198 & 0.203 \\
-SNGP & 0.183 & 0.195 \\
-$U_{\text{sem}}$ & 0.156 & 0.178 \\
-$U_{\text{str}}$ & 0.142 & 0.165 \\
-CAGP & \textbf{0.089} & \textbf{0.112} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-CAGP achieves 37--47\% ECE reduction over single signals. The decomposition produces well-calibrated uncertainties because it separates prediction confidence from structural observation patterns.
-
-\section{Selective Prediction}
-\label{app:selective}
-
-\begin{table}[h]
-\centering
-\caption{Selective prediction on FB15k-237. Systems answer 85\% of queries.}
-\begin{tabular}{lcc}
-\toprule
-Method & Acc@85\% & Error Red. \\
-\midrule
-No abstention & 62.3\% & --- \\
-UKGE & 68.1\% & 15.4\% \\
-Deep Ensemble & 69.4\% & 18.8\% \\
-$U_{\text{sem}}$ & 71.2\% & 23.6\% \\
-$U_{\text{str}}$ & 73.5\% & 29.7\% \\
-CAGP & \textbf{78.4\%} & \textbf{42.7\%} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Abstaining on 15\% highest-uncertainty queries reduces errors by 43\% (78.4\% accuracy vs 62.3\% baseline).
-
-\section{Architecture Generalization}
-\label{app:architectures}
-
-\begin{table}[h]
-\centering
-\caption{Generalization across architectures on FB15k-237.}
-\begin{tabular}{lccc}
-\toprule
-Base Model & $U_{\text{sem}}$ & $U_{\text{str}}$ & CAGP \\
-\midrule
-DistMult & 0.753 & 0.821 & 0.959 \\
-TransE & 0.775 & 0.822 & 0.963 \\
-ComplEx & 0.755 & 0.821 & 0.960 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The decomposition is architecture-agnostic, achieving $\sim$0.96 AUROC across DistMult, TransE, and ComplEx.
-
-\section{Error Analysis}
-\label{app:error_analysis}
-
-We analyzed CAGP's failure modes on FB15k-237 standard OOD detection (random tail corruption, 20,000 ID + 20,000 OOD samples).
-
-\begin{table}[h]
-\centering
-\caption{Error analysis on FB15k-237 standard OOD. FP = false positive (ID flagged as OOD), FN = false negative (OOD missed).}
-\label{tab:error_analysis}
-\small
-\begin{tabular}{lrr}
-\toprule
-Metric & Value & Rate \\
-\midrule
-\multicolumn{3}{l}{\textit{Overall Performance}} \\
-AUROC & 0.971 & --- \\
-Accuracy & 91.3\% & --- \\
-Precision & 0.913 & --- \\
-Recall & 0.913 & --- \\
-F1 Score & 0.913 & --- \\
-\midrule
-\multicolumn{3}{l}{\textit{Confusion Matrix}} \\
-True Negatives & 18,267 & --- \\
-False Positives & 1,733 & 8.7\% \\
-False Negatives & 1,733 & 8.7\% \\
-True Positives & 18,267 & --- \\
-\midrule
-\multicolumn{3}{l}{\textit{False Positive Characteristics}} \\
-Avg tail degree & 183 & (ID: 583) \\
-Avg relation freq & 2,384 & (ID: 5,213) \\
-\midrule
-\multicolumn{3}{l}{\textit{False Negative Characteristics}} \\
-Avg tail degree & 183 & (OOD: 37) \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\paragraph{Key findings.}
-\textbf{False positives} (8.7\%) occur primarily on ID triples with low-degree tail entities and rare relations.
-These triples have elevated uncertainty despite being in-distribution, reflecting the model's conservative behavior on under-represented patterns.
-FP tail entities have mean degree 183 compared to 583 for correctly classified ID triples; FP relations have mean frequency 2,384 vs 5,213.
-
-\textbf{False negatives} (8.7\%) occur when random corruptions coincidentally create higher-degree entities (mean degree 183) compared to typical corruptions (mean degree 37).
-These corrupted tails are better-represented in the training data, leading to lower uncertainty.
-
-The balanced error rates (8.7\% FP = FN) and high AUROC (0.971) demonstrate effective discrimination.
-Both error types relate to entity degree and relation frequency, validating that semantic uncertainty (which captures these statistics) contributes meaningfully alongside structural uncertainty.
-
-\section{Assumption Verification}
+\subsection{Assumption Verification}
 \label{app:assumptions}
 
 \begin{table}[h]
 \centering
-\caption{Empirical verification of theorem assumptions.}
+\caption{Empirical verification of theorem assumptions: variance-frequency monotonicity (A1), ID coverage (A2), bounded semantic gap (A4), non-degenerate coverage (A5), and semantic separation (A6).}
 \label{tab:assumptions}
 \small
 \begin{tabular}{llccc}
@@ -354,10 +180,10 @@ Assumptions (A1)--(A3) hold across datasets. (A4) is marginally violated on WN18
 \paragraph{Why does the theorem hold despite (A4) violation?}
 The bound $\Delta < 1$ ensures the structural term dominates for \emph{all} novel-context samples. When $\Delta \gtrsim 1$, a small fraction of novel-context samples may have $U_{\text{comb}}(x) < U_{\text{comb}}(x')$ for some ID $x'$. However, the theorem's qualitative predictions---semantic fails on novel contexts, structural fails on some emerging entities, combination helps---remain valid. The violation affects the tightness of the AUROC $= 1$ guarantee, not the direction of improvement.
 
-\subsection{Empirical Verification of Assumption A3}
+\subsubsection{Empirical Verification of Assumption A3}
 \label{app:assumption_verification}
 
-We empirically verify Assumption A3 (frequency overlap), which is central to Theorem~\ref{thm:impossibility}'s validity.
+We empirically verify Assumption A3, which is central to Theorem~\ref{thm:impossibility}'s validity.
 
 \paragraph{Verification methodology.}
 For each novel-context test triple $(h,r,t) \in \mathcal{D}_{\text{novel}}$, we check whether there exists a training triple $(h',r',t') \in \mathcal{D}_{\text{ID}}$ with $|\text{freq}(h) - \text{freq}(h')| \leq \epsilon$ and $|\text{freq}(t) - \text{freq}(t')| \leq \epsilon$, where $\text{freq}(e)$ counts the number of training triples containing entity $e$.
@@ -408,7 +234,189 @@ We verified A3 on WN18RR and YAGO3-10 with similar results:
 
 The near-perfect matching across three diverse datasets demonstrates that A3 is not an artifact of FB15k-237 but reflects a fundamental property of knowledge graph structure: novel contexts arise from recombining well-observed entities, not from rare entities appearing in new patterns.
 
-\section{OOD Split Methodology}
+\section{Additional Experimental Results}
+\label{app:experiments}
+
+\subsection{Ablation Study}
+\label{app:ablation}
+
+\begin{table}[h]
+\centering
+\caption{Ablation of mixing strategies on FB15k-237.}
+\begin{tabular}{lcc}
+\toprule
+Configuration & Temporal OOD & Standard OOD \\
+\midrule
+Fixed $\alpha = 0.5$ & 0.951 & 0.935 \\
+Learned global $\alpha$ (CAGP) & \textbf{0.986} & \textbf{0.960} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Fixed $\alpha = 0.5$ captures most gains (0.95 AUROC), validating the decomposition framework itself. Learned $\alpha$ (CAGP) provides additional improvement (+3.5\% absolute), adapting to dataset characteristics.
+
+\subsection{Binary vs Continuous Coverage}
+\label{app:coverage_ablation}
+
+\begin{table}[h]
+\centering
+\caption{Binary vs continuous coverage on temporal OOD (FB15k-237). Binary achieves perfect detection (AUROC = 1.0) while continuous variants fail (AUROC = 0.56--0.59).}
+\label{tab:coverage_ablation}
+\begin{tabular}{lccc}
+\toprule
+Coverage Mode & AUROC & AUPR & Separation \\
+\midrule
+Binary & \textbf{1.0000} & \textbf{1.0000} & 0.360 \\
+Log-scaled & 0.5888 & 0.6119 & 0.058 \\
+TF-IDF & 0.5606 & 0.5733 & 0.046 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Explanation.}
+Binary coverage achieves perfect OOD detection because novel contexts are characterized by \emph{zero} coverage---entity-relation pairs never observed during training. Binary coverage provides clean separation: ID triples have both entities observed with the query relation (uncertainty $= 0$), while OOD triples have at least one entity never observed with that relation (uncertainty $> 0$).
+
+Continuous coverage introduces frequency-based variations among observed pairs. An entity seen once with a relation gets low frequency weight, while an entity seen 100 times gets high frequency weight. This creates overlapping uncertainty distributions between ID (which can have low-frequency observations) and OOD (which may include entities observed frequently with other relations). The result is near-random performance (AUROC $\approx 0.56$--$0.59$).
+
+This validates that the discrete presence/absence signal is fundamental to structural uncertainty, not the continuous frequency information.
+
+\paragraph{Why perfect detection on some temporal splits?}
+Binary coverage achieves perfect AUROC $= 1.0$ on FB15k-237's simulated temporal split (Table~\ref{tab:coverage_ablation} above) but only 0.824 on ICEWS14 (main text Table~1). This discrepancy reflects different temporal split compositions (Table~\ref{tab:temporal_composition}):
+
+\begin{table}[h]
+\centering
+\caption{Temporal OOD composition across datasets. FB15k-237 split is simulated (first 70\% chronologically); ICEWS14 is ground-truth temporal (Oct--Dec 2014).}
+\label{tab:temporal_composition}
+\vspace{0.3em}
+\small
+\begin{tabular}{lcc}
+\toprule
+Dataset & Novel Contexts & Emerging Entities \\
+\midrule
+FB15k-237 (simulated) & $\sim$94\% & $\sim$6\% \\
+ICEWS14 (ground-truth) & $\sim$61\% & $\sim$39\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+FB15k-237's simulated temporal split predominantly creates novel contexts (well-observed entities appearing in new relational patterns), which binary coverage detects perfectly by Theorem~\ref{thm:complementarity} Part (iii). ICEWS14's ground-truth future time period contains substantial emerging entities (39\%)---genuinely new or rare entities that structural uncertainty misses (Theorem Part (ii)). This validates the theorem: when OOD is purely novel contexts, coverage alone suffices; when mixed with emerging entities, semantic uncertainty is necessary.
+
+\subsection{Calibration Analysis}
+\label{app:calibration}
+
+\begin{table}[h]
+\centering
+\caption{Calibration metrics on FB15k-237. ECE = Expected Calibration Error (lower is better).}
+\begin{tabular}{lcc}
+\toprule
+Method & ECE $\downarrow$ & Brier $\downarrow$ \\
+\midrule
+UKGE & 0.312 & 0.298 \\
+Energy & 0.287 & 0.271 \\
+Deep Ensemble & 0.198 & 0.203 \\
+SNGP & 0.183 & 0.195 \\
+$U_{\text{sem}}$ & 0.156 & 0.178 \\
+$U_{\text{str}}$ & 0.142 & 0.165 \\
+CAGP & \textbf{0.089} & \textbf{0.112} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+CAGP achieves 37--47\% ECE reduction over single signals. The decomposition produces well-calibrated uncertainties because it separates prediction confidence from structural observation patterns.
+
+\subsection{Selective Prediction}
+\label{app:selective}
+
+\begin{table}[h]
+\centering
+\caption{Selective prediction on FB15k-237. Systems answer 85\% of queries.}
+\begin{tabular}{lcc}
+\toprule
+Method & Acc@85\% & Error Red. \\
+\midrule
+No abstention & 62.3\% & --- \\
+UKGE & 68.1\% & 15.4\% \\
+Deep Ensemble & 69.4\% & 18.8\% \\
+$U_{\text{sem}}$ & 71.2\% & 23.6\% \\
+$U_{\text{str}}$ & 73.5\% & 29.7\% \\
+CAGP & \textbf{78.4\%} & \textbf{42.7\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Abstaining on 15\% highest-uncertainty queries reduces errors by 43\% (78.4\% accuracy vs 62.3\% baseline).
+
+\subsection{Architecture Generalization}
+\label{app:architectures}
+
+\begin{table}[h]
+\centering
+\caption{Generalization across architectures on FB15k-237. CAGP achieves consistent performance (0.959--0.963 AUROC) across DistMult, TransE, and ComplEx.}
+\begin{tabular}{lccc}
+\toprule
+Base Model & $U_{\text{sem}}$ & $U_{\text{str}}$ & CAGP \\
+\midrule
+DistMult & 0.753 & 0.821 & 0.959 \\
+TransE & 0.775 & 0.822 & 0.963 \\
+ComplEx & 0.755 & 0.821 & 0.960 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The decomposition is architecture-agnostic, achieving $\sim$0.96 AUROC across DistMult, TransE, and ComplEx.
+
+\subsection{Error Analysis}
+\label{app:error_analysis}
+
+We analyzed CAGP's failure modes on FB15k-237 standard OOD detection (random tail corruption, 20,000 ID + 20,000 OOD samples).
+
+\begin{table}[h]
+\centering
+\caption{Error analysis on FB15k-237 standard OOD. FP = false positive (ID flagged as OOD), FN = false negative (OOD missed).}
+\label{tab:error_analysis}
+\small
+\begin{tabular}{lrr}
+\toprule
+Metric & Value & Rate \\
+\midrule
+\multicolumn{3}{l}{\textit{Overall Performance}} \\
+AUROC & 0.971 & --- \\
+Accuracy & 91.3\% & --- \\
+Precision & 0.913 & --- \\
+Recall & 0.913 & --- \\
+F1 Score & 0.913 & --- \\
+\midrule
+\multicolumn{3}{l}{\textit{Confusion Matrix}} \\
+True Negatives & 18,267 & --- \\
+False Positives & 1,733 & 8.7\% \\
+False Negatives & 1,733 & 8.7\% \\
+True Positives & 18,267 & --- \\
+\midrule
+\multicolumn{3}{l}{\textit{False Positive Characteristics}} \\
+Avg tail degree & 183 & (ID: 583) \\
+Avg relation freq & 2,384 & (ID: 5,213) \\
+\midrule
+\multicolumn{3}{l}{\textit{False Negative Characteristics}} \\
+Avg tail degree & 183 & (OOD: 37) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Key findings.}
+Table~\ref{tab:error_analysis} shows that \textbf{false positives} (8.7\%) occur primarily on ID triples with low-degree tail entities and rare relations.
+These triples have elevated uncertainty despite being in-distribution, reflecting the model's conservative behavior on under-represented patterns.
+FP tail entities have mean degree 183 compared to 583 for correctly classified ID triples; FP relations have mean frequency 2,384 vs 5,213.
+
+\textbf{False negatives} (8.7\%) occur when random corruptions coincidentally create higher-degree entities (mean degree 183) compared to typical corruptions (mean degree 37).
+These corrupted tails are better-represented in the training data, leading to lower uncertainty.
+
+The balanced error rates (8.7\% FP = FN) and high AUROC (0.971) demonstrate effective discrimination.
+Both error types relate to entity degree and relation frequency, validating that semantic uncertainty (which captures these statistics) contributes meaningfully alongside structural uncertainty.
+
+\section{Implementation Details}
+\label{app:implementation}
+
+\subsection{OOD Split Methodology}
 \label{app:ood_splits}
 
 \paragraph{Temporal-like distribution shift.}
@@ -437,8 +445,8 @@ Our temporal-like split yields:
 
 The clear frequency separation (emerging: median 2 vs novel contexts: median 28) confirms that these categories represent distinct OOD phenomena.
 
-\section{Implementation Details}
-\label{app:implementation}
+\subsection{Training Configuration}
+\label{app:training_config}
 
 Embedding dimension $d=100$, batch size 2048, learning rate $10^{-3}$, KL weight $\beta=0.01$, 50 epochs, averaged over 3 seeds.
 Significance tests use paired bootstrap (10,000 iterations, $p < 0.01$).
@@ -454,14 +462,14 @@ Sparse storage reduces memory: $<$5\% non-zero on FB15k-237 yields $<$1MB. For e
 
 \textbf{Inference complexity.} Computing $U_{\text{str}}(h,r,t)$ requires two hash lookups: $O(1)$ average case. Total overhead: $<$2\% vs forward pass (measured on FB15k-237).
 
-\textbf{Learned variance alternative.} We explored learning relation-conditioned variance $\sigma^2(e,r)$ via MLP, avoiding explicit coverage storage. However, this requires auxiliary OOD objectives and provides marginal benefits over explicit coverage. We found CAGP's interpretability and simplicity preferable.
+\textbf{Learned variance alternative.} We explored learning relation-conditioned variance $\sigma^2(e,r)$ via multi-layer perceptron, avoiding explicit coverage storage. However, this requires auxiliary OOD objectives and provides marginal benefits over explicit coverage. We found CAGP's interpretability and simplicity preferable.
 
 \paragraph{Threshold $\tau$ sensitivity.}
 We set $\tau$ to the 10th percentile of entity frequencies. Table~\ref{tab:tau} shows CAGP is robust to this choice.
 
 \begin{table}[h]
 \centering
-\caption{Sensitivity to $\tau$ on FB15k-237 (temporal OOD AUROC).}
+\caption{Sensitivity to $\tau$ (emerging entity threshold, set to 10th percentile of entity frequencies) on FB15k-237 temporal OOD AUROC.}
 \label{tab:tau}
 \small
 \begin{tabular}{lccccc}
@@ -475,12 +483,12 @@ CAGP AUROC & 0.957 & 0.960 & 0.958 & 0.951 \\
 
 Performance is stable across 5th--20th percentile; higher thresholds reduce the emerging entity set, slightly hurting detection.
 
-\section{Dataset Statistics}
+\subsection{Dataset Statistics}
 \label{app:datasets}
 
 \begin{table}[h]
 \centering
-\caption{Dataset statistics.}
+\caption{Dataset statistics: number of entities, relations, and triples in train/validation/test splits.}
 \begin{tabular}{lccccc}
 \toprule
 Dataset & Entities & Relations & Train & Valid & Test \\

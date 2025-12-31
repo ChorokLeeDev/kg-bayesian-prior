@@ -9,7 +9,7 @@ But these variances are \emph{relation-agnostic}: entity $e$ receives a single v
 Consider $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
 The model assigns low variance (well-observed), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions.
 
-This causes systematic failures: score-based methods achieve 0.99 AUROC detecting random corruptions (implausible triples) but only 0.52--0.64 on temporal distribution shift (queries from future time periods with new entities and relationships).
+This causes systematic failures (Figure~\ref{fig:main_results}): score-based methods achieve 0.99 AUROC detecting random corruptions (implausible triples) but only 0.52--0.64 on temporal distribution shift (queries from future time periods with new entities and relationships).
 
 \paragraph{Two OOD Types.}
 We identify two distinct scenarios:
@@ -22,7 +22,7 @@ This failure reveals a fundamental mismatch between standard training objectives
 
 Our contributions are threefold:
 \textbf{(1) Theoretical:} We prove that relation-agnostic uncertainty estimators achieve near-random performance on novel contexts (Theorem~\ref{thm:impossibility}), and formalize conditions under which semantic and structural uncertainties are complementary (Theorem~\ref{thm:complementarity}).
-\textbf{(2) Empirical:} We demonstrate this limitation persists across existing probabilistic methods (GP-KGE, UKGE, ensembles), achieving only 0.52--0.64 AUROC on temporal shift despite 0.99 on random corruptions.
+\textbf{(2) Empirical:} We demonstrate this limitation persists across existing probabilistic methods (Gaussian Process Knowledge Graph Embedding (GP-KGE), Uncertainty-aware Knowledge Graph Embeddings (UKGE), ensembles), achieving only 0.52--0.64 AUROC on temporal shift despite 0.99 on random corruptions.
 \textbf{(3) Methodological:} We propose CAGP (Coverage-Augmented GP-KGE), which augments entity-level variance with explicit coverage tracking of entity-relation co-occurrence.
 CAGP achieves 0.94--0.99 AUROC on temporal OOD across multiple benchmarks, a 60--80\% relative improvement over probabilistic baselines.
 

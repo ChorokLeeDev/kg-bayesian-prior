@@ -38,7 +38,7 @@ Let $U: \mathcal{E} \times \mathcal{R} \times \mathcal{E} \to \mathbb{R}$ be an 
 \end{equation}
 where $\sigma^2_e$ depends only on entity $e$ (not relation $r$), and $f$ is any combining function.
 
-Under assumptions A1--A3 (variance-frequency monotonicity, ID coverage completeness, frequency overlap; see Appendix\footnote{We empirically validate Assumption A3 in Appendix~\ref{app:assumption_verification}, finding 100\% of novel-context triples have frequency-matched ID counterparts on three benchmarks.}), there exists a distribution $\mathcal{D}$ with novel-context OOD subset $\mathcal{D}_{\text{novel}}$ such that:
+Under assumptions A1--A3 (see Appendix~\ref{app:proof} for full details\footnote{We empirically validate Assumption A3 in Appendix~\ref{app:assumption_verification}, finding 100\% of novel-context triples have frequency-matched ID counterparts on three benchmarks.}), there exists a distribution $\mathcal{D}$ with novel-context OOD subset $\mathcal{D}_{\text{novel}}$ such that:
 \begin{equation}
     \text{AUROC}(U, \mathcal{D}_{\text{novel}}) \leq \frac{1}{2} + O(\epsilon)
 \end{equation}
@@ -51,7 +51,7 @@ where $\epsilon$ measures the frequency distribution overlap between ID and OOD 
 
 \begin{theorem}[Complementarity of Uncertainty Signals]
 \label{thm:complementarity}
-Under idealized conditions (monotonic variance-frequency relationship, complete ID coverage, approximate frequency overlap; see Appendix~\ref{app:proof} for precise statements and robustness analysis):
+Under assumptions A1--A6 (see Appendix~\ref{app:proof} for precise statements and robustness analysis):
 \begin{enumerate}
     \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\delta)$ on novel contexts, where $\delta$ measures frequency distribution overlap
     \item[\textbf{(ii)}] Structural uncertainty achieves AUROC $< 1$ on emerging entities (imperfect separation)
@@ -62,7 +62,7 @@ Under idealized conditions (monotonic variance-frequency relationship, complete 
 
 \textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities---semantic uncertainty cannot distinguish them. Part (ii): Emerging entities are defined by low \emph{frequency}, but may still have \emph{coverage} for the specific query relation, making some indistinguishable from ID via coverage alone. Part (iii): Novel contexts have missing coverage by definition, while ID has full coverage. Part (iv): The combination uses semantic to catch emerging entities that structural misses (those with coverage), and structural to catch novel contexts that semantic misses. Full proof in Appendix~\ref{app:proof}.
 
-\subsection{Coverage-Augmented GP-KGE (CAGP)}
+\subsection{CAGP}
 
 Theorem~\ref{thm:complementarity} establishes that relation-specific uncertainty is necessary for detecting novel contexts. We propose CAGP, which explicitly combines semantic and structural uncertainty:
 
