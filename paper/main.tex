@@ -1,16 +1,17 @@
-% arXiv submission
-% Uses UAI 2024 style files
+% UAI 2026 submission
+\documentclass{uai2026} % for initial submission
+%\documentclass[accepted]{uai2026} % after acceptance
 
-\documentclass[accepted]{uai2024}
+%% Language
+\usepackage[american]{babel}
 
-% Standard packages
-\usepackage{times}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{microtype}
+%% Bibliography
+\usepackage{natbib}
+    \bibliographystyle{plainnat}
+    \renewcommand{\bibsection}{\subsubsection*{References}}
 
-% Math and formatting
-\usepackage{amsmath}
+%% Math and formatting
+\usepackage{mathtools} % amsmath with fixes and additions
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{booktabs}
@@ -18,9 +19,6 @@
 \usepackage{subcaption}
 \usepackage{xcolor}
 \usepackage{bm}
-
-% Hyperref (load last)
-\usepackage[colorlinks=true,citecolor=blue,urlcolor=blue]{hyperref}
 
 % Theorem environments
 \newtheorem{proposition}{Proposition}
@@ -42,9 +40,9 @@
 
 \title{Decomposing Uncertainty in Probabilistic Knowledge Graph Embeddings: Why Entity Variance Is Not Enough}
 
-\author{
-  Chorok Lee\thanks{Corresponding author: \texttt{choroklee@kaist.ac.kr}} \\
-  Korea Advanced Institute of Science and Technology (KAIST)
+\author[1]{\href{mailto:choroklee@kaist.ac.kr}{Chorok~Lee}{}}
+\affil[1]{%
+    Korea Advanced Institute of Science and Technology (KAIST)
 }
 
 \begin{document}
@@ -78,7 +76,22 @@
 \label{sec:conclusion}
 \input{sections/conclusion_uai}
 
+\begin{contributions}
+    C.~Lee conceived the idea, developed the method, conducted all experiments, and wrote the paper.
+\end{contributions}
+
+\begin{acknowledgements}
+    % TODO: Add acknowledgements
+\end{acknowledgements}
+
 \bibliography{references}
+
+\newpage
+
+\onecolumn
+
+\title{Decomposing Uncertainty in Probabilistic Knowledge Graph Embeddings: Why Entity Variance Is Not Enough\\(Supplementary Material)}
+\maketitle
 
 \appendix
 
@@ -287,7 +300,6 @@ Binary coverage achieves perfect AUROC $= 1.0$ on FB15k-237's simulated temporal
 \centering
 \caption{Temporal OOD composition across datasets. FB15k-237 split is simulated (first 70\% chronologically); ICEWS14 is ground-truth temporal (Oct--Dec 2014).}
 \label{tab:temporal_composition}
-\vspace{0.3em}
 \small
 \begin{tabular}{lcc}
 \toprule
@@ -433,7 +445,7 @@ For each test triple $(h,r,t)$:
 \end{itemize}
 
 \paragraph{Rationale.}
-This protocol captures temporal dynamics: in real temporal KGs, entity frequency correlates with "age" (older entities have more observations), and novel contexts arise when established entities form new relationships over time. The frequency threshold $\tau$ at the 10th percentile ensures the "emerging" category captures genuinely rare entities while "novel contexts" includes only well-observed entities.
+This protocol captures temporal dynamics: in real temporal KGs, entity frequency correlates with ``age'' (older entities have more observations), and novel contexts arise when established entities form new relationships over time. The frequency threshold $\tau$ at the 10th percentile ensures the ``emerging'' category captures genuinely rare entities while ``novel contexts'' includes only well-observed entities.
 
 \paragraph{FB15k-237 split statistics.}
 Our temporal-like split yields:

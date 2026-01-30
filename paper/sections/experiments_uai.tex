@@ -19,7 +19,7 @@ Table~\ref{tab:temporal_ood} presents results on temporal-like distribution shif
 \centering
 \caption{\textbf{Temporal-like OOD detection.} AUROC on entity frequency-based splits simulating temporal dynamics. FB15k-237 results are mean of 3 runs; YAGO3-10 from 3 seeds. $^\dagger$p$<$0.01 vs best baseline.}
 \label{tab:temporal_ood}
-\vspace{0.5em}
+
 \small
 \begin{tabular}{lcc}
 \toprule
@@ -50,7 +50,7 @@ CAGP (learned $\alpha$) & \textbf{0.986}$^\dagger$ & \textbf{0.942}$^\dagger$ \\
 \centering
 \caption{\textbf{Stratified OOD detection by type on FB15k-237.} Each uncertainty signal excels on one OOD type and fails on the other, validating Theorem~\ref{thm:complementarity}. Sample sizes: Emerging entities $n{=}2{,}223$ (rare, low-frequency), Novel contexts $n{=}5{,}193$ (familiar entities in unobserved relational patterns), ID $n{=}13{,}050$.}
 \label{tab:complementarity}
-\vspace{0.5em}
+
 \small
 \begin{tabular}{lccc}
 \toprule
@@ -84,7 +84,7 @@ Simple averaging captures most gains (0.951 overall), showing the decomposition 
 \centering
 \caption{\textbf{Standard OOD} (random corruptions). Score-based methods excel on this easier setting.}
 \label{tab:standard}
-\vspace{0.5em}
+
 \small
 \begin{tabular}{lccc}
 \toprule
@@ -112,7 +112,6 @@ Table~\ref{tab:method_comparison} shows different methods excel on different dis
 \centering
 \caption{\textbf{Methods address different OOD types.} AUROC on two distribution shifts (FB15k-237). Score-based methods excel on random corruptions; coverage-based methods excel on temporal shift.}
 \label{tab:method_comparison}
-\vspace{0.3em}
 \small
 \begin{tabular}{lcc}
 \toprule
