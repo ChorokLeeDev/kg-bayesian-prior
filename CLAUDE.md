@@ -24,7 +24,7 @@ python scripts/verify_theorem.py
 # Full GPU experiments require Colab - see notebooks/colab_yago_full.ipynb
 
 # Compile paper
-cd paper && pdflatex main_emnlp.tex && bibtex main_emnlp && pdflatex main_emnlp.tex && pdflatex main_emnlp.tex
+cd paper && pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex
 
 # Format code
 black src/ scripts/
@@ -32,6 +32,24 @@ isort src/ scripts/
 ```
 
 No automated tests exist yet. The `tests/` directory is empty.
+
+## Folder Structure Update (2026-02-07)
+
+The paper folder was cleaned up to reduce confusion for active writing:
+
+- Active manuscript source of truth: `paper/main.tex`
+- Active section files remain under `paper/sections/`:
+  - `abstract_uai.tex`
+  - `introduction_uai.tex`
+  - `related_work_uai.tex`
+  - `background.tex`
+  - `method_uai_v2.tex`
+  - `experiments_uai.tex`
+  - `conclusion_uai.tex`
+- Legacy section drafts moved to `archive/retired_ideas/paper/sections/`
+- Non-LaTeX PNG figure copies moved to `archive/retired_ideas/paper/figures_png/`
+
+Before paper edits, check `docs/FOLDER_STRUCTURE_UPDATE.md`.
 
 ## Architecture
 

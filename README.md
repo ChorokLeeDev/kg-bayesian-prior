@@ -44,19 +44,21 @@ where:
 
 ```
 kg-bayesian-prior/
-├── src/models/          # CAGP, VanillaGPKGE implementations
+├── paper/               # Active manuscript (source of truth)
+│   ├── main.tex
+│   ├── sections/        # Active UAI sections only
+│   └── figures/         # Active PDF figures
+├── archive/retired_ideas/
+│   └── paper/           # Archived legacy drafts and PNG figure copies
+├── src/                 # Model/data/evaluation code
 ├── scripts/             # Experiment scripts
-│   ├── run_coverage_only_ablation.py
-│   ├── verify_theorem.py
-│   └── analyze_theorem_gap.py
 ├── notebooks/           # Colab notebooks for GPU experiments
-│   ├── colab_yago_full.ipynb
-│   └── colab_baselines.ipynb
 ├── outputs/             # Experiment results (JSON)
 └── docs/
-    ├── FINDINGS.md      # Main findings document
-    ├── STATUS.md        # Project status
-    └── theory/          # Theorem proofs
+    ├── FINDINGS.md                 # Main findings document
+    ├── STATUS.md                   # Project status
+    ├── FOLDER_STRUCTURE_UPDATE.md  # Folder structure change guide
+    └── theory/                     # Theorem proofs
 ```
 
 ## Quick Start
@@ -77,6 +79,7 @@ python scripts/verify_theorem.py
 - **[FINDINGS.md](docs/FINDINGS.md)** - Complete research findings
 - **[STATUS.md](docs/STATUS.md)** - Current project status
 - **[GPU_EXPERIMENTS.md](docs/GPU_EXPERIMENTS.md)** - Colab instructions
+- **[FOLDER_STRUCTURE_UPDATE.md](docs/FOLDER_STRUCTURE_UPDATE.md)** - Agent-facing folder migration guide
 
 ## Citation
 
