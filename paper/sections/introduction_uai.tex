@@ -9,7 +9,7 @@ But these variances are \emph{relation-agnostic}: entity $e$ receives a single v
 Consider $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
 The model assigns low variance (well-observed), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions.
 
-This causes systematic failures (Figure~\ref{fig:main_results}): score-based methods achieve 0.99 AUROC detecting random corruptions (implausible triples) but only 0.52--0.64 on temporal distribution shift (queries from future time periods with new entities and relationships).
+This causes systematic failures (Figure~\ref{fig:main_results}): score-based methods achieve 0.99 AUROC detecting random corruptions (implausible triples) but only 0.44--0.64 on temporal OOD (emerging entities and novel relational contexts that simulate temporal distribution shift).
 
 \paragraph{Two OOD Types.}
 We identify two distinct scenarios:
@@ -20,16 +20,15 @@ We identify two distinct scenarios:
 We identify a systematic limitation in probabilistic KG embeddings: learned variances are relation-agnostic despite training on data containing entity-relation co-occurrence patterns.
 This failure reveals a fundamental mismatch between standard training objectives (link prediction accuracy) and OOD detection requirements (capturing structural observation patterns).
 
-Our contributions are threefold:
-\textbf{(1) Theoretical:} We prove that relation-agnostic uncertainty estimators achieve near-random performance on novel contexts (Theorem~\ref{thm:impossibility}), and formalize conditions under which semantic and structural uncertainties are complementary (Theorem~\ref{thm:complementarity}).
-\textbf{(2) Empirical:} We demonstrate this limitation persists across existing probabilistic methods (Gaussian Process Knowledge Graph Embedding (GP-KGE), Uncertainty-aware Knowledge Graph Embeddings (UKGE), ensembles), achieving only 0.52--0.64 AUROC on temporal shift despite 0.99 on random corruptions.
-\textbf{(3) Methodological:} We propose CAGP (Coverage-Augmented GP-KGE), which augments entity-level variance with explicit coverage tracking of entity-relation co-occurrence.
-CAGP achieves 0.94--0.99 AUROC on temporal OOD across multiple benchmarks, a 60--80\% relative improvement over probabilistic baselines.
+Our contributions are:
+\textbf{(1) Problem identification and impossibility result:} We identify a systematic blind spot in probabilistic KG embeddings---the inability to detect novel relational contexts---and prove that \emph{any} relation-agnostic uncertainty estimator achieves near-random detection on this category (Theorem~\ref{thm:impossibility}).
+\textbf{(2) Uncertainty decomposition framework:} We formalize complementary semantic and structural uncertainty signals and show neither alone suffices (Theorem~\ref{thm:complementarity}). This decomposition is the core contribution; the combination mechanism (CAGP) is intentionally minimal.
+\textbf{(3) Empirical validation:} We demonstrate this limitation persists across existing methods (0.44--0.64 AUROC on temporal shift despite 0.99 on random corruptions), and that the decomposition consistently achieves 0.94--1.00 AUROC across three benchmarks.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/fig1_main_results.pdf}
 
-\caption{Temporal OOD detection. Existing methods fail on realistic distribution shift. Our method (CAGP) combines complementary semantic and structural signals.}
+\caption{Temporal OOD detection (AUROC). Existing probabilistic methods achieve only 0.44--0.64; CAGP combines complementary semantic and structural signals to reach 0.94--1.00 across three benchmarks.}
 \label{fig:main_results}
 \end{figure}

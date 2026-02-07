@@ -1,14 +1,21 @@
 % Conclusion - UAI version (condensed)
 
 We identified a fundamental limitation in probabilistic KG embeddings: learned variances are relation-agnostic and cannot capture structural uncertainty.
-This explains why existing methods achieve 0.99 AUROC on random corruptions but only 0.52--0.64 on temporal shift.
+This explains why existing methods achieve 0.99 AUROC on random corruptions but only 0.44--0.64 on temporal shift.
 
-We formalized two OOD types (emerging entities, novel contexts) and proved they require complementary detection strategies (Theorem~\ref{thm:complementarity}).
-Our decomposition achieves 0.94--0.99 AUROC on temporal-like OOD detection, with 100\% empirical validation of theoretical assumptions across three diverse datasets.
-The framework is architecture-agnostic and computationally lightweight (coverage is precomputed once).
+We formalized two OOD types (emerging entities, novel contexts) and showed under idealized assumptions that they require complementary detection strategies (Theorem~\ref{thm:complementarity}).
+The decomposition consistently achieves 0.94--1.00 AUROC on temporal OOD detection across three benchmarks (multi-seed on WN18RR; single-seed with bootstrap CI on FB15k-237 and YAGO; see Table~\ref{tab:temporal_ood}), substantially improving over relation-agnostic baselines.
+The qualitative predictions of the theorem hold across all three datasets despite some assumption violations (see Appendix~\ref{app:assumptions}).
+The framework is agnostic to standard embedding architectures (DistMult, TransE, ComplEx; Appendix~\ref{app:architectures}) and computationally lightweight (coverage is precomputed once).
 
 \paragraph{Scalability considerations.}
 CAGP's coverage matrix $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ memory. For our evaluated datasets (FB15k-237: 13MB dense, $<$1MB sparse; YAGO3-10: 17.5MB dense, $<$1MB sparse), this is negligible. For web-scale KGs, sparse storage (hash tables storing only observed pairs) reduces memory to $O(|\mathcal{T}|)$ with $O(1)$ inference. We also explored learned relation-conditioned variance via multi-layer perceptron, but found explicit coverage simpler and equally effective. CAGP provides interpretability and simplicity suitable for domain-specific KGs with $<$1M entities; empirical evaluation on billion-triple KGs remains future work.
 
 \paragraph{Limitations.}
-Our temporal OOD splits are simulated via frequency-based partitioning rather than ground-truth timestamps. While this captures the key temporal challenge (familiar entities in unfamiliar contexts), evaluation on real temporal KGs with event timestamps (e.g., ICEWS, GDELT) would strengthen validation. Coverage is binary; the framework assumes transductive settings; our base model underperforms state-of-the-art link prediction. Future work includes evaluation on ground-truth temporal data, continuous coverage relaxations, inductive extensions, and application to knowledge-grounded language models.
+Our simulated temporal OOD splits use coverage-based partitioning, and the novel-context category is defined using the same coverage feature as our structural detector (Remark~\ref{rem:circularity}), so structural AUROC $= 1$ on this category is by construction.
+Evaluation on temporal KGs with ground-truth timestamps (e.g., ICEWS14, GDELT) remains important future work to validate beyond simulated protocols.
+A relation-conditioned variance ablation (RelCondVar) matches CAGP performance, confirming the decomposition framework rather than specific parameterization drives gains.
+Coverage is binary; the framework assumes transductive settings; our base model underperforms state-of-the-art link prediction; FB15k-237 and YAGO3-10 results are from single seeds (multi-seed confirmation on WN18RR shows zero variance for CAGP).
+Assumptions A4 and A6 are violated on some datasets, so the formal guarantees should be interpreted qualitatively.
+The framework naturally supports selective prediction (abstaining on uncertain queries), with preliminary results showing up to 43\% error reduction at 85\% coverage (Appendix~\ref{app:selective}).
+Future work includes architecturally relation-aware models (R-GCN, CompGCN), inductive extensions, and application to knowledge-grounded language models.
