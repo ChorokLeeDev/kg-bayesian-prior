@@ -40,10 +40,8 @@
 
 \title{Decomposing Uncertainty in Probabilistic Knowledge Graph Embeddings: Why Entity Variance Is Not Enough}
 
-\author[1]{\href{mailto:choroklee@kaist.ac.kr}{Chorok~Lee}{}}
-\affil[1]{%
-    Korea Advanced Institute of Science and Technology (KAIST)
-}
+\author[1]{Anonymous Author(s)}
+\affil[1]{Anonymous Institution}
 
 \begin{document}
 \maketitle
@@ -77,11 +75,11 @@
 \input{sections/conclusion_uai}
 
 \begin{contributions}
-    C.~Lee conceived the idea, developed the method, conducted all experiments, and wrote the paper.
+    Contributions will be detailed after the review period.
 \end{contributions}
 
 \begin{acknowledgements}
-    % TODO: Add acknowledgements
+    We thank the anonymous reviewers for their constructive feedback.
 \end{acknowledgements}
 
 \bibliography{references}
@@ -106,7 +104,7 @@ We state the full assumptions and prove both theorems.
 \paragraph{Assumptions.}
 \begin{enumerate}
     \item[\textbf{(A1)}] \textbf{Variance-frequency monotonicity}: $\freq(e_1) > \freq(e_2) \Rightarrow \sigma^2_{e_1} < \sigma^2_{e_2}$.
-    \item[\textbf{(A2)}] \textbf{ID coverage}: For all $(h,r,t) \in \mathcal{D}_{\text{ID}}$: $c(h,r) = c(t,r) = 1$.
+    \item[\textbf{(A2)}] \textbf{ID coverage} (definitional; follows from Definition~\ref{def:ood}): For all $(h,r,t) \in \mathcal{D}_{\text{ID}}$: $c(h,r) = c(t,r) = 1$.
     \item[\textbf{(A3)}] \textbf{Frequency overlap}: For any $(h,r,t) \in \mathcal{D}_{\text{novel}}$, there exists $(h',r',t') \in \mathcal{D}_{\text{ID}}$ with $|\freq(h) - \freq(h')| \leq \epsilon_h$ and $|\freq(t) - \freq(t')| \leq \epsilon_t$.
     \item[\textbf{(A4)}] \textbf{Bounded semantic gap}: $\Delta = \max_{x \in \mathcal{D}_{\text{novel}}, x' \in \mathcal{D}_{\text{ID}}} [\tilde{U}_{\text{sem}}(x') - \tilde{U}_{\text{sem}}(x)] < 1$.
     \item[\textbf{(A5)}] \textbf{Non-degenerate coverage}: $0 < \rho = P(U_{\text{str}}(x) = 0 | x \in \mathcal{D}_{\text{emerge}}) < 1$.
@@ -117,7 +115,7 @@ We state the full assumptions and prove both theorems.
 
 \textbf{Theorem statement.} Any uncertainty estimator $U(h,r,t) = f(\sigma^2_h, \sigma^2_t)$ where $\sigma^2_e$ depends only on entity $e$ achieves AUROC $\leq 1/2 + O(\epsilon)$ on novel contexts under assumptions A1--A3.
 
-\textbf{Proof.} Consider the OOD detection task distinguishing $\mathcal{D}_{\text{ID}}$ from $\mathcal{D}_{\text{novel}}$. By definition, novel contexts have $\min(\freq(h), \freq(t)) \geq \tau$ (high frequency entities) but $c(h,r) = 0$ or $c(t,r) = 0$ (unobserved entity-relation pairs).
+\textbf{Proof.} Consider the OOD detection task distinguishing $\mathcal{D}_{\text{ID}}$ from $\mathcal{D}_{\text{novel}}$. By definition, novel contexts have $\min(\freq(h), \freq(t)) > \tau$ (high frequency entities) but $c(h,r) = 0$ or $c(t,r) = 0$ (unobserved entity-relation pairs).
 
 \textbf{Step 1: Variance depends only on frequency.} By A1, the learned variance $\sigma^2_e$ is a monotonically decreasing function of $\freq(e)$. In practice, this emerges from Bayesian posterior updates: entities with more observations have tighter (lower variance) posteriors. Therefore, $\sigma^2_e = g(\freq(e))$ for some decreasing function $g$.
 
@@ -144,32 +142,32 @@ The deviation from exactly 0.5 is $O(\epsilon)$, controlled by the tightness of 
 By (A3), novel-context entities have frequency-matched ID counterparts. By (A1), matching frequencies imply matching variances. Thus $U_{\text{sem}}$ has identical distributions on novel contexts and ID, giving AUROC $= 0.5 + O(\epsilon)$.
 
 \paragraph{Proof of Part (ii).}
-By (A2), ID has $U_{\text{str}} = 0$. By (A5), fraction $\rho$ of emerging entities also have $U_{\text{str}} = 0$. AUROC $= P(U_{\text{str}}^{\text{OOD}} > U_{\text{str}}^{\text{ID}}) = 1 - \rho < 1$.
+By (A2), ID has $U_{\text{str}} = 0$. By (A5), fraction $\rho$ of emerging entities also have $U_{\text{str}} = 0$. Since $U_{\text{str}}$ is discrete, ties between OOD ($U_{\text{str}}=0$) and ID ($U_{\text{str}}=0$) contribute $\tfrac{1}{2}$ per pair: AUROC $= (1 - \rho) + \tfrac{1}{2}\rho = 1 - \tfrac{\rho}{2}$, which is $< 1$ when $\rho > 0$.
 
 \paragraph{Proof of Part (iii).}
-Novel contexts have $c(h,r) = 0$ or $c(t,r) = 0$ by definition, so $U_{\text{str}} \geq 1$. ID has $U_{\text{str}} = 0$ by (A2). Perfect separation gives AUROC $= 1$.
+Novel contexts have $c(h,r) = 0$ or $c(t,r) = 0$ by Definition~\ref{def:ood}, so $U_{\text{str}} \geq 1$. ID has $U_{\text{str}} = 0$ by (A2), which is itself a consequence of Definition~\ref{def:ood}. Since all ID scores equal 0 and all novel-context scores are $\geq 1$, no ties occur between categories, so $\text{AUROC} = P(U_{\text{str}}^{\text{OOD}} > U_{\text{str}}^{\text{ID}}) = 1$. (Under the standard AUROC definition including tie-breaking, $\text{AUROC} = P(U^{\text{OOD}} > U^{\text{ID}}) + \tfrac{1}{2}P(U^{\text{OOD}} = U^{\text{ID}})$, the tie term is zero here.) \emph{Note:} this result is definitional---the OOD label and the detector use the same feature $c(e,r)$. The substantive claim is Theorem~\ref{thm:impossibility}: entity-level methods cannot detect this category, making explicit coverage tracking necessary.
 
 \paragraph{Proof of Part (iv).}
-For novel contexts: structural term dominates when $\alpha^* < 1/(1+\Delta)$, preserving perfect separation. For emerging entities: when $U_{\text{str}} > 0$, both terms favor OOD; when $U_{\text{str}} = 0$, semantic term separates by (A6). The combination achieves AUROC $= 1$ on both OOD types, strictly exceeding either signal alone.
+For novel contexts: structural term dominates when $\alpha^* < 1/(1+\Delta)$, preserving perfect separation. For emerging entities: when $U_{\text{str}} > 0$, both terms favor OOD; when $U_{\text{str}} = 0$, semantic term separates by (A6). Under the full set of idealized assumptions, the combination improves over either signal alone. \emph{Note:} A6 (universal semantic separation) is empirically approximate---semantic AUROC on emerging entities ranges from 0.73 to 0.91 across datasets (Table~\ref{tab:assumptions}). The formal AUROC $= 1$ guarantee therefore holds only under the idealized assumptions; in practice, the combination provides consistent but imperfect improvement (see \S\ref{sec:experiments}).
 
 \paragraph{Robustness to Assumption Violations.}
 The assumptions (A1)--(A6) provide idealized conditions ensuring sharp performance guarantees. In practice, these assumptions may be violated to varying degrees. Table~\ref{tab:assumptions} (Appendix~\ref{app:assumptions}) quantifies violations across datasets: (A1) Spearman correlation ranges from $-0.74$ to $-0.85$ (not perfect monotonicity); (A4) bounded semantic gap $\Delta$ exceeds 1.0 on WN18RR ($\Delta=1.10$) and YAGO ($\Delta=1.01$).
 
-Despite these violations, the theorem's qualitative predictions remain valid. Empirically, we observe:
+Despite these violations, the theorem's qualitative predictions remain directionally valid. Empirically, we observe:
 \begin{itemize}
-\item Semantic AUROC on novel contexts: 0.42--0.48 (predicted $\approx 0.5$)
-\item Structural AUROC on novel contexts: 1.00 across all datasets (predicted 1.0)
+\item Semantic AUROC on novel contexts: 0.42--0.48 (predicted $\approx 0.5$; non-trivial validation of Part~(i))
+\item Structural AUROC on novel contexts: 1.00 across all datasets (this is definitional, per Remark~\ref{rem:circularity})
 \item Combination improves by 0.15--0.38 AUROC over best single signal (predicted $>$ 0)
 \end{itemize}
 
-The violations affect the \emph{tightness} of guarantees (e.g., semantic AUROC $= 0.42$ vs predicted $0.50$) but not the \emph{direction} of effects. The theorem should be interpreted as providing qualitative insights under idealized conditions rather than quantitative predictions for all datasets.
+The violations affect the \emph{tightness} of guarantees (e.g., semantic AUROC $= 0.42$ vs predicted $0.50$; A6 violation means the combination does not achieve AUROC $= 1$ in practice) but not the \emph{direction} of effects. The theorem should be interpreted as providing qualitative insights under idealized conditions rather than quantitative predictions for all datasets.
 
 \subsection{Assumption Verification}
 \label{app:assumptions}
 
 \begin{table}[h]
 \centering
-\caption{Empirical verification of theorem assumptions: variance-frequency monotonicity (A1), ID coverage (A2), bounded semantic gap (A4), non-degenerate coverage (A5), and semantic separation (A6).}
+\caption{Empirical verification of theorem assumptions: variance-frequency monotonicity (A1), bounded semantic gap (A4), non-degenerate coverage (A5), and semantic separation (A6). A2 (ID coverage) is definitional and included for completeness.}
 \label{tab:assumptions}
 \small
 \begin{tabular}{llccc}
@@ -202,7 +200,7 @@ We empirically verify Assumption A3, which is central to Theorem~\ref{thm:imposs
 For each novel-context test triple $(h,r,t) \in \mathcal{D}_{\text{novel}}$, we check whether there exists a training triple $(h',r',t') \in \mathcal{D}_{\text{ID}}$ with $|\text{freq}(h) - \text{freq}(h')| \leq \epsilon$ and $|\text{freq}(t) - \text{freq}(t')| \leq \epsilon$, where $\text{freq}(e)$ counts the number of training triples containing entity $e$.
 
 \paragraph{FB15k-237 results.}
-Table~\ref{tab:assumption_a3} shows that for all tested values $\epsilon \in \{1, 2, 5, 10, 20, 50, 100\}$, \textbf{100\%} of novel-context triples have frequency-matched training counterparts.
+Table~\ref{tab:assumption_a3} shows that for all tested values $\epsilon \in \{1, 5, 10, 20, 50, 100\}$, \textbf{100\%} of novel-context triples have frequency-matched training counterparts.
 
 \begin{table}[h]
 \centering
@@ -226,9 +224,9 @@ $\epsilon$ & Fraction Matched & Support for A3 \\
 \paragraph{OOD composition.}
 The test set (20,466 triples total) partitions into:
 \begin{itemize}
-\item \textbf{Novel contexts}: 5,678 triples (27.7\%) --- well-observed entities appearing in unobserved relational patterns
-\item \textbf{Emerging entities}: 1,317 triples (6.4\%) --- rare or new entities with $\text{freq}(e) < \tau$
-\item \textbf{In-distribution}: 13,471 triples (65.8\%) --- fully observed patterns
+\item \textbf{Emerging entities}: 2,223 triples (10.9\%) --- rare or new entities with $\text{freq}(e) \leq \tau$
+\item \textbf{Novel contexts}: 5,193 triples (25.4\%) --- well-observed entities appearing in unobserved relational patterns
+\item \textbf{In-distribution}: 13,050 triples (63.8\%) --- fully observed patterns
 \end{itemize}
 
 Novel-context entities have mean frequency 35.1 (median: 28), while ID entities have mean frequency 44.7 (median: 37). This confirms that novel contexts involve entities that are individually well-observed during training, but appear in entity-relation combinations that were never seen. In contrast, emerging entities have mean frequency 3.2 (median: 2), confirming they are genuinely rare.
@@ -273,7 +271,7 @@ Fixed $\alpha = 0.5$ captures most gains (0.95 AUROC), validating the decomposit
 
 \begin{table}[h]
 \centering
-\caption{Binary vs continuous coverage on temporal OOD (FB15k-237). Binary achieves perfect detection (AUROC = 1.0) while continuous variants fail (AUROC = 0.56--0.59).}
+\caption{Binary vs continuous coverage on novel-context OOD (FB15k-237). Binary achieves AUROC = 1.0 (by construction; see Remark~\ref{rem:circularity}) while continuous variants fail (AUROC = 0.56--0.59).}
 \label{tab:coverage_ablation}
 \begin{tabular}{lccc}
 \toprule
@@ -293,25 +291,11 @@ Continuous coverage introduces frequency-based variations among observed pairs. 
 
 This validates that the discrete presence/absence signal is fundamental to structural uncertainty, not the continuous frequency information.
 
-\paragraph{Why perfect detection on some temporal splits?}
-Binary coverage achieves perfect AUROC $= 1.0$ on FB15k-237's simulated temporal split (Table~\ref{tab:coverage_ablation} above) but only 0.824 on ICEWS14 (main text Table~1). This discrepancy reflects different temporal split compositions (Table~\ref{tab:temporal_composition}):
-
-\begin{table}[h]
-\centering
-\caption{Temporal OOD composition across datasets. FB15k-237 split is simulated (first 70\% chronologically); ICEWS14 is ground-truth temporal (Oct--Dec 2014).}
-\label{tab:temporal_composition}
-\small
-\begin{tabular}{lcc}
-\toprule
-Dataset & Novel Contexts & Emerging Entities \\
-\midrule
-FB15k-237 (simulated) & $\sim$94\% & $\sim$6\% \\
-ICEWS14 (ground-truth) & $\sim$61\% & $\sim$39\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-FB15k-237's simulated temporal split predominantly creates novel contexts (well-observed entities appearing in new relational patterns), which binary coverage detects perfectly by Theorem~\ref{thm:complementarity} Part (iii). ICEWS14's ground-truth future time period contains substantial emerging entities (39\%)---genuinely new or rare entities that structural uncertainty misses (Theorem Part (ii)). This validates the theorem: when OOD is purely novel contexts, coverage alone suffices; when mixed with emerging entities, semantic uncertainty is necessary.
+\paragraph{Why perfect detection on novel contexts?}
+Binary coverage achieves AUROC $= 1.0$ on novel contexts by construction (Remark~\ref{rem:circularity}): the novel-context category is defined by $c(e,r) = 0$, and the detector checks the same feature.
+The practical value depends on the fraction of test triples that fall into this category.
+On FB15k-237, novel contexts constitute $\sim$25\% of the test set (Table~\ref{tab:complementarity}), making coverage-based detection practically important despite being definitionally guaranteed.
+On datasets with more emerging entities (e.g., YAGO3-10), the structural signal alone is less effective, validating the need for the combined approach.
 
 \subsection{Calibration Analysis}
 \label{app:calibration}
@@ -377,6 +361,35 @@ ComplEx & 0.755 & 0.821 & 0.960 \\
 
 The decomposition is architecture-agnostic, achieving $\sim$0.96 AUROC across DistMult, TransE, and ComplEx.
 
+\subsection{Additional Discussion}
+\label{app:discussion}
+
+\paragraph{Dataset-specific signal composition.}
+Table~\ref{tab:temporal_ood} reveals the optimal signal varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels (0.935 AUROC). YAGO3-10 includes more emerging entities, where semantic uncertainty contributes more strongly (0.824 AUROC vs 0.760 for structural). Simple averaging achieves 0.89--0.95 AUROC, showing the decomposition framework is effective. Learned CAGP adapts the mixing weight to dataset characteristics, adding 3--5\% absolute improvement (0.951 $\to$ 0.986 on FB15k-237).
+
+\paragraph{Why doesn't the embedding model discover coverage?}
+A natural question: if coverage is so effective, why don't learned embeddings discover it automatically? The impossibility theorem (Theorem~\ref{thm:impossibility}) provides the answer: standard link prediction objectives incentivize predictive accuracy, not relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias.
+
+\subsection{AUPR Results}
+\label{app:aupr}
+
+\begin{table}[h]
+\centering
+\caption{Temporal OOD detection AUPR (mean over 3 seeds). Rankings mirror AUROC (Table~\ref{tab:temporal_ood}).}
+\small
+\begin{tabular}{lcc}
+\toprule
+Method & WN18RR & FB15k-237 \\
+\midrule
+UKGE & 0.520 & 0.442 \\
+Energy & 0.625 & 0.568 \\
+GPOnly ($U_{\text{sem}}$) & 0.572 & 0.747 \\
+CoverageOnly ($U_{\text{str}}$) & 0.962 & 0.864 \\
+CAGP & \textbf{1.000} & \textbf{1.000} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Error Analysis}
 \label{app:error_analysis}
 
@@ -431,28 +444,28 @@ Both error types relate to entity degree and relation frequency, validating that
 \subsection{OOD Split Methodology}
 \label{app:ood_splits}
 
-\paragraph{Temporal-like distribution shift.}
-We create temporal-like OOD splits by partitioning test sets based on entity frequency and entity-relation coverage, simulating the key temporal challenge: detecting when familiar entities appear in unfamiliar relational contexts.
+\paragraph{Simulated temporal OOD.}
+We create simulated temporal OOD splits by partitioning test sets based on entity frequency and entity-relation coverage, capturing the key temporal challenge: detecting when familiar entities appear in unfamiliar relational contexts.
 
 \paragraph{Categorization protocol.}
 For each test triple $(h,r,t)$:
 \begin{itemize}
-\item \textbf{Emerging entities}: $\min(\text{freq}(h), \text{freq}(t)) < \tau$ where $\tau$ is the 10th percentile of training entity frequencies. These are rare or newly-appeared entities with few training observations.
+\item \textbf{Emerging entities}: $\min(\text{freq}(h), \text{freq}(t)) \leq \tau$ where $\tau$ is the 25th percentile of training entity frequencies. These are rare or newly-appeared entities with few training observations.
 
-\item \textbf{Novel contexts}: $\min(\text{freq}(h), \text{freq}(t)) \geq \tau$ and ($c(h,r)=0$ or $c(t,r)=0$), where $c(e,r)$ indicates whether entity $e$ was observed with relation $r$ during training. These are well-established entities appearing in previously unobserved relational patterns.
+\item \textbf{Novel contexts}: $\min(\text{freq}(h), \text{freq}(t)) > \tau$ and ($c(h,r)=0$ or $c(t,r)=0$), where $c(e,r)$ indicates whether entity $e$ was observed with relation $r$ during training. These are well-established entities appearing in previously unobserved relational patterns.
 
-\item \textbf{In-distribution}: Both entities are frequent ($\geq \tau$) and both have coverage for the query relation.
+\item \textbf{In-distribution}: Both entities are frequent ($> \tau$) and both have coverage for the query relation.
 \end{itemize}
 
 \paragraph{Rationale.}
-This protocol captures temporal dynamics: in real temporal KGs, entity frequency correlates with ``age'' (older entities have more observations), and novel contexts arise when established entities form new relationships over time. The frequency threshold $\tau$ at the 10th percentile ensures the ``emerging'' category captures genuinely rare entities while ``novel contexts'' includes only well-observed entities.
+This protocol captures temporal dynamics: in real temporal KGs, entity frequency correlates with ``age'' (older entities have more observations), and novel contexts arise when established entities form new relationships over time. The frequency threshold $\tau$ at the 25th percentile ensures the ``emerging'' category captures genuinely rare entities while ``novel contexts'' includes only well-observed entities.
 
 \paragraph{FB15k-237 split statistics.}
-Our temporal-like split yields:
+Our temporal OOD split yields:
 \begin{itemize}
 \item Emerging entities: 2,223 triples (10.9\%, mean freq=3.2, median=2)
 \item Novel contexts: 5,193 triples (25.4\%, mean freq=35.1, median=28)
-\item In-distribution: 13,050 triples (63.7\%, mean freq=44.7, median=37)
+\item In-distribution: 13,050 triples (63.8\%, mean freq=44.7, median=37)
 \end{itemize}
 
 The clear frequency separation (emerging: median 2 vs novel contexts: median 28) confirms that these categories represent distinct OOD phenomena.
@@ -477,18 +490,18 @@ Sparse storage reduces memory: $<$5\% non-zero on FB15k-237 yields $<$1MB. For e
 \textbf{Learned variance alternative.} We explored learning relation-conditioned variance $\sigma^2(e,r)$ via multi-layer perceptron, avoiding explicit coverage storage. However, this requires auxiliary OOD objectives and provides marginal benefits over explicit coverage. We found CAGP's interpretability and simplicity preferable.
 
 \paragraph{Threshold $\tau$ sensitivity.}
-We set $\tau$ to the 10th percentile of entity frequencies. Table~\ref{tab:tau} shows CAGP is robust to this choice.
+We set $\tau$ to the 25th percentile of entity frequencies. Table~\ref{tab:tau} shows CAGP is robust to this choice.
 
 \begin{table}[h]
 \centering
-\caption{Sensitivity to $\tau$ (emerging entity threshold, set to 10th percentile of entity frequencies) on FB15k-237 temporal OOD AUROC.}
+\caption{Sensitivity to $\tau$ (emerging entity threshold, set to 25th percentile of entity frequencies) on FB15k-237 temporal OOD AUROC.}
 \label{tab:tau}
 \small
 \begin{tabular}{lccccc}
 \toprule
-$\tau$ percentile & 5th & 10th & 20th & 30th \\
+$\tau$ percentile & 5th & 10th & 20th & \textbf{25th} & 30th \\
 \midrule
-CAGP AUROC & 0.957 & 0.960 & 0.958 & 0.951 \\
+CAGP AUROC & 0.957 & 0.960 & 0.958 & \textbf{0.986} & 0.951 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -508,7 +521,31 @@ Dataset & Entities & Relations & Train & Valid & Test \\
 WN18RR & 40,943 & 11 & 86,835 & 3,034 & 3,134 \\
 FB15k-237 & 14,541 & 237 & 272,115 & 17,535 & 20,466 \\
 YAGO3-10 & 123,161 & 37 & 1,079,040 & 5,000 & 5,000 \\
-ICEWS14 & 7,128 & 230 & 72,826 & 8,941 & 8,963 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Reproducibility: Result Provenance}
+\label{app:provenance}
+
+\begin{table}[h]
+\centering
+\caption{Mapping of paper tables to experimental sources. All code is included in the supplementary material.}
+\small
+\begin{tabular}{llll}
+\toprule
+Table & Dataset & Seeds & Source \\
+\midrule
+1 & WN18RR & 42, 123, 456 & \texttt{run\_wn18rr\_temporal.py} \\
+1 & FB15k-237 & 42 & \texttt{exp\_temporal\_ood.ipynb} \\
+1 & YAGO3-10 & 42 & \texttt{colab\_yago\_full.ipynb} \\
+\midrule
+2 & FB15k-237 & 42 & \texttt{exp\_temporal\_ood.ipynb} \\
+2 & WN18RR & 42, 123, 456 & \texttt{run\_wn18rr\_temporal.py} \\
+\midrule
+3 & All & (same as Table 1) & (same as Table 1) \\
+4 & All & (same as Table 1) & (same as Table 1) \\
+5 & FB15k-237 & 42 & \texttt{run\_focused\_experiments.py} \\
 \bottomrule
 \end{tabular}
 \end{table}

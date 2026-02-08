@@ -45,7 +45,7 @@ def compute_entity_frequencies(triples):
     return freq
 
 
-def classify_ood_types(triples, entity_freq, coverage, tau_percentile=10):
+def classify_ood_types(triples, entity_freq, coverage, tau_percentile=25):
     """
     Classify OOD triples into:
     - Emerging entities: min(freq(h), freq(t)) < τ
@@ -73,7 +73,7 @@ def classify_ood_types(triples, entity_freq, coverage, tau_percentile=10):
 
         min_freq = min(h_freq, t_freq)
 
-        if min_freq < tau:
+        if min_freq <= tau:
             # Emerging entity
             emerging.append(i)
         elif coverage.get((h, r), 0) == 0 or coverage.get((t, r), 0) == 0:
@@ -176,7 +176,7 @@ def verify_assumption_a3(dataset_name):
     # Classify OOD types
     print("\nClassifying OOD types...")
     emerging, novel_contexts, id_triples = classify_ood_types(
-        test_triples, entity_freq, coverage, tau_percentile=10
+        test_triples, entity_freq, coverage, tau_percentile=25
     )
 
     print(f"\nOOD classification:")

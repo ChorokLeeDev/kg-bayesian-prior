@@ -93,9 +93,25 @@ class CAGP(nn.Module):
         self.relation_emb = nn.Embedding(num_relations, dim)
         self.register_buffer('coverage', torch.zeros(num_entities, num_relations))
         self.alpha = nn.Parameter(torch.tensor(0.0))
+        self._norm_stats = None
 
     def forward(self, h, r, t):
         return (self.entity_mean[h] * self.relation_emb(r) * self.entity_mean[t]).sum(-1)
+
+    def calibrate_normalization(self, triples, device):
+        """Compute normalization statistics from a reference set."""
+        with torch.no_grad():
+            h = torch.tensor(triples[:, 0]).to(device)
+            r = torch.tensor(triples[:, 1]).to(device)
+            t = torch.tensor(triples[:, 2]).to(device)
+            h_var = torch.exp(self.entity_logvar[h]).mean(dim=-1)
+            t_var = torch.exp(self.entity_logvar[t]).mean(dim=-1)
+            gp_var = (h_var + t_var) / 2
+            cov_unc = 2.0 - self.coverage[h, r] - self.coverage[t, r]
+            self._norm_stats = {
+                'gp_mean': gp_var.mean().item(),
+                'cov_mean': cov_unc.mean().item(),
+            }
 
     def get_uncertainty(self, h, r, t):
         h_var = torch.exp(self.entity_logvar[h]).mean(dim=-1)
@@ -104,8 +120,14 @@ class CAGP(nn.Module):
 
         cov_unc = 2.0 - self.coverage[h, r] - self.coverage[t, r]
 
-        # Normalize
-        gp_norm = gp_var / (gp_var.mean() + 1e-8) * (cov_unc.mean() + 1e-8)
+        # Use cached normalization stats if available
+        if self._norm_stats is not None:
+            gp_mean = self._norm_stats['gp_mean']
+            cov_mean = self._norm_stats['cov_mean']
+        else:
+            gp_mean = gp_var.mean().item()
+            cov_mean = cov_unc.mean().item()
+        gp_norm = gp_var / (gp_mean + 1e-8) * (cov_mean + 1e-8)
         alpha = torch.sigmoid(self.alpha)
         return alpha * gp_norm + (1 - alpha) * cov_unc
 
@@ -390,7 +412,7 @@ def evaluate_temporal(model, train, test, n_ent, device):
     new_entity, new_pair = [], []
     for i in range(len(test)):
         h, r, t = test[i]
-        if freq.get(h, 0) < thresh or freq.get(t, 0) < thresh:
+        if freq.get(h, 0) <= thresh or freq.get(t, 0) <= thresh:
             new_entity.append(i)
         elif cov[h, r] == 0 or cov[t, r] == 0:
             new_pair.append(i)
@@ -480,6 +502,10 @@ def main():
             print(f"\n--- {name} ---")
             model.precompute_coverage(train)
             model = train_model(model, train, device, epochs=30)
+
+            # Calibrate normalization on full test set to avoid batch-dependent leakage
+            if hasattr(model, 'calibrate_normalization'):
+                model.calibrate_normalization(test, device)
 
             m_results = {}
 

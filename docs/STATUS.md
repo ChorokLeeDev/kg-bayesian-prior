@@ -1,5 +1,8 @@
 # Project Status
 
+> NOTE (2026-02-08): This file is a historical snapshot from 2025-12-21.  
+> Use `docs/RETURNING_AFTER_BREAK.md` for the current re-entry workflow and source-of-truth paths.
+
 **Last Updated:** 2025-12-21
 
 ## Executive Summary

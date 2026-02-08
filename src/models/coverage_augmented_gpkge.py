@@ -111,6 +111,18 @@ class CoverageAugmentedGPKGE(nn.Module):
 
         return coverage_unc
 
+    def calibrate_normalization(self, heads, relations, tails, use_frequency=False):
+        """Compute and cache normalization statistics from a reference set.
+        Must be called before get_uncertainty() during evaluation to avoid
+        batch-dependent normalization leakage."""
+        with torch.no_grad():
+            gp_var = self.get_gp_variance(heads, tails)
+            coverage_unc = self.get_coverage_uncertainty(heads, relations, tails, use_frequency)
+            self._norm_stats = {
+                'gp_mean': gp_var.mean().item(),
+                'cov_mean': coverage_unc.mean().item(),
+            }
+
     def get_uncertainty(self, heads, relations, tails, use_frequency=False):
         """
         Combined uncertainty: α * GP_var + (1-α) * Coverage_unc
@@ -124,7 +136,14 @@ class CoverageAugmentedGPKGE(nn.Module):
         coverage_unc = self.get_coverage_uncertainty(heads, relations, tails, use_frequency)
 
         # Normalize GP variance to similar scale as coverage uncertainty
-        gp_var_normalized = gp_var / (gp_var.mean() + 1e-8) * coverage_unc.mean()
+        # Use cached stats if available to avoid batch-dependent leakage
+        if hasattr(self, '_norm_stats') and self._norm_stats is not None:
+            gp_mean = self._norm_stats['gp_mean']
+            cov_mean = self._norm_stats['cov_mean']
+        else:
+            gp_mean = gp_var.mean().item()
+            cov_mean = coverage_unc.mean().item()
+        gp_var_normalized = gp_var / (gp_mean + 1e-8) * (cov_mean + 1e-8)
 
         # Adaptive combination
         alpha = self.get_alpha(relations)

@@ -80,6 +80,7 @@ python scripts/verify_theorem.py
 - **[STATUS.md](docs/STATUS.md)** - Current project status
 - **[GPU_EXPERIMENTS.md](docs/GPU_EXPERIMENTS.md)** - Colab instructions
 - **[FOLDER_STRUCTURE_UPDATE.md](docs/FOLDER_STRUCTURE_UPDATE.md)** - Agent-facing folder migration guide
+- **[RETURNING_AFTER_BREAK.md](docs/RETURNING_AFTER_BREAK.md)** - Quick re-entry guide after long gaps
 
 ## Citation
 
