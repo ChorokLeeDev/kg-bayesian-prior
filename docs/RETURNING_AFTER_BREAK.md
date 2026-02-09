@@ -5,7 +5,7 @@
 ## Source of Truth
 
 - Active manuscript: `paper/main.tex`
-- Submitted camera-ready snapshot: `paper/UAI2026_ChorokLee.pdf`
+- Submitted camera-ready snapshot: `paper/UAI2026_submission.pdf`
 - Active paper sections: `paper/sections/`
 - Archived legacy drafts: `archive/retired_ideas/paper/`
 
