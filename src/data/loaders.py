@@ -369,6 +369,90 @@ def load_yago310(data_dir: Optional[Path] = None) -> Tuple[KGDataset, KGDataset,
     )
 
 
+def load_icews14(data_dir: Optional[Path] = None) -> Tuple[KGDataset, KGDataset, KGDataset]:
+    """
+    Load ICEWS14 dataset (temporal knowledge graph).
+
+    ICEWS14 contains ~7,128 entities, 230 relations, and events from 2014.
+    The data includes ground-truth timestamps (encoded as integer IDs).
+    Format per line: subject_id  relation_id  object_id  timestamp_id  extra
+
+    The original splits are chronological: train has earlier timestamps, test has later.
+    This makes it a natural benchmark for temporal OOD detection without simulated splits.
+
+    Returns:
+        Tuple of (train_dataset, valid_dataset, test_dataset)
+        Each dataset's triples are (h, r, t) with timestamps stored separately.
+    """
+    if data_dir is None:
+        data_dir = DATA_DIR / "icews14"
+    else:
+        data_dir = Path(data_dir)
+
+    train_path = data_dir / "train.txt"
+    stat_path = data_dir / "stat.txt"
+
+    if not train_path.exists():
+        print("ICEWS14 not found. Downloading...")
+        _download_icews14(data_dir)
+
+    # Read stat file for entity/relation counts
+    with open(stat_path) as f:
+        parts = f.readline().strip().split('\t')
+        num_entities = int(parts[0])
+        num_relations = int(parts[1])
+
+    def load_temporal_triples(path: Path) -> Tuple[np.ndarray, np.ndarray]:
+        """Load triples with timestamp IDs. Returns (triples, timestamps)."""
+        triples = []
+        timestamps = []
+        with open(path) as f:
+            for line in f:
+                parts = line.strip().split('\t')
+                if len(parts) >= 4:
+                    s, r, o, ts = int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3])
+                    triples.append([s, r, o])
+                    timestamps.append(ts)
+        return np.array(triples), np.array(timestamps)
+
+    train_triples, train_ts = load_temporal_triples(data_dir / "train.txt")
+    valid_triples, valid_ts = load_temporal_triples(data_dir / "valid.txt")
+    test_triples, test_ts = load_temporal_triples(data_dir / "test.txt")
+
+    # Check for entities/relations in valid/test that exceed stat counts
+    all_triples = np.concatenate([train_triples, valid_triples, test_triples])
+    actual_n_ent = max(num_entities, all_triples[:, 0].max() + 1, all_triples[:, 2].max() + 1)
+    actual_n_rel = max(num_relations, all_triples[:, 1].max() + 1)
+
+    train_ds = KGDataset(train_triples, actual_n_ent, actual_n_rel)
+    valid_ds = KGDataset(valid_triples, actual_n_ent, actual_n_rel)
+    test_ds = KGDataset(test_triples, actual_n_ent, actual_n_rel)
+
+    # Store timestamps as extra attribute
+    train_ds.timestamps = train_ts
+    valid_ds.timestamps = valid_ts
+    test_ds.timestamps = test_ts
+
+    return train_ds, valid_ds, test_ds
+
+
+def _download_icews14(data_dir: Path):
+    """Download ICEWS14 dataset from TiRGN repository."""
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    base_url = "https://raw.githubusercontent.com/Liyyy2122/TiRGN/main/data/ICEWS14"
+
+    for fname in ["train.txt", "test.txt", "valid.txt", "stat.txt"]:
+        url = f"{base_url}/{fname}"
+        dest = data_dir / fname
+
+        if not dest.exists():
+            print(f"Downloading {fname}...")
+            _download_file(url, dest, f"Downloading {fname}")
+
+    print("ICEWS14 download complete!")
+
+
 def _create_sample_data(data_dir: Path):
     """Create sample data for testing when real data is not available."""
     data_dir.mkdir(parents=True, exist_ok=True)

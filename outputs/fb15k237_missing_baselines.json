@@ -1,0 +1,116 @@
+{
+  "seed_42": {
+    "MCDropout": {
+      "n_emerging": 2223,
+      "n_novel_ctx": 5193,
+      "n_id": 13050,
+      "threshold": 11.0,
+      "emerging_operator": "leq",
+      "overall_auroc": 0.6252340388597503,
+      "overall_aupr": 0.518613529844533,
+      "emerging_auroc": 0.6654913538882081,
+      "novel_ctx_auroc": 0.6065693060139165,
+      "eval_mode": "full"
+    },
+    "DeepEnsemble": {
+      "n_emerging": 2223,
+      "n_novel_ctx": 5193,
+      "n_id": 13050,
+      "threshold": 11.0,
+      "emerging_operator": "leq",
+      "overall_auroc": 0.6026721761377491,
+      "overall_aupr": 0.5022330533712231,
+      "emerging_auroc": 0.6415236908461348,
+      "novel_ctx_auroc": 0.5860407651620624,
+      "eval_mode": "full"
+    },
+    "SNGP": {
+      "n_emerging": 2223,
+      "n_novel_ctx": 5193,
+      "n_id": 13050,
+      "threshold": 11.0,
+      "emerging_operator": "leq",
+      "overall_auroc": 0.456273910195208,
+      "overall_aupr": 0.46191084830656404,
+      "emerging_auroc": 0.6215362554140533,
+      "novel_ctx_auroc": 0.38539543727077347,
+      "eval_mode": "full"
+    }
+  },
+  "seed_123": {
+    "MCDropout": {
+      "n_emerging": 2223,
+      "n_novel_ctx": 5193,
+      "n_id": 13050,
+      "threshold": 11.0,
+      "emerging_operator": "leq",
+      "overall_auroc": 0.6319129189450583,
+      "overall_aupr": 0.5255106979458517,
+      "emerging_auroc": 0.678103026009862,
+      "novel_ctx_auroc": 0.6114092799546693,
+      "eval_mode": "full"
+    },
+    "DeepEnsemble": {
+      "n_emerging": 2223,
+      "n_novel_ctx": 5193,
+      "n_id": 13050,
+      "threshold": 11.0,
+      "emerging_operator": "leq",
+      "overall_auroc": 0.6099170479485176,
+      "overall_aupr": 0.5105061173265029,
+      "emerging_auroc": 0.6537061683583161,
+      "novel_ctx_auroc": 0.5911719652081013,
+      "eval_mode": "full"
+    },
+    "SNGP": {
+      "n_emerging": 2223,
+      "n_novel_ctx": 5193,
+      "n_id": 13050,
+      "threshold": 11.0,
+      "emerging_operator": "leq",
+      "overall_auroc": 0.456273910195208,
+      "overall_aupr": 0.46191084830656404,
+      "emerging_auroc": 0.6215362554140533,
+      "novel_ctx_auroc": 0.38539543727077347,
+      "eval_mode": "full"
+    }
+  },
+  "seed_456": {
+    "MCDropout": {
+      "n_emerging": 2223,
+      "n_novel_ctx": 5193,
+      "n_id": 13050,
+      "threshold": 11.0,
+      "emerging_operator": "leq",
+      "overall_auroc": 0.622172660748015,
+      "overall_aupr": 0.5169984421765214,
+      "emerging_auroc": 0.6708966344538033,
+      "novel_ctx_auroc": 0.6000208577269874,
+      "eval_mode": "full"
+    },
+    "DeepEnsemble": {
+      "n_emerging": 2223,
+      "n_novel_ctx": 5193,
+      "n_id": 13050,
+      "threshold": 11.0,
+      "emerging_operator": "leq",
+      "overall_auroc": 0.6068634762985282,
+      "overall_aupr": 0.5048820767899213,
+      "emerging_auroc": 0.6545592146197107,
+      "novel_ctx_auroc": 0.5864460631870341,
+      "eval_mode": "full"
+    },
+    "SNGP": {
+      "n_emerging": 2223,
+      "n_novel_ctx": 5193,
+      "n_id": 13050,
+      "threshold": 11.0,
+      "emerging_operator": "leq",
+      "overall_auroc": 0.456273910195208,
+      "overall_aupr": 0.46191084830656404,
+      "emerging_auroc": 0.6215362554140533,
+      "novel_ctx_auroc": 0.38539543727077347,
+      "eval_mode": "full"
+    }
+  }
+}

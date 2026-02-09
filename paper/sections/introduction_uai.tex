@@ -9,7 +9,7 @@ But these variances are \emph{relation-agnostic}: entity $e$ receives a single v
 Consider $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
 The model assigns low variance (well-observed), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions.
 
-This causes systematic failures (Figure~\ref{fig:main_results}): score-based methods achieve 0.99 AUROC detecting random corruptions (implausible triples) but only 0.44--0.64 on temporal OOD (emerging entities and novel relational contexts that simulate temporal distribution shift).
+This causes systematic failures (Figure~\ref{fig:main_results}): score-based methods achieve 0.99 AUROC detecting random corruptions (implausible triples) but only 0.38--0.60 on temporal OOD (emerging entities and novel relational contexts that simulate temporal distribution shift).
 
 \paragraph{Two OOD Types.}
 We identify two distinct scenarios:
@@ -22,13 +22,13 @@ This failure reveals a fundamental mismatch between standard training objectives
 
 Our contributions are:
 \textbf{(1) Problem identification and impossibility result:} We identify a systematic blind spot in probabilistic KG embeddings---the inability to detect novel relational contexts---and prove that \emph{any} relation-agnostic uncertainty estimator achieves near-random detection on this category (Theorem~\ref{thm:impossibility}).
-\textbf{(2) Uncertainty decomposition framework:} We formalize complementary semantic and structural uncertainty signals and show neither alone suffices (Theorem~\ref{thm:complementarity}). This decomposition is the core contribution; the combination mechanism (CAGP) is intentionally minimal.
-\textbf{(3) Empirical validation:} We demonstrate this limitation persists across existing methods (0.44--0.64 AUROC on temporal shift despite 0.99 on random corruptions), and that the decomposition consistently achieves 0.94--1.00 AUROC across three benchmarks.
+\textbf{(2) Uncertainty decomposition framework:} We formalize complementary semantic and structural uncertainty signals and characterize their failure modes by OOD type (semantic fails on novel contexts; structural degrades on emerging entities; Theorem~\ref{thm:complementarity}). This decomposition is the core contribution; the combination mechanism (CAGP) is intentionally minimal.
+\textbf{(3) Empirical validation:} We demonstrate this limitation persists across existing methods (0.38--0.63 AUROC on temporal shift despite 0.99 on random corruptions), and that the decomposition achieves 0.86--0.99 AUROC across four benchmarks.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{figures/fig1_main_results.pdf}
+\includegraphics[width=0.75\textwidth]{figures/fig1_main_results.pdf}
 
-\caption{Temporal OOD detection (AUROC). Existing probabilistic methods achieve only 0.44--0.64; CAGP combines complementary semantic and structural signals to reach 0.94--1.00 across three benchmarks.}
+\caption{Temporal OOD detection on FB15k-237 (AUROC). Existing probabilistic methods achieve 0.42--0.63; our decomposition reaches 0.94. The pattern holds across all four benchmarks (Table~\ref{tab:temporal_ood}).}
 \label{fig:main_results}
-\end{figure}
+\end{figure*}

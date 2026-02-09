@@ -80,13 +80,13 @@ Theorem~\ref{thm:complementarity} establishes that relation-specific uncertainty
 where $U_{\text{sem}}$ is the GP-based semantic uncertainty (entity variance), $U_{\text{str}}$ is the structural uncertainty (coverage), and $\alpha = \sigma(\lambda)$ is a learned mixing weight.
 
 \paragraph{Implementation.}
-The logit parameter $\lambda$ is initialized to $0$ ($\alpha_0 = 0.5$) and optimized jointly with entity embeddings via the link prediction loss (BCE with negative sampling plus KL regularization, $\beta{=}0.01$). Alpha is a single global scalar (shared across all relations). To ensure comparable scales, we normalize semantic uncertainty: $\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot \bar{U}_{\text{str}} / \bar{U}_{\text{sem}}$, where $\bar{U}_{\text{str}}$ and $\bar{U}_{\text{sem}}$ are means computed once over the full evaluation set. This avoids batch-dependent normalization that could leak class information when ID and OOD samples are evaluated separately.
+The logit parameter $\lambda$ is initialized to $0$ ($\alpha_0 = 0.5$) and optimized jointly with entity embeddings via the link prediction loss (BCE with negative sampling plus KL regularization; see Appendix~\ref{app:training_config} for $\beta_{\text{KL}}$). Alpha is a single global scalar (shared across all relations). To ensure comparable scales, we normalize semantic uncertainty: $\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot \bar{U}_{\text{str}} / \bar{U}_{\text{sem}}$, where $\bar{U}_{\text{str}}$ and $\bar{U}_{\text{sem}}$ are means computed once over the training set. This avoids batch-dependent normalization and ensures consistency with the distributions seen during training.
 
 \paragraph{Coverage matrix.}
 We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from training data:
 \begin{equation}
     c(e,r) = \begin{cases}
-        1 & \text{if } \exists (h,r',t) \in \mathcal{T}_{\text{train}}: (e=h \text{ or } e=t) \text{ and } r'=r \\
+        1 & \exists (h,r',t) \in \mathcal{T}_{\text{train}}\!: (e{=}h \lor e{=}t) \land r'{=}r \\
         0 & \text{otherwise}
     \end{cases}
 \end{equation}
@@ -94,7 +94,7 @@ We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from
 Structural uncertainty is: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0,1,2\}$.
 
 \paragraph{Design rationale.}
-The linear combination is intentionally simple---a single learned scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}) and its \emph{complementarity} with semantic uncertainty (Theorem~\ref{thm:complementarity}). A fixed $\alpha = 0.5$ captures most gains (Table~\ref{tab:temporal_ood}: 0.89--1.00 AUROC), and an MLP-based variant (RelCondVar) achieves identical performance (\S\ref{sec:experiments}), confirming the framework---not the fusion mechanism---drives gains.
+The linear combination is intentionally simple---a single learned scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}) and its \emph{complementarity} with semantic uncertainty (Theorem~\ref{thm:complementarity}). RelCondVar, an MLP-based variant, matches $U_{\text{str}}$ across all datasets (\S\ref{sec:experiments}), confirming the framework---not the fusion mechanism---drives gains.
 
 \paragraph{Why explicit coverage?}
 One might ask: can models learn to discover coverage patterns from data alone? Our impossibility theorem (Theorem~\ref{thm:impossibility}) shows that standard link prediction objectives do not incentivize relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias. Note that coverage-based detection of novel contexts is perfect by construction (Remark~\ref{rem:circularity}); the empirical question is whether this category is prevalent enough to matter, which we validate in \S\ref{sec:experiments}.

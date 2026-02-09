@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Run MC Dropout, Deep Ensemble, and SNGP baselines on WN18RR temporal OOD.
+Run MC Dropout, Deep Ensemble, and SNGP baselines on temporal OOD.
 
-These are the three '--' entries in Table 1 that need filling.
+Supports --dataset wn18rr (default) or --dataset fb15k237.
 Uses the same temporal OOD evaluation as run_wn18rr_temporal.py.
 """
 
@@ -11,6 +11,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,7 +22,8 @@ import json
 from collections import defaultdict
 import time
 
-from src.data.loaders import load_wn18rr
+from src.data.loaders import load_wn18rr, load_fb15k237
+from scripts.run_wn18rr_temporal import evaluate_temporal as canonical_evaluate_temporal, _is_emerging
 
 
 def setup_device():
@@ -335,67 +337,12 @@ def train_sngp(model, triples, device, epochs=30, lr=0.001):
 
 
 # ============================================================
-# Temporal OOD evaluation (same as run_wn18rr_temporal.py)
+# Temporal OOD evaluation — delegates to canonical implementation
+# in run_wn18rr_temporal.py to guarantee identical split logic.
 # ============================================================
 
 def evaluate_temporal(model, train, test, n_ent, device):
-    model.eval()
-
-    freq = defaultdict(int)
-    for i in range(len(train)):
-        freq[train[i, 0]] += 1
-        freq[train[i, 2]] += 1
-
-    thresh = np.percentile(list(freq.values()), 25)
-    cov = model.coverage.cpu().numpy()
-
-    new_entity_idx, new_pair_idx, id_idx = [], [], []
-    for i in range(len(test)):
-        h, r, t = test[i]
-        if freq.get(h, 0) <= thresh or freq.get(t, 0) <= thresh:
-            new_entity_idx.append(i)
-        elif cov[h, r] == 0 or cov[t, r] == 0:
-            new_pair_idx.append(i)
-        else:
-            id_idx.append(i)
-
-    print(f"    Split: emerging={len(new_entity_idx)}, novel_ctx={len(new_pair_idx)}, id={len(id_idx)}")
-
-    results = {
-        'n_emerging': len(new_entity_idx),
-        'n_novel_ctx': len(new_pair_idx),
-        'n_id': len(id_idx),
-        'threshold': float(thresh),
-    }
-
-    ood_idx = new_entity_idx + new_pair_idx
-    if len(ood_idx) > 50 and len(id_idx) > 50:
-        with torch.no_grad():
-            ood_sample = ood_idx[:min(len(ood_idx), 3000)]
-            id_sample = id_idx[:min(len(id_idx), 3000)]
-
-            ood_triples = test[ood_sample]
-            id_triples = test[id_sample]
-
-            h_ood = torch.tensor(ood_triples[:, 0]).to(device)
-            r_ood = torch.tensor(ood_triples[:, 1]).to(device)
-            t_ood = torch.tensor(ood_triples[:, 2]).to(device)
-            ood_unc = model.get_uncertainty(h_ood, r_ood, t_ood).cpu().numpy()
-
-            h_id = torch.tensor(id_triples[:, 0]).to(device)
-            r_id = torch.tensor(id_triples[:, 1]).to(device)
-            t_id = torch.tensor(id_triples[:, 2]).to(device)
-            id_unc = model.get_uncertainty(h_id, r_id, t_id).cpu().numpy()
-
-        labels = np.concatenate([np.zeros(len(id_unc)), np.ones(len(ood_unc))])
-        scores = np.concatenate([id_unc, ood_unc])
-
-        try:
-            results['overall_auroc'] = float(roc_auc_score(labels, scores))
-        except Exception:
-            results['overall_auroc'] = 0.5
-
-    return results
+    return canonical_evaluate_temporal(model, train, test, n_ent, device, emerging_operator='leq')
 
 
 # ============================================================
@@ -447,15 +394,26 @@ def evaluate_link_prediction(model, test, train, n_ent, device, max_test=1000):
 # ============================================================
 
 def main():
+    parser = argparse.ArgumentParser(description="Run MC Dropout, Deep Ensemble, SNGP baselines.")
+    parser.add_argument('--dataset', choices=['wn18rr', 'fb15k237'], default='wn18rr',
+                        help="Dataset to evaluate on.")
+    args = parser.parse_args()
+
     device = setup_device()
     print(f"Device: {device}")
 
-    train_ds, _, test_ds = load_wn18rr()
+    if args.dataset == 'wn18rr':
+        train_ds, _, test_ds = load_wn18rr()
+        dataset_name = 'WN18RR'
+    else:
+        train_ds, _, test_ds = load_fb15k237()
+        dataset_name = 'FB15k-237'
+
     train = train_ds.triples
     test = test_ds.triples
     n_ent = train_ds.num_entities
     n_rel = train_ds.num_relations
-    print(f"WN18RR: {n_ent} entities, {n_rel} relations, {len(train)} train, {len(test)} test")
+    print(f"{dataset_name}: {n_ent} entities, {n_rel} relations, {len(train)} train, {len(test)} test")
 
     seeds = [42, 123, 456]
     all_results = {}
@@ -511,17 +469,18 @@ def main():
 
         all_results[f'seed_{seed}'] = seed_results
 
-    # Also get link prediction metrics (once, seed=42)
-    print("\n\nLink Prediction (base DistMult, seed=42):")
-    torch.manual_seed(42)
-    np.random.seed(42)
-    from scripts.run_wn18rr_temporal import UKGE as BaseModel
-    model = BaseModel(n_ent, n_rel)
-    model.precompute_coverage(train)
-    model = train_model(model, train, device, epochs=30)
-    lp_results = evaluate_link_prediction(model, test, train, n_ent, device, max_test=500)
-    print(f"  MRR: {lp_results['mrr']:.3f}, Hits@10: {lp_results['hits@10']:.3f}, Hits@1: {lp_results['hits@1']:.3f}")
-    all_results['link_prediction'] = lp_results
+    # Link prediction metrics (WN18RR only, for paper footnote)
+    if args.dataset == 'wn18rr':
+        print("\n\nLink Prediction (base DistMult, seed=42):")
+        torch.manual_seed(42)
+        np.random.seed(42)
+        from scripts.run_wn18rr_temporal import UKGE as BaseModel
+        model = BaseModel(n_ent, n_rel)
+        model.precompute_coverage(train)
+        model = train_model(model, train, device, epochs=30)
+        lp_results = evaluate_link_prediction(model, test, train, n_ent, device, max_test=500)
+        print(f"  MRR: {lp_results['mrr']:.3f}, Hits@10: {lp_results['hits@10']:.3f}, Hits@1: {lp_results['hits@1']:.3f}")
+        all_results['link_prediction'] = lp_results
 
     # Summary
     print("\n" + "=" * 60)
@@ -538,7 +497,7 @@ def main():
             print(f"  {method}: {np.mean(aurocs):.3f} ± {np.std(aurocs):.3f}")
 
     # Save
-    out = project_root / 'outputs' / 'wn18rr_missing_baselines.json'
+    out = project_root / 'outputs' / f'{args.dataset}_missing_baselines.json'
     out.parent.mkdir(exist_ok=True)
     with open(out, 'w') as f:
         json.dump(all_results, f, indent=2, default=float)

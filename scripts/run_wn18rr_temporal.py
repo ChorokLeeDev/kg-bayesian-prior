@@ -14,6 +14,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -100,7 +101,7 @@ class CAGP(nn.Module):
         return (self.entity_mean[h] * self.relation_emb(r) * self.entity_mean[t]).sum(-1)
 
     def calibrate_normalization(self, triples, device):
-        """Compute normalization statistics from a reference set (e.g., full test set).
+        """Compute normalization statistics from a reference set (e.g., training set).
         Must be called before get_uncertainty() during evaluation."""
         with torch.no_grad():
             h = torch.tensor(triples[:, 0]).to(device)
@@ -253,7 +254,16 @@ class UKGE(nn.Module):
 # Training and evaluation
 # ============================================================
 
-def train_model(model, triples, device, epochs=30, lr=0.001):
+def _kl_entity_gaussian(model):
+    """KL(q(e)||N(0,1)) for models with explicit entity mean/logvar parameters."""
+    if not (hasattr(model, 'entity_mean') and hasattr(model, 'entity_logvar')):
+        return None
+    mean = model.entity_mean
+    logvar = model.entity_logvar
+    return -0.5 * (1 + logvar - mean.pow(2) - logvar.exp()).sum(dim=-1).mean()
+
+
+def train_model(model, triples, device, epochs=30, lr=0.001, kl_beta=0.001, unc_weight=0.1):
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -278,11 +288,17 @@ def train_model(model, triples, device, epochs=30, lr=0.001):
                 neg_scores, torch.zeros_like(neg_scores)
             )
 
+            # KL regularization toward N(0,1) prior
+            kl = _kl_entity_gaussian(model)
+            if kl is not None:
+                loss = loss + kl_beta * kl
+
+            # Uncertainty margin: OOD (neg) should have higher uncertainty
             if hasattr(model, 'entity_logvar') or hasattr(model, 'var_net'):
                 pos_unc = model.get_uncertainty(h, r, t)
                 neg_unc = model.get_uncertainty(h, r, neg_t)
                 unc_loss = F.relu(0.3 + pos_unc.mean() - neg_unc.mean())
-                loss = loss + 0.1 * unc_loss
+                loss = loss + unc_weight * unc_loss
 
             optimizer.zero_grad()
             loss.backward()
@@ -318,7 +334,15 @@ def evaluate_ood(model, test, n_ent, device):
     return roc_auc_score(labels, scores)
 
 
-def evaluate_temporal(model, train, test, n_ent, device):
+def _is_emerging(h_freq, t_freq, thresh, emerging_operator):
+    if emerging_operator == 'lt':
+        return h_freq < thresh or t_freq < thresh
+    if emerging_operator == 'leq':
+        return h_freq <= thresh or t_freq <= thresh
+    raise ValueError(f"Unsupported emerging_operator: {emerging_operator}")
+
+
+def evaluate_temporal(model, train, test, n_ent, device, emerging_operator='leq'):
     """Temporal-like OOD evaluation with 25th percentile threshold."""
     model.eval()
 
@@ -335,7 +359,7 @@ def evaluate_temporal(model, train, test, n_ent, device):
     new_entity_idx, new_pair_idx, id_idx = [], [], []
     for i in range(len(test)):
         h, r, t = test[i]
-        if freq.get(h, 0) <= thresh or freq.get(t, 0) <= thresh:
+        if _is_emerging(freq.get(h, 0), freq.get(t, 0), thresh, emerging_operator):
             new_entity_idx.append(i)
         elif cov[h, r] == 0 or cov[t, r] == 0:
             new_pair_idx.append(i)
@@ -349,18 +373,16 @@ def evaluate_temporal(model, train, test, n_ent, device):
         'n_novel_ctx': len(new_pair_idx),
         'n_id': len(id_idx),
         'threshold': float(thresh),
+        'emerging_operator': emerging_operator,
     }
 
     # Overall temporal OOD: emerging + novel_ctx vs ID
     ood_idx = new_entity_idx + new_pair_idx
     if len(ood_idx) > 50 and len(id_idx) > 50:
         with torch.no_grad():
-            # Sample for efficiency
-            ood_sample = ood_idx[:min(len(ood_idx), 3000)]
-            id_sample = id_idx[:min(len(id_idx), 3000)]
-
-            ood_triples = test[ood_sample]
-            id_triples = test[id_sample]
+            # Use full evaluation set to avoid class-ratio distortions.
+            ood_triples = test[ood_idx]
+            id_triples = test[id_idx]
 
             h_ood = torch.tensor(ood_triples[:, 0]).to(device)
             r_ood = torch.tensor(ood_triples[:, 1]).to(device)
@@ -385,11 +407,8 @@ def evaluate_temporal(model, train, test, n_ent, device):
     # Per-category: emerging vs ID
     if len(new_entity_idx) > 50 and len(id_idx) > 50:
         with torch.no_grad():
-            emerge_sample = new_entity_idx[:min(len(new_entity_idx), 2000)]
-            id_sample2 = id_idx[:min(len(id_idx), 2000)]
-
-            e_triples = test[emerge_sample]
-            i_triples = test[id_sample2]
+            e_triples = test[new_entity_idx]
+            i_triples = test[id_idx]
 
             h_e = torch.tensor(e_triples[:, 0]).to(device)
             r_e = torch.tensor(e_triples[:, 1]).to(device)
@@ -411,11 +430,8 @@ def evaluate_temporal(model, train, test, n_ent, device):
     # Per-category: novel context vs ID
     if len(new_pair_idx) > 50 and len(id_idx) > 50:
         with torch.no_grad():
-            novel_sample = new_pair_idx[:min(len(new_pair_idx), 2000)]
-            id_sample3 = id_idx[:min(len(id_idx), 2000)]
-
-            n_triples = test[novel_sample]
-            i_triples = test[id_sample3]
+            n_triples = test[new_pair_idx]
+            i_triples = test[id_idx]
 
             h_n = torch.tensor(n_triples[:, 0]).to(device)
             r_n = torch.tensor(n_triples[:, 1]).to(device)
@@ -434,11 +450,25 @@ def evaluate_temporal(model, train, test, n_ent, device):
         except Exception:
             results['novel_ctx_auroc'] = 0.5
 
+    results['eval_mode'] = 'full'
     return results
 
 
-def run_dataset(ds_name, loader, device, seeds=[42, 123, 456]):
+def run_dataset(
+    ds_name,
+    loader,
+    device,
+    seeds=None,
+    epochs=30,
+    lr=0.001,
+    kl_beta=0.001,
+    unc_weight=0.1,
+    emerging_operator='leq',
+):
     """Run all models on a dataset across multiple seeds."""
+    if seeds is None:
+        seeds = [42, 123, 456]
+
     print(f"\n{'='*60}")
     print(f"  {ds_name}")
     print(f"{'='*60}")
@@ -475,18 +505,21 @@ def run_dataset(ds_name, loader, device, seeds=[42, 123, 456]):
             t0 = time.time()
             model = cls(n_ent, n_rel)
             model.precompute_coverage(train)
-            model = train_model(model, train, device, epochs=30)
+            model = train_model(model, train, device, epochs=epochs, lr=lr, kl_beta=kl_beta, unc_weight=unc_weight)
 
-            # Calibrate normalization on full test set to avoid batch-dependent leakage
+            # Calibrate normalization on training set (consistent with what the
+            # model saw during training, avoids train/eval mismatch for learned alpha)
             if hasattr(model, 'calibrate_normalization'):
-                model.calibrate_normalization(test, device)
+                model.calibrate_normalization(train, device)
 
             # Standard OOD
             random_auroc = evaluate_ood(model, test, n_ent, device)
             print(f"    Random OOD AUROC: {random_auroc:.4f}")
 
             # Temporal OOD
-            temporal = evaluate_temporal(model, train, test, n_ent, device)
+            temporal = evaluate_temporal(
+                model, train, test, n_ent, device, emerging_operator=emerging_operator
+            )
             elapsed = time.time() - t0
 
             if 'overall_auroc' in temporal:
@@ -543,24 +576,80 @@ def run_dataset(ds_name, loader, device, seeds=[42, 123, 456]):
                 summary[name][f'{key}_std'] = float(np.std(vals))
 
     all_seed_results['summary'] = summary
+    all_seed_results['config'] = {
+        'seeds': list(seeds),
+        'epochs': int(epochs),
+        'lr': float(lr),
+        'kl_beta': float(kl_beta),
+        'unc_weight': float(unc_weight),
+        'emerging_operator': emerging_operator,
+    }
 
     return all_seed_results
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Temporal OOD experiments on WN18RR/FB15k-237.")
+    parser.add_argument(
+        '--datasets',
+        type=str,
+        default='wn18rr,fb15k237',
+        help="Comma-separated datasets: wn18rr,fb15k237",
+    )
+    parser.add_argument(
+        '--seeds',
+        type=str,
+        default='42,123,456',
+        help="Comma-separated integer seeds.",
+    )
+    parser.add_argument('--epochs', type=int, default=30)
+    parser.add_argument('--lr', type=float, default=1e-3)
+    parser.add_argument('--kl-beta', type=float, default=1e-3)
+    parser.add_argument('--unc-weight', type=float, default=0.1,
+                        help="Weight for uncertainty margin loss (pos_unc < neg_unc).")
+    parser.add_argument(
+        '--emerging-operator',
+        choices=['leq', 'lt'],
+        default='leq',
+        help="Threshold rule for emerging entities: leq uses <= tau, lt uses < tau.",
+    )
+    parser.add_argument(
+        '--output',
+        type=str,
+        default=str(project_root / 'outputs' / 'wn18rr_temporal_results.json'),
+    )
+    args = parser.parse_args()
+
     device = setup_device()
     print(f"Device: {device}")
 
     results = {}
+    seeds = [int(s.strip()) for s in args.seeds.split(',') if s.strip()]
+    requested = [d.strip().lower() for d in args.datasets.split(',') if d.strip()]
 
-    # WN18RR (primary target — missing from Table 1)
-    results['wn18rr'] = run_dataset('WN18RR', load_wn18rr, device)
+    dataset_loaders = {
+        'wn18rr': ('WN18RR', load_wn18rr),
+        'fb15k237': ('FB15k-237', load_fb15k237),
+    }
 
-    # FB15k-237 (for RelCondVar — missing from current tables)
-    results['fb15k237'] = run_dataset('FB15k-237', load_fb15k237, device)
+    for ds in requested:
+        if ds not in dataset_loaders:
+            raise ValueError(f"Unknown dataset '{ds}'. Valid options: {', '.join(dataset_loaders)}")
+        pretty_name, loader = dataset_loaders[ds]
+        results[ds] = run_dataset(
+            pretty_name,
+            loader,
+            device,
+            seeds=seeds,
+            epochs=args.epochs,
+            lr=args.lr,
+            kl_beta=args.kl_beta,
+            unc_weight=args.unc_weight,
+            emerging_operator=args.emerging_operator,
+        )
 
     # Save results
-    out = project_root / 'outputs' / 'wn18rr_temporal_results.json'
+    out = Path(args.output)
     out.parent.mkdir(exist_ok=True)
     with open(out, 'w') as f:
         json.dump(results, f, indent=2, default=float)

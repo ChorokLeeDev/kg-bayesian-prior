@@ -1,21 +1,20 @@
 % Conclusion - UAI version (condensed)
 
 We identified a fundamental limitation in probabilistic KG embeddings: learned variances are relation-agnostic and cannot capture structural uncertainty.
-This explains why existing methods achieve 0.99 AUROC on random corruptions but only 0.44--0.64 on temporal shift.
+This explains why existing methods achieve 0.99 AUROC on random corruptions but only 0.38--0.63 on temporal shift.
 
 We formalized two OOD types (emerging entities, novel contexts) and showed under idealized assumptions that they require complementary detection strategies (Theorem~\ref{thm:complementarity}).
-The decomposition consistently achieves 0.94--1.00 AUROC on temporal OOD detection across three benchmarks (multi-seed on WN18RR; single-seed with bootstrap CI on FB15k-237 and YAGO; see Table~\ref{tab:temporal_ood}), substantially improving over relation-agnostic baselines.
-The qualitative predictions of the theorem hold across all three datasets despite some assumption violations (see Appendix~\ref{app:assumptions}).
+The decomposition achieves 0.86--0.99 AUROC on temporal OOD detection across four benchmarks, including 0.99 on ICEWS14 where OOD is defined by ground-truth timestamps rather than coverage (Table~\ref{tab:temporal_ood}), substantially improving over relation-agnostic baselines where evaluated (0.38--0.63).
+The qualitative predictions of the theorem hold across all four datasets despite some assumption violations (see Appendix~\ref{app:assumptions}).
 The framework is agnostic to standard embedding architectures (DistMult, TransE, ComplEx; Appendix~\ref{app:architectures}) and computationally lightweight (coverage is precomputed once).
 
 \paragraph{Scalability considerations.}
 CAGP's coverage matrix $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ memory. For our evaluated datasets (FB15k-237: 13MB dense, $<$1MB sparse; YAGO3-10: 17.5MB dense, $<$1MB sparse), this is negligible. For web-scale KGs, sparse storage (hash tables storing only observed pairs) reduces memory to $O(|\mathcal{T}|)$ with $O(1)$ inference. We also explored learned relation-conditioned variance via multi-layer perceptron, but found explicit coverage simpler and equally effective. CAGP provides interpretability and simplicity suitable for domain-specific KGs with $<$1M entities; empirical evaluation on billion-triple KGs remains future work.
 
 \paragraph{Limitations.}
-Our simulated temporal OOD splits use coverage-based partitioning, and the novel-context category is defined using the same coverage feature as our structural detector (Remark~\ref{rem:circularity}), so structural AUROC $= 1$ on this category is by construction.
-Evaluation on temporal KGs with ground-truth timestamps (e.g., ICEWS14, GDELT) remains important future work to validate beyond simulated protocols.
-A relation-conditioned variance ablation (RelCondVar) matches CAGP performance, confirming the decomposition framework rather than specific parameterization drives gains.
-Coverage is binary; the framework assumes transductive settings; our base model underperforms state-of-the-art link prediction; FB15k-237 and YAGO3-10 results are from single seeds (multi-seed confirmation on WN18RR shows zero variance for CAGP).
+On the three static benchmarks, simulated temporal OOD splits use coverage-based partitioning, and the novel-context category is defined using the same coverage feature as our structural detector (Remark~\ref{rem:circularity}), so structural AUROC $= 1$ on this category is by construction. ICEWS14 validation (Table~\ref{tab:temporal_ood}) breaks this coupling but uses a single temporal KG; a leakage audit (Appendix~\ref{app:leakage}) confirms temporal integrity despite 53\% inverse-relation overlap, and strict-split decontamination (58.5\% removed) improves CAGP from 0.993 to 0.995 while Energy drops to 0.499. Ablation (Appendix~\ref{app:icews14_ablation}) further shows performance drops to chance when structural signal is removed or shuffled. Evaluation on additional temporal benchmarks (e.g., GDELT) would further strengthen generalizability.
+A relation-conditioned variance ablation (RelCondVar) matches $U_{\text{str}}$ across all datasets, confirming the decomposition framework rather than specific parameterization drives gains. CAGP's learned $\alpha$ underperforms on sparse-relation graphs (WN18RR: 0.72 vs $U_{\text{str}}$ 0.86) due to normalization sensitivity; fixed-weight combinations (RelCondVar) avoid this.
+Coverage is binary; the framework assumes transductive settings; our base model underperforms state-of-the-art link prediction.
 Assumptions A4 and A6 are violated on some datasets, so the formal guarantees should be interpreted qualitatively.
 The framework naturally supports selective prediction (abstaining on uncertain queries), with preliminary results showing up to 43\% error reduction at 85\% coverage (Appendix~\ref{app:selective}).
 Future work includes architecturally relation-aware models (R-GCN, CompGCN), inductive extensions, and application to knowledge-grounded language models.
