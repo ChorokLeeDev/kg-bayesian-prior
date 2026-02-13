@@ -2,20 +2,23 @@
 
 \paragraph{Probabilistic KG Embeddings.}
 UKGE~\citep{chen2019embedding} associates confidence scores with triples; BEUrRE~\citep{chen2021probabilistic} uses box embeddings where volume indicates uncertainty; GP-KGE~\citep{Chen2021PERM} learns Gaussian distributions over entities.
-All share the limitation we identify: learned variances are relation-agnostic.
-Despite being trained on data containing entity-relation co-occurrence patterns, these methods do not autonomously learn relation-specific uncertainty, necessitating our explicit decomposition framework.
-While relation-aware scoring functions exist (R-GCN~\citep{schlichtkrull2018modeling}, CompGCN~\citep{vashishth2019composition}), these condition \emph{predictions} on relations but still produce relation-agnostic uncertainty estimates; our framework addresses uncertainty decomposition orthogonally to scoring architecture.
+Earlier, KG2E~\citep{he2015learning} represented both entities and relations as Gaussian distributions, capturing per-relation uncertainty through covariance matrices; however, KG2E targets link prediction rather than OOD detection, and its learned covariances remain entity-level statistics that do not explicitly track whether specific entity-relation combinations have been observed.
+All these methods share the limitation we identify: learned variances are relation-agnostic.
+Despite being trained on data containing entity-relation co-occurrence patterns, these methods do not autonomously learn relation-specific uncertainty, necessitating explicit decomposition.
+While relation-aware scoring functions exist (R-GCN~\citep{schlichtkrull2018modeling}, CompGCN~\citep{vashishth2019composition}), these condition \emph{predictions} on relations but still produce relation-agnostic uncertainty estimates; our decomposition addresses uncertainty orthogonally to scoring architecture.
 
 \paragraph{OOD Detection.}
 MC Dropout~\citep{gal2016dropout}, Deep Ensembles~\citep{lakshminarayanan2017simple}, and Energy-based methods~\citep{liu2020energy} capture model uncertainty but not structural observation patterns.
 Simple Neural Gaussian Process (SNGP)~\citep{liu2020simple} estimates distance to training data but remains relation-agnostic.
 Graph Posterior Networks~\citep{stadler2021graph} propagate uncertainty through graphs but treat edges homogeneously.
 Classical feature-space methods (Mahalanobis distance~\citep{lee2018simple}, energy scores) assume continuous feature geometry; KGs' discrete combinatorial structure motivates our coverage-based alternative.
+In graph-structured data more broadly, GNNSafe~\citep{wu2023energy} applies energy-based detection to graph neural networks, while recent work explores spectral and topological signals for graph-level OOD detection. Our work differs by targeting the knowledge graph triple classification setting, where the relational structure creates a distinct challenge: entity-level signals conflate relation-specific contexts.
 
 \paragraph{Temporal Knowledge Graphs.}
 Temporal KG methods extend embedding models with time-aware scoring functions for link prediction over evolving graphs~\citep{garcia2018learning,lacroix2020tensor,lacroix2021tntcomplex}. These methods model \emph{when} facts hold but do not address uncertainty quantification or OOD detection---the problem we target. Our simulated temporal splits test whether methods can flag unseen entity-relation patterns, complementing temporal KG research.
+Recent conformal prediction approaches~\citep{zhu2025certainty} provide coverage guarantees for answer sets but do not decompose the sources of uncertainty; our decomposition complements such approaches by identifying \emph{which} uncertainty type---semantic or structural---drives each prediction's unreliability.
 
 \paragraph{Positioning.}
 Prior work treats uncertainty as a single quantity. We show KG uncertainty decomposes into semantic (entity-level) and structural (relation-specific) components, with theoretical guarantees on when each is necessary (Theorem~\ref{thm:complementarity}).
-Our decomposition mirrors the aleatoric/epistemic distinction in Bayesian deep learning~\citep{kendall2017uncertainties}: semantic uncertainty captures epistemic uncertainty about entity embeddings, while structural uncertainty captures the absence of training signal for specific entity-relation combinations.
-Recent work has advanced KG uncertainty from complementary angles: PAC-Bayesian generalization bounds for KGE~\citep{lee2024pacbayesian} and conformal prediction for uncertain KGs~\citep{zhu2025certainty}. These address generalization and calibration, respectively, while our work targets the orthogonal problem of \emph{decomposing} uncertainty into relation-aware components for OOD detection.
+Structural uncertainty (coverage) captures a form of epistemic uncertainty about relational context: has the model observed this particular entity-relation combination? This is distinct from the semantic epistemic uncertainty captured by embedding variance~\citep{kendall2017uncertainties}.
+Recent work has advanced KG uncertainty from complementary angles, including PAC-Bayesian generalization bounds for KGE~\citep{lee2024pacbayesian}. These address generalization guarantees, while our work targets the orthogonal problem of \emph{decomposing} uncertainty into relation-aware components for OOD detection.

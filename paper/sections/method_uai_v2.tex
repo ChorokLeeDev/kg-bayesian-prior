@@ -20,12 +20,13 @@ We set $\tau$ to the 25th percentile of entity frequencies (robust to outliers; 
 
 \begin{remark}[Relationship to structural detector]
 \label{rem:circularity}
-The novel-context category is defined via the same coverage indicator $c(e,r)$ used by our structural detector $U_{\text{str}}$. This means that structural uncertainty achieves perfect separation on novel contexts \emph{by construction} (Theorem~\ref{thm:complementarity}, Part~(iii)). The empirical contribution is therefore not that coverage ``discovers'' novel contexts, but rather: (a) the impossibility result (Theorem~\ref{thm:impossibility}) showing that entity-level methods \emph{cannot} detect this category regardless of definition, and (b) the empirical finding that coverage-defined novel contexts constitute a substantial fraction (25--28\%) of realistic test sets, making their detection practically important. We discuss the implications and limitations of this definitional coupling in \S\ref{sec:experiments}.
+The novel-context category is defined via the same coverage indicator $c(e,r)$ used by our structural detector $U_{\text{str}}$. This means that structural uncertainty achieves perfect separation on novel contexts \emph{by construction} (Theorem~\ref{thm:complementarity}, Part~(iii)). The empirical contribution is therefore not that coverage ``discovers'' novel contexts, but rather: (a) the impossibility result (Theorem~\ref{thm:impossibility}) showing that entity-level methods \emph{cannot} detect this category regardless of definition, and (b) the empirical finding that coverage-defined novel contexts constitute a substantial fraction (11--25\%) of realistic test sets (with WN18RR at the lower end due to its sparse relation set), making their detection practically important. We discuss the implications and limitations of this definitional coupling in \S\ref{sec:experiments}.
 \end{remark}
 
 \subsection{Uncertainty Signals}
 
 \textbf{Semantic uncertainty} from learned variance: $U_{\text{sem}}(h,r,t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)$ where $\bar{\sigma}^2_e$ is mean variance across dimensions.
+In practice, $U_{\text{sem}}$ is computed as the mean diagonal variance of the entity embedding distribution: $U_{\text{sem}}(e) = \frac{1}{d}\sum_{j=1}^{d} \exp(\ell_{e,j})$, where $\ell_{e,j}$ are learned log-variance parameters. While a full GP posterior with the relation-aware kernel (Section~\ref{sec:background}) could provide richer uncertainty estimates, we find that even this simpler variational approximation, when combined with structural coverage, achieves strong OOD detection.
 
 \textbf{Structural uncertainty} from coverage: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0, 1, 2\}$.
 
@@ -58,7 +59,7 @@ where $\epsilon$ measures the tightness of frequency matching between novel-cont
 \label{thm:complementarity}
 Under assumptions A1--A6 (see Appendix~\ref{app:proof} for precise statements and robustness analysis):
 \begin{enumerate}
-    \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\delta)$ on novel contexts, where $\delta$ measures frequency distribution overlap
+    \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\epsilon)$ on novel contexts, where $\epsilon$ measures frequency distribution overlap
     \item[\textbf{(ii)}] Structural uncertainty achieves AUROC $< 1$ on emerging entities (imperfect separation)
     \item[\textbf{(iii)}] Structural uncertainty achieves AUROC $= 1$ on novel contexts (this follows directly from Definition~\ref{def:ood} and assumption A2; see Remark~\ref{rem:circularity})
     \item[\textbf{(iv)}] Under the additional condition that semantic uncertainty separates emerging entities from ID better than structural uncertainty does (A6, verified empirically), the combination $U_{\text{comb}} = \alpha^* U_{\text{sem}} + (1-\alpha^*) U_{\text{str}}$ improves over either signal alone when both OOD types are present
@@ -78,9 +79,18 @@ Theorem~\ref{thm:complementarity} establishes that relation-specific uncertainty
 \end{equation}
 
 where $U_{\text{sem}}$ is the GP-based semantic uncertainty (entity variance), $U_{\text{str}}$ is the structural uncertainty (coverage), and $\alpha = \sigma(\lambda)$ is a learned mixing weight.
+In Eq.~(\ref{eq:cagp}), we use the normalized variant $\tilde{U}_{\text{sem}}$, scaled so that semantic and structural components have comparable magnitude (normalization statistics computed over the training set).
 
 \paragraph{Implementation.}
-The logit parameter $\lambda$ is initialized to $0$ ($\alpha_0 = 0.5$) and optimized jointly with entity embeddings via the link prediction loss (BCE with negative sampling plus KL regularization; see Appendix~\ref{app:training_config} for $\beta_{\text{KL}}$). Alpha is a single global scalar (shared across all relations). To ensure comparable scales, we normalize semantic uncertainty: $\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot \bar{U}_{\text{str}} / \bar{U}_{\text{sem}}$, where $\bar{U}_{\text{str}}$ and $\bar{U}_{\text{sem}}$ are means computed once over the training set. This avoids batch-dependent normalization and ensures consistency with the distributions seen during training.
+The logit parameter $\lambda$ is initialized to $0$ ($\alpha_0 = 0.5$) and optimized jointly with entity embeddings via the link prediction loss (BCE with negative sampling plus KL regularization; see Appendix~\ref{app:training_config} for $\beta_{\text{KL}}$). Alpha is a single global scalar (shared across all relations). Crucially, the scoring function uses \emph{reparameterization sampling}~\citep{kingma2014autoencoding}: during training, entity embeddings are sampled as $\mathbf{e} = \boldsymbol{\mu}_e + \boldsymbol{\sigma}_e \odot \boldsymbol{\epsilon}$, $\boldsymbol{\epsilon} \sim \mathcal{N}(0, I)$; at evaluation, we use the mean $\boldsymbol{\mu}_e$. This ensures the reconstruction loss provides gradients to the variance parameters, preventing KL-driven collapse (see error analysis in \S\ref{sec:experiments}). To ensure comparable scales, we normalize semantic uncertainty: $\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot \bar{U}_{\text{str}} / \bar{U}_{\text{sem}}$, where $\bar{U}_{\text{str}}$ and $\bar{U}_{\text{sem}}$ are means computed once over the training set.
+
+\paragraph{Training objective.}
+The training objective combines three terms:
+\begin{equation}
+\mathcal{L} = \mathcal{L}_{\text{BCE}} + \beta \cdot \mathcal{L}_{\text{KL}} + w_{\text{unc}} \cdot \mathcal{L}_{\text{margin}}
+\label{eq:loss}
+\end{equation}
+where $\mathcal{L}_{\text{BCE}}$ is binary cross-entropy with negative sampling, $\mathcal{L}_{\text{KL}} = -\frac{1}{2}\sum_{e}(1 + \log\sigma^2_e - \mu^2_e - \sigma^2_e)$ regularizes the variational posterior, and $\mathcal{L}_{\text{margin}} = \max(0, m - (U_{\text{CAGP}}^{\text{ood}} - U_{\text{CAGP}}^{\text{id}}))$ encourages higher uncertainty for OOD triples (margin $m{=}1.0$, $\beta{=}0.001$, $w_{\text{unc}}{=}0.1$).
 
 \paragraph{Coverage matrix.}
 We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from training data:
@@ -94,7 +104,7 @@ We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from
 Structural uncertainty is: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0,1,2\}$.
 
 \paragraph{Design rationale.}
-The linear combination is intentionally simple---a single learned scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}) and its \emph{complementarity} with semantic uncertainty (Theorem~\ref{thm:complementarity}). RelCondVar, an MLP-based variant, matches $U_{\text{str}}$ across all datasets (\S\ref{sec:experiments}), confirming the framework---not the fusion mechanism---drives gains.
+The linear combination is intentionally simple---a single learned scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}), its \emph{complementarity} with semantic uncertainty (Theorem~\ref{thm:complementarity}), and showing that even this minimal combination consistently outperforms either signal alone (\S\ref{sec:experiments}).
 
 \paragraph{Why explicit coverage?}
 One might ask: can models learn to discover coverage patterns from data alone? Our impossibility theorem (Theorem~\ref{thm:impossibility}) shows that standard link prediction objectives do not incentivize relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias. Note that coverage-based detection of novel contexts is perfect by construction (Remark~\ref{rem:circularity}); the empirical question is whether this category is prevalent enough to matter, which we validate in \S\ref{sec:experiments}.

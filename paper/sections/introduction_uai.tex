@@ -9,7 +9,7 @@ But these variances are \emph{relation-agnostic}: entity $e$ receives a single v
 Consider $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
 The model assigns low variance (well-observed), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions.
 
-This causes systematic failures (Figure~\ref{fig:main_results}): score-based methods achieve 0.99 AUROC detecting random corruptions (implausible triples) but only 0.38--0.60 on temporal OOD (emerging entities and novel relational contexts that simulate temporal distribution shift).
+This causes systematic failures (Figure~\ref{fig:main_results}): existing probabilistic methods achieve only 0.38--0.72 AUROC on temporal OOD (emerging entities and novel relational contexts), while our decomposition-based approach reaches 0.90--0.97.
 
 \paragraph{Two OOD Types.}
 We identify two distinct scenarios:
@@ -17,18 +17,17 @@ We identify two distinct scenarios:
 (2) \textbf{Novel contexts}: Well-observed entities in unobserved relations---variance is low (falsely confident), but the entity-relation pair was never trained.
 
 \paragraph{Contributions.}
-We identify a systematic limitation in probabilistic KG embeddings: learned variances are relation-agnostic despite training on data containing entity-relation co-occurrence patterns.
-This failure reveals a fundamental mismatch between standard training objectives (link prediction accuracy) and OOD detection requirements (capturing structural observation patterns).
+We diagnose why probabilistic KG embeddings fail at temporal OOD detection and show how to fix them.
 
-Our contributions are:
-\textbf{(1) Problem identification and impossibility result:} We identify a systematic blind spot in probabilistic KG embeddings---the inability to detect novel relational contexts---and prove that \emph{any} relation-agnostic uncertainty estimator achieves near-random detection on this category (Theorem~\ref{thm:impossibility}).
-\textbf{(2) Uncertainty decomposition framework:} We formalize complementary semantic and structural uncertainty signals and characterize their failure modes by OOD type (semantic fails on novel contexts; structural degrades on emerging entities; Theorem~\ref{thm:complementarity}). This decomposition is the core contribution; the combination mechanism (CAGP) is intentionally minimal.
-\textbf{(3) Empirical validation:} We demonstrate this limitation persists across existing methods (0.38--0.63 AUROC on temporal shift despite 0.99 on random corruptions), and that the decomposition achieves 0.86--0.99 AUROC across four benchmarks.
+\textbf{(1) Impossibility result:} We prove that \emph{any} relation-agnostic uncertainty estimator---one whose output depends only on entity-level statistics---achieves near-random detection on novel relational contexts (Theorem~\ref{thm:impossibility}). This directly explains the poor performance of UKGE, Energy, MC Dropout, Deep Ensembles, and SNGP (0.38--0.72 AUROC) on temporal distribution shift.
+\textbf{(2) Decomposition analysis:} We decompose KG uncertainty into \emph{semantic} (entity variance) and \emph{structural} (binary entity-relation co-occurrence) components and characterize their complementary failure modes (Theorem~\ref{thm:complementarity}): semantic uncertainty detects emerging entities but is blind to novel contexts; structural uncertainty detects novel contexts perfectly but degrades on emerging entities.
+\textbf{(3) CAGP realizes the complementarity:} Our model combines semantic and structural signals, achieving 0.90--0.97 AUROC across WN18RR~\citep{dettmers2018convolutional}, FB15k-237~\citep{toutanova2015observed}, and YAGO3-10~\citep{mahdisoltani2015yago3}---consistently outperforming coverage alone (0.84--0.94), with the largest gains on emerging entities (+8--12pp). On ICEWS14 (ground-truth temporal), CAGP achieves 0.993 AUROC.
+\textbf{(4) Variance collapse diagnosis:} We identify a subtle failure mode in variational KG embeddings: when the scoring function ignores variance parameters, KL regularization collapses all entity variances to a uniform value. Reparameterization sampling in the scoring function prevents this collapse, enabling meaningful semantic uncertainty. This diagnosis applies broadly to probabilistic KG embedding methods.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.75\textwidth]{figures/fig1_main_results.pdf}
 
-\caption{Temporal OOD detection on FB15k-237 (AUROC). Existing probabilistic methods achieve 0.42--0.63; our decomposition reaches 0.94. The pattern holds across all four benchmarks (Table~\ref{tab:temporal_ood}).}
+\caption{Temporal OOD detection on FB15k-237~\citep{toutanova2015observed} (AUROC). Existing probabilistic methods achieve 0.42--0.63; CAGP reaches 0.97. The pattern holds across all four benchmarks (Table~\ref{tab:temporal_ood}).}
 \label{fig:main_results}
 \end{figure*}

@@ -12,7 +12,7 @@ We additionally evaluate on \emph{temporal OOD}---emerging entities and novel re
 Performance is measured by AUROC.
 
 \paragraph{GP-KGE Uncertainty.}
-Probabilistic embedding methods~\citep{Chen2021PERM} learn Gaussian distributions over entity embeddings:
+Probabilistic embedding methods~\citep{Chen2021PERM,rasmussen2006gaussian} learn Gaussian distributions over entity embeddings:
 \begin{equation}
     \vect{e}_i \sim \mathcal{N}(\vect{\mu}_i, \text{diag}(\exp(\vect{\ell}_i)))
 \end{equation}
@@ -23,4 +23,5 @@ Uncertainty for a triple $(h, r, t)$ is typically the average entity variance:
     \label{eq:gp_uncertainty}
 \end{equation}
 where $\bar{\sigma}^2_e = \frac{1}{d}\sum_j \exp(\ell_{e,j})$ is the mean variance across dimensions.
+We denote this entity-level uncertainty $U_{\text{sem}}$ (semantic uncertainty) in our decomposition (Section~\ref{sec:method}).
 This uncertainty is \emph{relation-agnostic}---it depends only on entity variances, not the query relation $r$. Intuitively, an entity observed in 1000 triples receives low variance even for relations it has never appeared with, since $\bar{\sigma}^2_e$ reflects overall observation count rather than per-relation experience.

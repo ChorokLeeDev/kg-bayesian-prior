@@ -25,7 +25,7 @@ import json
 from collections import defaultdict
 import time
 
-from src.data.loaders import load_fb15k237, load_wn18rr
+from src.data.loaders import load_fb15k237, load_wn18rr, load_yago310
 
 
 def setup_device():
@@ -72,7 +72,15 @@ class GPOnly(nn.Module):
         self.register_buffer('coverage', torch.zeros(num_entities, num_relations))
 
     def forward(self, h, r, t):
-        return (self.entity_mean[h] * self.relation_emb(r) * self.entity_mean[t]).sum(-1)
+        if self.training:
+            h_std = torch.exp(0.5 * self.entity_logvar[h])
+            t_std = torch.exp(0.5 * self.entity_logvar[t])
+            h_emb = self.entity_mean[h] + h_std * torch.randn_like(h_std)
+            t_emb = self.entity_mean[t] + t_std * torch.randn_like(t_std)
+        else:
+            h_emb = self.entity_mean[h]
+            t_emb = self.entity_mean[t]
+        return (h_emb * self.relation_emb(r) * t_emb).sum(-1)
 
     def get_uncertainty(self, h, r, t):
         h_var = torch.exp(self.entity_logvar[h]).mean(dim=-1)
@@ -98,7 +106,15 @@ class CAGP(nn.Module):
         self._norm_stats = None  # cached normalization statistics
 
     def forward(self, h, r, t):
-        return (self.entity_mean[h] * self.relation_emb(r) * self.entity_mean[t]).sum(-1)
+        if self.training:
+            h_std = torch.exp(0.5 * self.entity_logvar[h])
+            t_std = torch.exp(0.5 * self.entity_logvar[t])
+            h_emb = self.entity_mean[h] + h_std * torch.randn_like(h_std)
+            t_emb = self.entity_mean[t] + t_std * torch.randn_like(t_std)
+        else:
+            h_emb = self.entity_mean[h]
+            t_emb = self.entity_mean[t]
+        return (h_emb * self.relation_emb(r) * t_emb).sum(-1)
 
     def calibrate_normalization(self, triples, device):
         """Compute normalization statistics from a reference set (e.g., training set).
@@ -630,6 +646,7 @@ def main():
     dataset_loaders = {
         'wn18rr': ('WN18RR', load_wn18rr),
         'fb15k237': ('FB15k-237', load_fb15k237),
+        'yago310': ('YAGO3-10', load_yago310),
     }
 
     for ds in requested:

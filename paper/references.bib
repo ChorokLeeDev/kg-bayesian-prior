@@ -1,5 +1,13 @@
 % References for GP-KGE Paper
 
+% Variational Inference
+@article{kingma2014autoencoding,
+  title={Auto-encoding variational {B}ayes},
+  author={Kingma, Diederik P and Welling, Max},
+  journal={arXiv preprint arXiv:1312.6114},
+  year={2014}
+}
+
 % Knowledge Graph Embeddings
 @inproceedings{bordes2013translating,
   title={Translating embeddings for modeling multi-relational data},
@@ -22,13 +30,6 @@
   booktitle={International Conference on Machine Learning},
   pages={2071--2080},
   year={2016}
-}
-
-@inproceedings{sun2019rotate,
-  title={RotatE: Knowledge graph embedding by relational rotation in complex space},
-  author={Sun, Zhiqing and Deng, Zhi-Hong and Nie, Jian-Yun and Tang, Jian},
-  booktitle={International Conference on Learning Representations},
-  year={2019}
 }
 
 @inproceedings{dettmers2018convolutional,
@@ -72,30 +73,6 @@
 }
 
 
-% Gaussian Processes on Graphs
-@inproceedings{kondor2002diffusion,
-  title={Diffusion kernels on graphs and other discrete structures},
-  author={Kondor, Risi and Lafferty, John},
-  booktitle={International Conference on Machine Learning},
-  pages={315--322},
-  year={2002}
-}
-
-@inproceedings{borovitskiy2021matern,
-  title={Mat{\'e}rn {G}aussian processes on graphs},
-  author={Borovitskiy, Viacheslav and Azangulov, Iskander and Terenin, Alexander and Mostowsky, Peter and Deisenroth, Marc and Cunningham, John},
-  booktitle={International Conference on Artificial Intelligence and Statistics},
-  pages={2593--2601},
-  year={2021}
-}
-
-@inproceedings{chen2022graph,
-  title={Graph Gaussian Processes for Multi-Relational Knowledge Graph Completion},
-  author={Chen, Hao and others},
-  booktitle={AAAI Conference on Artificial Intelligence},
-  year={2022}
-}
-
 % Graph Posterior Networks
 @inproceedings{stadler2021graph,
   title={Graph Posterior Network: Bayesian Predictive Uncertainty for Node Classification},
@@ -138,47 +115,6 @@
   year={2020}
 }
 
-@inproceedings{rao2024knowledge,
-  title={On the Calibration of Knowledge Graph Link Prediction},
-  author={Rao, Shijie and others},
-  booktitle={The Web Conference},
-  year={2024}
-}
-
-% Applications
-@article{singhal2012knowledge,
-  title={Introducing the knowledge graph: things, not strings},
-  author={Singhal, Amit},
-  journal={Google Blog},
-  year={2012}
-}
-
-@inproceedings{huang2019knowledge,
-  title={Knowledge graph embedding based question answering},
-  author={Huang, Xiao and Zhang, Jingyuan and Li, Dingcheng and Li, Ping},
-  booktitle={ACM International Conference on Web Search and Data Mining},
-  pages={105--113},
-  year={2019}
-}
-
-@article{mohamed2020discovering,
-  title={Discovering protein drug targets using knowledge graph embeddings},
-  author={Mohamed, Sameh K and Nov{\'a}{\v{c}}ek, V{\'\i}t and Nounu, Aayah},
-  journal={Bioinformatics},
-  volume={36},
-  number={2},
-  pages={603--610},
-  year={2020}
-}
-
-@inproceedings{wang2019kgat,
-  title={KGAT: Knowledge graph attention network for recommendation},
-  author={Wang, Xiang and He, Xiangnan and Cao, Yixin and Liu, Meng and Chua, Tat-Seng},
-  booktitle={ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining},
-  pages={950--958},
-  year={2019}
-}
-
 % GP Fundamentals
 @book{rasmussen2006gaussian,
   title={Gaussian processes for machine learning},
@@ -218,78 +154,6 @@
   author={Liu, Weitang and Wang, Xiaoyun and Owens, John D and Li, Yixuan},
   booktitle={Advances in Neural Information Processing Systems},
   pages={21464--21475},
-  year={2020}
-}
-
-% NLP Applications of KGs
-@article{bordes2015large,
-  title={Large-scale Simple Question Answering with Memory Networks},
-  author={Bordes, Antoine and Usunier, Nicolas and Chopra, Sumit and Weston, Jason},
-  journal={arXiv preprint arXiv:1506.02075},
-  year={2015}
-}
-
-@inproceedings{moon2019opendialkg,
-  title={OpenDialKG: Explainable Conversational Reasoning with Attention-based Walks over Knowledge Graphs},
-  author={Moon, Seungwhan and Shah, Pararth and Kumar, Anuj and Subba, Rajen},
-  booktitle={Annual Meeting of the Association for Computational Linguistics},
-  pages={845--854},
-  year={2019}
-}
-
-@inproceedings{thorne2018fever,
-  title={FEVER: a Large-scale Dataset for Fact Extraction and VERification},
-  author={Thorne, James and Vlachos, Andreas and Christodoulopoulos, Christos and Mittal, Arpit},
-  booktitle={Annual Conference of the North American Chapter of the ACL},
-  pages={809--819},
-  year={2018}
-}
-
-@inproceedings{zhang2018variational,
-  title={Variational Reasoning for Question Answering with Knowledge Graph},
-  author={Zhang, Yuyu and Dai, Hanjun and Kozareva, Zornitsa and Smola, Alexander and Song, Le},
-  booktitle={AAAI Conference on Artificial Intelligence},
-  year={2018}
-}
-
-@inproceedings{yasunaga2021qa,
-  title={QA-GNN: Reasoning with Language Models and Knowledge Graphs for Question Answering},
-  author={Yasunaga, Michihiro and Ren, Hongyu and Bosselut, Antoine and Liang, Percy and Leskovec, Jure},
-  booktitle={Annual Conference of the North American Chapter of the ACL},
-  pages={535--546},
-  year={2021}
-}
-
-@inproceedings{wu2020scalable,
-  title={Scalable Zero-shot Entity Linking with Dense Entity Retrieval},
-  author={Wu, Ledell and Petroni, Fabio and Josifoski, Martin and Riedel, Sebastian and Zettlemoyer, Luke},
-  booktitle={Conference on Empirical Methods in Natural Language Processing},
-  pages={6397--6407},
-  year={2020}
-}
-
-@inproceedings{liu2020k,
-  title={K-BERT: Enabling Language Representation with Knowledge Graph},
-  author={Liu, Weijie and Zhou, Peng and Zhao, Zhe and Wang, Zhiruo and Ju, Qi and Deng, Haotang and Wang, Ping},
-  booktitle={AAAI Conference on Artificial Intelligence},
-  pages={2901--2908},
-  year={2020}
-}
-
-@article{wang2021kepler,
-  title={KEPLER: A Unified Model for Knowledge Embedding and Pre-trained Language Representation},
-  author={Wang, Xiaozhi and Gao, Tianyu and Zhu, Zhaocheng and Zhang, Zhengyan and Liu, Zhiyuan and Li, Juanzi and Tang, Jian},
-  journal={Transactions of the Association for Computational Linguistics},
-  volume={9},
-  pages={176--194},
-  year={2021}
-}
-
-@inproceedings{akrami2020realistic,
-  title={Realistic Re-evaluation of Knowledge Graph Completion Methods: An Experimental Study},
-  author={Akrami, Farahnaz and Saeef, Mohammed Samiul and Zhang, Qingheng and Hu, Wei and Li, Chengkai},
-  booktitle={ACM SIGMOD International Conference on Management of Data},
-  pages={1995--2010},
   year={2020}
 }
 
@@ -353,4 +217,29 @@
   author={Lacroix, Timoth{\'e}e and Obozinski, Guillaume and Usunier, Nicolas},
   booktitle={AAAI Conference on Artificial Intelligence},
   year={2021}
+}
+
+% Gaussian Embedding for KGs
+@inproceedings{he2015learning,
+  title={Learning to Represent Knowledge Graphs with Gaussian Embedding},
+  author={He, Shizhu and Liu, Kang and Ji, Guoliang and Zhao, Jun},
+  booktitle={Proceedings of the 24th ACM International on Conference on Information and Knowledge Management},
+  pages={623--632},
+  year={2015}
+}
+
+% Energy-based OOD for GNNs
+@inproceedings{wu2023energy,
+  title={Energy-based Out-of-Distribution Detection for Graph Neural Networks},
+  author={Wu, Qitian and Chen, Yiting and Yang, Chenxiao and Yan, Junchi},
+  booktitle={International Conference on Learning Representations},
+  year={2023}
+}
+
+% Evidential Deep Learning
+@inproceedings{sensoy2018evidential,
+  title={Evidential Deep Learning to Quantify Classification Uncertainty},
+  author={Sensoy, Murat and Kaplan, Lance and Kandemir, Melih},
+  booktitle={Advances in Neural Information Processing Systems},
+  year={2018}
 }

@@ -153,7 +153,8 @@ def compute_coverage_matrix(triples, num_entities, num_relations):
     return coverage
 
 
-def create_ood_splits(train_triples, test_triples, coverage, freq, tau_percentile=20):
+def create_ood_splits(train_triples, test_triples, coverage, freq,
+                      tau_percentile=25, emerging_operator='leq'):
     """
     Create emerging entity and novel context OOD splits.
 
@@ -163,6 +164,7 @@ def create_ood_splits(train_triples, test_triples, coverage, freq, tau_percentil
         coverage: Coverage matrix from training
         freq: Entity frequency from training
         tau_percentile: Percentile threshold for "low frequency" entities
+        emerging_operator: 'leq' for <= tau, 'lt' for < tau
 
     Returns:
         id_triples: In-distribution test triples
@@ -181,7 +183,8 @@ def create_ood_splits(train_triples, test_triples, coverage, freq, tau_percentil
         t_covered = coverage[t, r] == 1
         both_covered = h_covered and t_covered
 
-        if min_freq < tau:
+        if (emerging_operator == 'leq' and min_freq <= tau) or \
+           (emerging_operator == 'lt' and min_freq < tau):
             # Emerging entity: at least one entity is low-frequency
             emerging_triples.append((h, r, t))
         elif not both_covered:
@@ -311,9 +314,10 @@ def verify_assumptions(dataset_name, train_dataset, test_dataset, device='cpu',
     freq = compute_entity_frequency(train_triples, num_entities)
     coverage = compute_coverage_matrix(train_triples, num_entities, num_relations)
 
-    # Create OOD splits
+    # Create OOD splits (canonical: 25th percentile, leq operator)
     id_triples, emerging_triples, novel_ctx_triples = create_ood_splits(
-        train_triples, test_triples, coverage, freq, tau_percentile=20
+        train_triples, test_triples, coverage, freq,
+        tau_percentile=25, emerging_operator='leq'
     )
 
     print(f"\nOOD Split sizes:")

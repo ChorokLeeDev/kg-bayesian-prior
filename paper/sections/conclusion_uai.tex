@@ -1,20 +1,18 @@
 % Conclusion - UAI version (condensed)
 
-We identified a fundamental limitation in probabilistic KG embeddings: learned variances are relation-agnostic and cannot capture structural uncertainty.
-This explains why existing methods achieve 0.99 AUROC on random corruptions but only 0.38--0.63 on temporal shift.
-
-We formalized two OOD types (emerging entities, novel contexts) and showed under idealized assumptions that they require complementary detection strategies (Theorem~\ref{thm:complementarity}).
-The decomposition achieves 0.86--0.99 AUROC on temporal OOD detection across four benchmarks, including 0.99 on ICEWS14 where OOD is defined by ground-truth timestamps rather than coverage (Table~\ref{tab:temporal_ood}), substantially improving over relation-agnostic baselines where evaluated (0.38--0.63).
-The qualitative predictions of the theorem hold across all four datasets despite some assumption violations (see Appendix~\ref{app:assumptions}).
-The framework is agnostic to standard embedding architectures (DistMult, TransE, ComplEx; Appendix~\ref{app:architectures}) and computationally lightweight (coverage is precomputed once).
+The central insight of this work is that OOD detection in knowledge graphs requires distinguishing \emph{what kind} of distribution shift has occurred---a distinction invisible to relation-agnostic uncertainty estimators.
+By decomposing uncertainty into semantic and structural components, CAGP combines their complementary strengths: semantic variance captures emerging entities while structural coverage captures novel relational contexts, each compensating where the other fails.
+Empirically, CAGP achieves 0.90--0.97 AUROC across three static benchmarks and 0.993 on ICEWS14 (Table~\ref{tab:temporal_ood}), consistently outperforming both coverage alone and all baselines. The improvement is largest on emerging entities (+8--12pp), confirming that the semantic signal provides genuine complementary value when properly trained.
+The decomposition is architecture-agnostic (DistMult, TransE, ComplEx; Appendix~\ref{app:architectures}) and computationally lightweight (coverage is precomputed once).
+These properties make it applicable to domains where KG reliability is critical, such as drug interaction prediction, clinical decision support, and recommender systems.
 
 \paragraph{Scalability considerations.}
 CAGP's coverage matrix $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ requires $O(|\mathcal{E}| \times |\mathcal{R}|)$ memory. For our evaluated datasets (FB15k-237: 13MB dense, $<$1MB sparse; YAGO3-10: 17.5MB dense, $<$1MB sparse), this is negligible. For web-scale KGs, sparse storage (hash tables storing only observed pairs) reduces memory to $O(|\mathcal{T}|)$ with $O(1)$ inference. We also explored learned relation-conditioned variance via multi-layer perceptron, but found explicit coverage simpler and equally effective. CAGP provides interpretability and simplicity suitable for domain-specific KGs with $<$1M entities; empirical evaluation on billion-triple KGs remains future work.
 
 \paragraph{Limitations.}
-On the three static benchmarks, simulated temporal OOD splits use coverage-based partitioning, and the novel-context category is defined using the same coverage feature as our structural detector (Remark~\ref{rem:circularity}), so structural AUROC $= 1$ on this category is by construction. ICEWS14 validation (Table~\ref{tab:temporal_ood}) breaks this coupling but uses a single temporal KG; a leakage audit (Appendix~\ref{app:leakage}) confirms temporal integrity despite 53\% inverse-relation overlap, and strict-split decontamination (58.5\% removed) improves CAGP from 0.993 to 0.995 while Energy drops to 0.499. Ablation (Appendix~\ref{app:icews14_ablation}) further shows performance drops to chance when structural signal is removed or shuffled. Evaluation on additional temporal benchmarks (e.g., GDELT) would further strengthen generalizability.
-A relation-conditioned variance ablation (RelCondVar) matches $U_{\text{str}}$ across all datasets, confirming the decomposition framework rather than specific parameterization drives gains. CAGP's learned $\alpha$ underperforms on sparse-relation graphs (WN18RR: 0.72 vs $U_{\text{str}}$ 0.86) due to normalization sensitivity; fixed-weight combinations (RelCondVar) avoid this.
-Coverage is binary; the framework assumes transductive settings; our base model underperforms state-of-the-art link prediction.
-Assumptions A4 and A6 are violated on some datasets, so the formal guarantees should be interpreted qualitatively.
-The framework naturally supports selective prediction (abstaining on uncertain queries), with preliminary results showing up to 43\% error reduction at 85\% coverage (Appendix~\ref{app:selective}).
-Future work includes architecturally relation-aware models (R-GCN, CompGCN), inductive extensions, and application to knowledge-grounded language models.
+On simulated splits, structural AUROC $= 1$ on novel contexts is by construction (Remark~\ref{rem:circularity}); ICEWS14 breaks this coupling but is a single temporal KG---evaluation on additional temporal benchmarks (e.g., GDELT) would strengthen generalizability.
+CAGP's mixing weight $\alpha$ does not learn from data ($\alpha{=}0.50$ across all seeds); the equal weighting works well empirically but an adaptive mechanism could improve performance on datasets with varying OOD compositions.
+Reparameterization sampling is essential: without it, KL regularization collapses entity variances (see error analysis), a pitfall that likely affects other probabilistic KG embedding methods.
+Coverage is binary; the approach assumes transductive settings; assumptions A4 and A6 are violated on some datasets, so formal guarantees should be interpreted qualitatively.
+The decomposition supports selective prediction, with preliminary results showing up to 43\% error reduction at 85\% coverage (Appendix~\ref{app:selective}).
+Future work includes architecturally relation-aware models (R-GCN, CompGCN), inductive extensions, learning $\alpha$ adaptively, and application to knowledge-grounded language models.

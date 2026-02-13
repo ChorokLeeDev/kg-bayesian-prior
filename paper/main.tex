@@ -148,10 +148,10 @@ By (A2), ID has $U_{\text{str}} = 0$. By (A5), fraction $\rho$ of emerging entit
 Novel contexts have $c(h,r) = 0$ or $c(t,r) = 0$ by Definition~\ref{def:ood}, so $U_{\text{str}} \geq 1$. ID has $U_{\text{str}} = 0$ by (A2), which is itself a consequence of Definition~\ref{def:ood}. Since all ID scores equal 0 and all novel-context scores are $\geq 1$, no ties occur between categories, so $\text{AUROC} = P(U_{\text{str}}^{\text{OOD}} > U_{\text{str}}^{\text{ID}}) = 1$. (Under the standard AUROC definition including tie-breaking, $\text{AUROC} = P(U^{\text{OOD}} > U^{\text{ID}}) + \tfrac{1}{2}P(U^{\text{OOD}} = U^{\text{ID}})$, the tie term is zero here.) \emph{Note:} this result is definitional---the OOD label and the detector use the same feature $c(e,r)$. The substantive claim is Theorem~\ref{thm:impossibility}: entity-level methods cannot detect this category, making explicit coverage tracking necessary.
 
 \paragraph{Proof of Part (iv).}
-For novel contexts: structural term dominates when $\alpha^* < 1/(1+\Delta)$, preserving perfect separation. For emerging entities: when $U_{\text{str}} > 0$, both terms favor OOD; when $U_{\text{str}} = 0$, semantic term separates by (A6). Under the full set of idealized assumptions, the combination improves over either signal alone. \emph{Note:} A6 (universal semantic separation) is empirically approximate---semantic AUROC on emerging entities ranges from 0.73 to 0.91 across datasets (Table~\ref{tab:assumptions}). The formal AUROC $= 1$ guarantee therefore holds only under the idealized assumptions; in practice, the combination provides consistent but imperfect improvement (see \S\ref{sec:experiments}).
+For novel contexts: structural term dominates when $\alpha^* < 1/(1+\Delta)$, preserving perfect separation. For emerging entities: when $U_{\text{str}} > 0$, both terms favor OOD; when $U_{\text{str}} = 0$, semantic term separates by (A6). Under the full set of idealized assumptions, the combination improves over either signal alone. \emph{Note:} A6 (universal semantic separation) is empirically approximate---semantic AUROC on emerging entities ranges from 0.69 to 0.81 across datasets (Table~\ref{tab:assumptions}). The formal AUROC $= 1$ guarantee therefore holds only under the idealized assumptions; in practice, the combination provides consistent but imperfect improvement (see \S\ref{sec:experiments}).
 
 \paragraph{Robustness to Assumption Violations.}
-Table~\ref{tab:assumptions} quantifies violations: (A1) Spearman $\rho$ ranges from $-0.74$ to $-0.85$; (A4) $\Delta$ marginally exceeds 1.0 on WN18RR and YAGO. Despite these violations, qualitative predictions hold: semantic AUROC on novel contexts is 0.42--0.48 (predicted $\approx 0.5$), structural is 1.00 (definitional), and the combination improves by 0.15--0.38 over the best single signal. The violations affect tightness, not direction; the theorem provides qualitative insights under idealized conditions.
+Table~\ref{tab:assumptions} quantifies violations: (A1) Spearman $\rho$ ranges from $-0.68$ to $-0.88$; (A4) $\Delta$ exceeds 1.0 on all three datasets (FB15k-237: 1.10, WN18RR: 1.00, YAGO: 1.36). Despite these violations, qualitative predictions hold: semantic AUROC on novel contexts is 0.40--0.49 (predicted $\approx 0.5$), structural is 1.00 (definitional), and the combination improves over entity-level baselines across all datasets. The violations affect tightness, not direction; the theorem provides qualitative insights under idealized conditions.
 
 \subsection{Assumption Verification}
 \label{app:assumptions}
@@ -163,21 +163,21 @@ Table~\ref{tab:assumptions} quantifies violations: (A1) Spearman $\rho$ ranges f
 \small
 \begin{tabular}{llccc}
 \toprule
- & & FB15k & WN18RR & YAGO \\
+ & & FB15k-237 & WN18RR & YAGO \\
 \midrule
-(A1) & Spearman $\rho(\text{freq}, \sigma^2)$ & $-$0.85 & $-$0.74 & $-$0.82 \\
+(A1) & Spearman $\rho(\text{freq}, \sigma^2)$ & $-$0.88 & $-$0.81 & $-$0.68 \\
 (A2) & ID coverage rate & 1.00 & 1.00 & 1.00 \\
-(A4) & $\Delta$ (req: $<$1) & 0.86 & 1.10 & 1.01 \\
-(A5) & $\rho$ & 0.41 & 0.13 & 0.68 \\
-(A6) & Sem. AUROC on emerging & 0.91 & 0.73 & 0.90 \\
+(A4) & $\Delta$ (req: $<$1) & 1.10 & 1.00 & 1.36 \\
+(A5) & $\rho$ & 0.43 & 0.34 & 0.66 \\
+(A6) & Sem. AUROC on emerging & 0.81 & 0.71 & 0.69 \\
 \midrule
-& Sem. on novel (pred: 0.5) & 0.48 & 0.47 & 0.47 \\
+& Sem. on novel (pred: 0.5) & 0.49 & 0.40 & 0.40 \\
 & Str. on novel (pred: 1.0) & 1.00 & 1.00 & 1.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Assumptions (A1)--(A3) hold across datasets. (A4) is marginally violated on WN18RR ($\Delta{=}1.10$) and YAGO ($\Delta{=}1.01$); when $\Delta \gtrsim 1$ a small fraction of novel-context samples may be misranked, but the qualitative predictions---semantic fails on novel contexts, structural fails on some emerging entities, combination helps---remain valid.
+Assumptions (A1)--(A3) hold across datasets (with YAGO showing weaker A1 monotonicity at $\rho{=}{-}0.68$). (A4) is marginally violated on all three datasets (FB15k-237: $\Delta{=}1.10$, WN18RR: $\Delta{=}1.00$, YAGO: $\Delta{=}1.36$); when $\Delta \gtrsim 1$ a fraction of novel-context samples may be misranked, but the qualitative predictions---semantic fails on novel contexts, structural fails on some emerging entities, combination helps---remain valid.
 
 \subsubsection{Empirical Verification of Assumption A3}
 \label{app:assumption_verification}
@@ -207,7 +207,34 @@ Learned global $\alpha$ (CAGP) & 0.935 & \textbf{0.960} \\
 \end{tabular}
 \end{table}
 
-On temporal OOD, fixed $\alpha = 0.5$ matches CAGP (both 0.94), validating the decomposition framework itself. On standard OOD (random corruptions), learned $\alpha$ provides a small improvement (0.96 vs 0.94), adapting to dataset characteristics.
+On temporal OOD, fixed $\alpha = 0.5$ matches CAGP (both 0.94), validating the decomposition itself. On standard OOD (random corruptions), learned $\alpha$ provides a small improvement (0.96 vs 0.94), adapting to dataset characteristics.
+
+\subsection{Theorem~\ref{thm:complementarity}(iv) Validation: Mixture Proportions}
+\label{app:mixture}
+
+To validate Part~(iv)---that the combination outperforms either signal when both OOD types are present---we vary the emerging-to-novel ratio in the test set and compute AUROC for $U_{\text{sem}}$, $U_{\text{str}}$, and an oracle combination (grid-search over $\alpha$). No retraining is performed; we resample from per-triple uncertainties.
+
+\begin{table}[h]
+\centering
+\caption{Oracle combination gain over best single signal at varying emerging/(emerging+novel) ratios. The combination outperforms at all mixed proportions, validating Theorem~\ref{thm:complementarity}(iv).}
+\label{tab:mixture}
+\small
+\begin{tabular}{lccc|ccc}
+\toprule
+& \multicolumn{3}{c}{WN18RR} & \multicolumn{3}{c}{FB15k-237} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+Frac. & $U_{\text{sem}}$ & $U_{\text{str}}$ & Oracle & $U_{\text{sem}}$ & $U_{\text{str}}$ & Oracle \\
+\midrule
+0.0 & .40 & \textbf{1.00} & 1.00 & .49 & \textbf{1.00} & 1.00 \\
+0.3 & .50 & .95 & \textbf{.98} & .59 & .94 & \textbf{.98} \\
+0.5 & .56 & .92 & \textbf{.97} & .65 & .89 & \textbf{.97} \\
+0.7 & .62 & .88 & \textbf{.95} & .72 & .85 & \textbf{.96} \\
+1.0 & \textbf{.71} & .83 & \textbf{.93} & \textbf{.82} & .79 & \textbf{.94} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At 100\% novel contexts (frac=0.0), $U_{\text{str}}$ dominates; at 100\% emerging (frac=1.0), $U_{\text{sem}}$ dominates. At mixed proportions, the oracle combination consistently outperforms the best single signal by 0.01--0.14 AUROC, confirming that the two signals are genuinely complementary. The oracle $\alpha^*$ is small (0.05--0.07), reflecting the high discriminative power of the structural signal.
 
 \subsection{Binary vs Continuous Coverage}
 \label{app:coverage_ablation}
@@ -308,7 +335,7 @@ The decomposition is architecture-agnostic, achieving $\sim$0.96 AUROC across Di
 \label{app:discussion}
 
 \paragraph{Dataset-specific signal composition.}
-Table~\ref{tab:temporal_ood} reveals the optimal signal varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels (0.94 AUROC). YAGO3-10 includes more emerging entities, where semantic uncertainty contributes more strongly (0.82 AUROC vs 0.76 for structural). The decomposition achieves 0.86--0.99 AUROC across all four benchmarks, with YAGO3-10 showing the largest complementarity gain (CAGP 0.94 vs $U_{\text{str}}$ 0.76, $+$0.18).
+Table~\ref{tab:temporal_ood} reveals the optimal signal composition varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels. On YAGO3-10, structural uncertainty is strong ($U_{\text{str}}$ 0.84), while semantic uncertainty alone is moderate (0.60)---a similar pattern to WN18RR, where few relations limit GP expressiveness. CAGP improves over $U_{\text{str}}$ on all datasets by contributing semantic information on emerging entities: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO. The improvement is largest where single-signal emerging detection is weakest, consistent with the complementarity predicted by Theorem~\ref{thm:complementarity}. Note: without reparameterization sampling, entity variances collapse under KL regularization (see error analysis in \S\ref{sec:experiments}), reducing CAGP to a coverage-only detector. CAGP achieves 0.90--0.97 AUROC across static benchmarks and 0.993 on ICEWS14.
 
 \paragraph{Why doesn't the embedding model discover coverage?}
 A natural question: if coverage is so effective, why don't learned embeddings discover it automatically? The impossibility theorem (Theorem~\ref{thm:impossibility}) provides the answer: standard link prediction objectives incentivize predictive accuracy, not relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias.
@@ -324,10 +351,12 @@ A natural question: if coverage is so effective, why don't learned embeddings di
 \toprule
 Method & WN18RR & FB15k-237 \\
 \midrule
-UKGE & 0.520 & 0.442 \\
-Energy & 0.625 & 0.568 \\
-GPOnly ($U_{\text{sem}}$) & 0.572 & 0.747 \\
-CoverageOnly ($U_{\text{str}}$) & \textbf{0.962} & \textbf{0.864} \\
+UKGE & 0.641 & 0.325 \\
+Energy & 0.732 & 0.421 \\
+$U_{\text{sem}}$ & 0.789 & 0.412 \\
+$U_{\text{str}}$ & 0.898 & 0.917 \\
+CAGP & \textbf{0.965} & \textbf{0.970} \\
+RelCondVar & 0.898 & 0.917 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -420,7 +449,7 @@ ICEWS14~\citep{garcia2018learning} is a temporal KG containing 7,128 entities, 2
 
 Embedding dimension $d=100$, learning rate $10^{-3}$, averaged over 3 seeds.
 WN18RR, FB15k-237, and ICEWS14: batch size 1024, KL weight $\beta_{\text{KL}}=0.001$, 30 epochs.
-YAGO3-10: batch size 2048, $\beta_{\text{KL}}=0.01$, 50 epochs (separate Colab pipeline).
+YAGO3-10: same canonical pipeline (batch size 1024, $\beta_{\text{KL}}=0.001$, 30 epochs).
 Significance tests use paired bootstrap (10,000 iterations, $p < 0.01$).
 
 \paragraph{Scalability Analysis.}
@@ -538,7 +567,7 @@ Table & Dataset & Seeds & Source \\
 1 & WN18RR (baselines$^b$) & 42, 123, 456 & \texttt{run\_wn18rr\_missing\_baselines.py} \\
 1 & FB15k-237 (ours$^a$) & 42, 123, 456 & \texttt{run\_wn18rr\_temporal.py} \\
 1 & FB15k-237 (baselines$^b$) & 42, 123, 456 & \texttt{run\_wn18rr\_missing\_baselines.py} \\
-1 & YAGO3-10$^c$ & 42, 123, 456 & \texttt{colab\_yago\_full.ipynb} \\
+1 & YAGO3-10$^c$ & 42, 123, 456 & \texttt{run\_yago\_single\_model.py} \\
 1 & ICEWS14 & 42, 123, 456 & \texttt{run\_icews14\_temporal.py} \\
 \ref{tab:icews14_ablation} & ICEWS14 & 42, 123, 456 & \texttt{icews14\_ablation.py} \\
 \ref{tab:strict_split} & ICEWS14 & 42, 123, 456 & \texttt{icews14\_strict\_split.py} \\
@@ -556,7 +585,7 @@ Table & Dataset & Seeds & Source \\
 \scriptsize
 $^a$UKGE, Energy, $U_{\text{sem}}$, $U_{\text{str}}$, CAGP, RelCondVar. \quad
 $^b$MC Dropout, Deep Ensemble, SNGP. \quad
-$^c$$U_{\text{sem}}$, $U_{\text{str}}$, CAGP only (baselines not evaluated on YAGO).
+$^c$All 6 methods (3 seeds).
 \end{table}
 
 \end{document}

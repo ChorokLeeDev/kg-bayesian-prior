@@ -1,6 +1,5 @@
 """
-Create Figure 1 for UAI paper: Minimal clean version (FB15k-237)
-NO annotations, NO overlapping text - just clean bars
+Create Figure 1 for UAI paper: FB15k-237 temporal OOD with error bars
 
 Data sources:
   - UKGE, Energy, GPOnly, CoverageOnly, CAGP: outputs/canonical_temporal_results_v2.json
@@ -9,6 +8,8 @@ Data sources:
 
 import matplotlib.pyplot as plt
 import numpy as np
+import json
+from pathlib import Path
 
 # Set publication-quality defaults
 plt.rcParams['font.family'] = 'serif'
@@ -18,7 +19,25 @@ plt.rcParams['xtick.labelsize'] = 10
 plt.rcParams['ytick.labelsize'] = 11
 plt.rcParams['legend.fontsize'] = 10
 
-# Data from Table 1 (FB15k-237, canonical 3-seed means)
+# Load canonical data
+root = Path(__file__).parent.parent
+with open(root / 'outputs' / 'canonical_temporal_results_v2.json') as f:
+    canonical = json.load(f)
+with open(root / 'outputs' / 'fb15k237_missing_baselines.json') as f:
+    baselines = json.load(f)
+
+fb = canonical['fb15k237']['summary']
+
+# Compute missing baseline stats
+def baseline_stats(method):
+    vals = [baselines[f'seed_{s}'][method]['overall_auroc']
+            for s in [42, 123, 456]]
+    return np.mean(vals), np.std(vals)
+
+mc_mean, mc_std = baseline_stats('MCDropout')
+de_mean, de_std = baseline_stats('DeepEnsemble')
+sngp_mean, sngp_std = baseline_stats('SNGP')
+
 methods = [
     'UKGE',
     'Energy',
@@ -33,11 +52,29 @@ methods = [
 ]
 
 auroc = [
-    0.42, 0.51, 0.63, 0.61, 0.46,  # Baselines
+    fb['UKGE']['temporal_auroc_mean'],
+    fb['Energy']['temporal_auroc_mean'],
+    mc_mean,
+    de_mean,
+    sngp_mean,
     np.nan,
-    0.59, 0.94,  # Single signals
+    fb['GPOnly']['temporal_auroc_mean'],
+    fb['CoverageOnly']['temporal_auroc_mean'],
     np.nan,
-    0.94,  # CAGP
+    fb['CAGP']['temporal_auroc_mean'],
+]
+
+yerr = [
+    fb['UKGE']['temporal_auroc_std'],
+    fb['Energy']['temporal_auroc_std'],
+    mc_std,
+    de_std,
+    sngp_std,
+    0,
+    fb['GPOnly']['temporal_auroc_std'],
+    fb['CoverageOnly']['temporal_auroc_std'],
+    0,
+    fb['CAGP']['temporal_auroc_std'],
 ]
 
 # Simple colors
@@ -52,9 +89,10 @@ colors = [
 # Create figure
 fig, ax = plt.subplots(figsize=(10, 4))
 
-# Create bars
+# Create bars with error bars
 x = np.arange(len(methods))
-bars = ax.bar(x, auroc, color=colors, edgecolor='black', linewidth=0.8, width=0.7)
+bars = ax.bar(x, auroc, color=colors, edgecolor='black', linewidth=0.8, width=0.7,
+              yerr=yerr, capsize=3, error_kw={'linewidth': 1.2, 'color': '#444444'})
 
 # Emphasize CAGP
 bars[-1].set_linewidth(2.5)
@@ -62,19 +100,19 @@ bars[-1].set_linewidth(2.5)
 # Random baseline
 ax.axhline(y=0.5, color='red', linestyle='--', linewidth=1.2, alpha=0.5)
 
-# Value labels on bars ONLY
-for i, (method, val) in enumerate(zip(methods, auroc)):
+# Value labels on bars
+for i, (method, val, err) in enumerate(zip(methods, auroc, yerr)):
     if method and not np.isnan(val):
         fontweight = 'bold' if i == len(methods) - 1 else 'normal'
         fontsize = 11 if i == len(methods) - 1 else 9
 
         # Smart positioning
-        if val > 0.96:
+        if val > 0.90:
             y_pos = val - 0.03
             va = 'top'
             color = 'white'
         else:
-            y_pos = val + 0.02
+            y_pos = val + err + 0.02
             va = 'bottom'
             color = 'black'
 
@@ -95,7 +133,7 @@ ax.spines['right'].set_visible(False)
 ax.set_title('Temporal OOD Detection on FB15k-237',
              fontsize=13, fontweight='bold', pad=15)
 
-# Legend only
+# Legend
 from matplotlib.patches import Patch
 legend = [
     Patch(facecolor='#CCCCCC', label='Probabilistic baselines'),
@@ -108,7 +146,7 @@ ax.legend(handles=legend, loc='upper left', framealpha=0.95)
 plt.tight_layout()
 
 # Save
-output = '/Users/i767700/Github/kg-bayesian-prior/paper/figures/fig1_main_results.pdf'
+output = str(root / 'paper' / 'figures' / 'fig1_main_results.pdf')
 plt.savefig(output, dpi=300, bbox_inches='tight', pad_inches=0.15)
 print(f"Saved: {output}")
 

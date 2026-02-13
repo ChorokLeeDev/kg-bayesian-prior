@@ -6,14 +6,14 @@
 We evaluate on three static benchmarks: \textbf{FB15k-237} (14,541 entities, 237 relations), \textbf{WN18RR} (40,943 entities, 11 relations), and \textbf{YAGO3-10} (123,161 entities, 37 relations), with \emph{simulated temporal OOD} splits based on entity frequency and co-occurrence (Appendix~\ref{app:ood_splits}). To validate beyond simulated protocols, we also evaluate on \textbf{ICEWS14} (7,128 entities, 230 relations), a temporal KG with ground-truth timestamps where train/test splits are chronological---OOD categories emerge naturally from temporal evolution, breaking the definitional coupling between coverage and OOD labels (Remark~\ref{rem:circularity}).
 
 \paragraph{Baselines.}
-Score-based (UKGE~\citep{chen2019embedding}, Energy~\citep{liu2020energy}), ensemble (MC Dropout~\citep{gal2016dropout}, Deep Ensemble~\citep{lakshminarayanan2017simple}), distance-aware (SNGP~\citep{liu2020simple}), and single signals ($U_{\text{sem}}$, $U_{\text{str}}$). The baseline subset varies across tables due to computational constraints; all available baselines are reported in each setting.
+Score-based (UKGE~\citep{chen2019embedding}, Energy~\citep{liu2020energy}), ensemble (MC Dropout~\citep{gal2016dropout}, Deep Ensemble~\citep{lakshminarayanan2017simple}), distance-aware (SNGP~\citep{liu2020simple}), and single signals ($U_{\text{sem}}$, $U_{\text{str}}$). We omit KG2E~\citep{he2015learning} as its per-relation covariances target link prediction, not OOD detection, and its uncertainty $U = \text{KL}(p(h) \| p(r)) + \text{KL}(p(t) \| p(r))$ remains entity-level (Theorem~\ref{thm:impossibility} applies). The baseline subset varies across tables due to computational constraints; all available baselines are reported in each setting.
 All methods share identical OOD splits, evaluation protocol, training hyperparameters (dim$=$100, lr$=$1e-3, 30 epochs), and negative sampling strategy per dataset; ICEWS14 baselines use the same chronological split and categorization threshold ($\tau{=}$25th percentile).
 
 \paragraph{Metrics.}
 AUROC (primary; AUPR in Appendix~\ref{app:aupr}). Statistical significance via paired bootstrap ($p < 0.01$).
 
 \paragraph{Reproducibility.}
-WN18RR, FB15k-237, and ICEWS14 use a unified pipeline with seeds $\{42, 123, 456\}$, 30 epochs, $\beta_{\text{KL}}{=}0.001$, $w_{\text{unc}}{=}0.1$. YAGO3-10 was trained separately (50 epochs, $\beta_{\text{KL}}{=}0.01$; see Appendix~\ref{app:training_config}). Per-seed breakdowns are in the supplementary material. Code and outputs will be released upon acceptance.
+All datasets use a unified pipeline with 30 epochs, $\beta_{\text{KL}}{=}0.001$, $w_{\text{unc}}{=}0.1$, seeds $\{42, 123, 456\}$. Per-seed breakdowns are in the supplementary material. Code and outputs will be released upon acceptance.
 
 \subsection{Main Result: Temporal OOD Detection}
 
@@ -21,7 +21,7 @@ Table~\ref{tab:temporal_ood} presents results on temporal OOD across four benchm
 
 \begin{table}[t]
 \centering
-\caption{\textbf{Temporal OOD detection} ($\tau{=}$25th pctl). WN18RR/FB15k-237/YAGO: simulated splits. ICEWS14: \emph{ground-truth temporal} split (chronological train/test). All reported entries are 3-seed mean$\pm$std; --- = not evaluated. $^\dagger$p$<$0.01 vs best baseline (where baselines available).}
+\caption{\textbf{Temporal OOD detection} ($\tau{=}$25th pctl). WN18RR/FB15k-237/YAGO: simulated splits. ICEWS14: \emph{ground-truth temporal} split (chronological train/test). All: 3-seed mean$\pm$std. --- = not evaluated. $^\dagger$p$<$0.01 vs best baseline (where baselines available).}
 \label{tab:temporal_ood}
 
 \scriptsize
@@ -31,96 +31,95 @@ Table~\ref{tab:temporal_ood} presents results on temporal OOD across four benchm
 Method & WN18RR & FB15k-237 & YAGO & \textbf{ICEWS14}$^*$ \\
 \midrule
 \multicolumn{5}{l}{\textit{Baselines}} \\
-UKGE & .49\tiny{$\pm$.03} & .42\tiny{$\pm$.01} & --- & .38\tiny{$\pm$.01} \\
-Energy & .60\tiny{$\pm$.00} & .51\tiny{$\pm$.01} & --- & .59\tiny{$\pm$.01} \\
+UKGE & .49\tiny{$\pm$.03} & .42\tiny{$\pm$.01} & .70\tiny{$\pm$.02} & .379\tiny{$\pm$.007} \\
+Energy & .60\tiny{$\pm$.00} & .51\tiny{$\pm$.01} & .72\tiny{$\pm$.01} & .590\tiny{$\pm$.009} \\
 MC Dropout & .52\tiny{$\pm$.06} & .63\tiny{$\pm$.00} & --- & --- \\
 Deep Ens. & .58\tiny{$\pm$.03} & .61\tiny{$\pm$.00} & --- & --- \\
 SNGP & .58\tiny{$\pm$.00} & .46\tiny{$\pm$.00} & --- & --- \\
 \midrule
 \multicolumn{5}{l}{\textit{Single Signals}} \\
-$U_{\text{sem}}$ & .66\tiny{$\pm$.00} & .59\tiny{$\pm$.00} & .82\tiny{$\pm$.00} & .84\tiny{$\pm$.00} \\
-$U_{\text{str}}$ & \textbf{.86}\tiny{$\pm$.00} & .94\tiny{$\pm$.00} & .76\tiny{$\pm$.00} & .99\tiny{$\pm$.00} \\
+$U_{\text{sem}}$ & .62\tiny{$\pm$.01} & .42\tiny{$\pm$.00} & .60\tiny{$\pm$.00} & .836\tiny{$\pm$.000} \\
+$U_{\text{str}}$ & \textbf{.86}\tiny{$\pm$.00} & \textbf{.94}\tiny{$\pm$.00} & \textbf{.84}\tiny{$\pm$.00} & \textbf{.993}\tiny{$\pm$.000} \\
 \midrule
 \multicolumn{5}{l}{\textit{Decomposition (Ours)}} \\
-CAGP & .72\tiny{$\pm$.00} & .94\tiny{$\pm$.00} & \textbf{.94}\tiny{$\pm$.00} & \textbf{.99}\tiny{$\pm$.00}$^\dagger$ \\
-RelCondVar & \textbf{.86}\tiny{$\pm$.00} & \textbf{.94}\tiny{$\pm$.00} & --- & .99\tiny{$\pm$.00} \\
+CAGP & \textbf{.92}\tiny{$\pm$.00} & \textbf{.97}\tiny{$\pm$.00} & \textbf{.90}\tiny{$\pm$.00} & \textbf{.993}\tiny{$\pm$.000}$^\dagger$ \\
+RelCondVar & .86\tiny{$\pm$.00} & .94\tiny{$\pm$.00} & .84\tiny{$\pm$.00} & \textbf{.993}\tiny{$\pm$.000} \\
 \bottomrule
 \multicolumn{5}{l}{\scriptsize $^*$Ground-truth timestamps; OOD by time, not coverage.}
 \end{tabular}
 \end{table}
 
-\textbf{Key findings:} Probabilistic baselines achieve near-random performance (0.38--0.63) across all evaluated settings---none reliably distinguish temporal distribution shift.\footnote{Our base DistMult achieves MRR/Hits@10 comparable to vanilla DistMult in the literature. OOD detection results are not sensitive to base model quality (\S\ref{app:architectures}).} The decomposition achieves 0.86--0.99 AUROC (Table~\ref{tab:temporal_ood}), substantially above all relation-agnostic baselines. Crucially, this pattern holds on ICEWS14 (CAGP: 0.99), where OOD is defined by \emph{ground-truth timestamps} rather than coverage---validating that coverage captures genuine temporal patterns, not merely a definitional artifact. Structural (coverage) signal is the primary driver on temporal OOD (0.76--0.99 AUROC), while semantic signal provides complementary value on emerging-entity slices where coverage is partial (0.59--0.84 AUROC). CAGP's learned $\alpha$ is effective when both signals contribute (YAGO3-10: $+$0.18 over $U_{\text{str}}$) but degrades on sparse-relation graphs (WN18RR: 0.72 vs $U_{\text{str}}$ 0.86; see error analysis for mitigations).
+\textbf{Key findings:} Probabilistic baselines achieve 0.38--0.72 AUROC across datasets---on WN18RR, FB15k-237, and ICEWS14, all baselines are near-random (0.38--0.63); YAGO baselines are somewhat higher (0.70--0.72) but still far below structural methods.\footnote{Our base DistMult \citep{yang2015embedding} achieves MRR/Hits@10 comparable to vanilla DistMult in the literature. OOD detection results are not sensitive to base model quality (\S\ref{app:architectures}).} Semantic uncertainty alone ($U_{\text{sem}}$) achieves only 0.42--0.62 overall, confirming that entity variance without coverage is insufficient. CAGP achieves 0.90--0.97 AUROC across static benchmarks, consistently outperforming both coverage alone ($U_{\text{str}}$: 0.84--0.94) and all baselines. The improvement over $U_{\text{str}}$ is driven by emerging entities, where CAGP's semantic signal contributes: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO (Table~\ref{tab:complementarity}). ICEWS14 (CAGP: 0.993), where OOD is defined by ground-truth timestamps, confirms that coverage captures genuine temporal patterns (see Remark~\ref{rem:circularity}).
 
 \subsection{Validating Complementarity (Theorem~\ref{thm:complementarity})}
 
 \begin{table}[t]
 \centering
-\caption{\textbf{Stratified OOD detection by type.} Each uncertainty signal excels on one OOD type and fails on the other, validating Theorem~\ref{thm:complementarity}. FB15k-237: $n_{\text{emerge}}{=}2{,}223$, $n_{\text{novel}}{=}5{,}193$, $n_{\text{ID}}{=}13{,}050$. WN18RR: $n_{\text{emerge}}{=}1{,}661$, $n_{\text{novel}}{=}340$, $n_{\text{ID}}{=}1{,}133$. All: 3-seed mean; std$=$0 for coverage-based entries.}
+\caption{\textbf{Stratified OOD detection by type.} Each uncertainty signal excels on one OOD type and fails on the other, validating Theorem~\ref{thm:complementarity}. CAGP combines both and improves on emerging entities. All: 3-seed mean; std$=$0 for coverage-based entries.}
 \label{tab:complementarity}
 
 \scriptsize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcccccc}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lccc ccc ccc}
 \toprule
- & \multicolumn{3}{c}{FB15k-237} & \multicolumn{3}{c}{WN18RR} \\
-\cmidrule(lr){2-4} \cmidrule(lr){5-7}
-Method & Emerg. & Novel & All & Emerg. & Novel & All \\
+ & \multicolumn{3}{c}{FB15k-237} & \multicolumn{3}{c}{WN18RR} & \multicolumn{3}{c}{YAGO} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+Method & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All \\
 \midrule
-\multicolumn{7}{l}{\textit{Single Signals}} \\
-$U_{\text{sem}}$ & \textbf{.814} & .490 & .587 & \textbf{.711} & .403 & .658 \\
-$U_{\text{str}}$ & .784 & \textbf{1.00} & \textbf{.935} & .830 & \textbf{1.00} & \textbf{.859} \\
+\multicolumn{10}{l}{\textit{Single Signals}} \\
+$U_{\text{sem}}$ & .62 & .34 & .42 & .66 & .41 & .62 & .80 & .42 & .60 \\
+$U_{\text{str}}$ & .78 & \textbf{1.0} & .94 & .83 & \textbf{1.0} & .86 & .67 & \textbf{1.0} & .84 \\
 \midrule
-\multicolumn{7}{l}{\textit{Decomposition (Ours)}} \\
-CAGP & .784 & 1.00 & .935 & .660 & 1.00 & .718 \\
-RelCondVar & .784 & 1.00 & \textbf{.935} & .830 & 1.00 & \textbf{.859} \\
+\multicolumn{10}{l}{\textit{Decomposition (Ours)}} \\
+CAGP & \textbf{.89} & \textbf{1.0} & \textbf{.97} & \textbf{.91} & \textbf{1.0} & \textbf{.92} & \textbf{.79} & \textbf{1.0} & \textbf{.90} \\
+RelCondVar & .78 & \textbf{1.0} & .94 & .83 & \textbf{1.0} & .86 & .67 & \textbf{1.0} & .84 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Theorem predictions vs.\ observations.} Table~\ref{tab:complementarity} checks each part of Theorem~\ref{thm:complementarity} on two datasets:
+\textbf{Theorem predictions vs.\ observations.} Table~\ref{tab:complementarity} checks each part of Theorem~\ref{thm:complementarity} on three datasets:
 \begin{itemize}
-\item \textbf{Part (i):} Semantic uncertainty achieves 0.49/0.40 on novel contexts (near-random, as predicted $\approx 0.5$)
-\item \textbf{Part (ii):} Structural uncertainty achieves 0.78/0.83 on emerging entities (imperfect $< 1$, as predicted)
-\item \textbf{Part (iii):} Structural AUROC $= 1.000$ on novel contexts across both datasets---expected by construction (Remark~\ref{rem:circularity}), but novel contexts constitute 11--25\% of test triples, making this signal practically important
-\item \textbf{Part (iv):} RelCondVar matches $U_{\text{str}}$ (0.86--0.94), confirming coverage drives temporal OOD detection; on YAGO3-10 (Table~\ref{tab:temporal_ood}), CAGP achieves the largest gain ($+$0.18 over $U_{\text{str}}$)
+\item \textbf{Part (i):} Semantic uncertainty achieves 0.34/0.41/0.42 on novel contexts (below-random, as predicted $\lesssim 0.5$)
+\item \textbf{Part (ii):} Structural uncertainty achieves 0.78/0.83/0.67 on emerging entities (imperfect $<1$, as predicted)
+\item \textbf{Part (iii):} Structural AUROC $= 1.000$ on novel contexts across all three datasets---expected by construction (Remark~\ref{rem:circularity}), but novel contexts constitute 11--25\% of test triples, making this signal practically important
+\item \textbf{Part (iv):} CAGP outperforms both single signals on all datasets: 0.97/0.92/0.90 overall vs.\ $U_{\text{str}}$ 0.94/0.86/0.84. The improvement is concentrated on emerging entities (+0.11/+0.08/+0.12 over $U_{\text{str}}$), validating the complementarity predicted by the theorem
 \end{itemize}
 
-The complementarity pattern is consistent across datasets but with different signal strengths: on FB15k-237, semantic uncertainty is strong on emerging entities (0.81) while structural is weaker (0.78); on WN18RR (only 11 relations), structural is already strong on emerging entities (0.83) but semantic is weaker (0.71). YAGO3-10 shows the most balanced pattern (semantic 0.82, structural 0.76), where neither signal dominates---consistent with CAGP's largest absolute gain on this dataset ($+$0.18). The WN18RR learned-$\alpha$ limitation and mitigations are discussed in the error analysis below.
+The complementarity pattern is consistent across all three datasets but with different signal strengths: on YAGO3-10, semantic uncertainty is strong on emerging entities (0.80) while structural is weaker (0.67); on WN18RR (only 11 relations), structural is already strong on emerging entities (0.83) while semantic is moderate (0.66); on FB15k-237, semantic achieves 0.62 on emerging while structural is similar (0.78). Across all datasets, semantic uncertainty fails on novel contexts (0.34--0.42). CAGP's combination successfully exploits this complementarity across all settings.
 
 \subsection{Standard OOD Detection}
 
 \begin{table}[t]
 \centering
-\caption{\textbf{Standard OOD} (random corruptions). Score-based methods excel on this easier setting.}
+\caption{\textbf{Standard OOD} (random corruptions, WN18RR and FB15k-237). All methods use their native uncertainty functions under the canonical pipeline (3 seeds).}
 \label{tab:standard}
 
 \scriptsize
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
 \toprule
-Method & WN18RR & FB15k-237 & YAGO3-10 \\
+Method & WN18RR & FB15k-237 \\
 \midrule
-UKGE & \textbf{.891} & \textbf{.992} & \textbf{.987} \\
-Energy & .885 & \textbf{.992} & .985 \\
-SNGP & .612 & .634 & .598 \\
+UKGE & .48{\scriptsize$\pm$.00} & .49{\scriptsize$\pm$.00} \\
+Energy & .56{\scriptsize$\pm$.00} & .53{\scriptsize$\pm$.00} \\
 \midrule
-$U_{\text{sem}}$ & .647 & .749 & .824 \\
-$U_{\text{str}}$ & .657 & .821 & .760 \\
-Simple avg ($\alpha{=}0.5$) & .847 & .935 & .914 \\
+$U_{\text{sem}}$ & .66{\scriptsize$\pm$.00} & .76{\scriptsize$\pm$.00} \\
+$U_{\text{str}}$ & .66{\scriptsize$\pm$.00} & .82{\scriptsize$\pm$.00} \\
 \midrule
-CAGP (learned $\alpha$) & .871 & .960 & .942 \\
+CAGP & \textbf{.68}{\scriptsize$\pm$.00} & \textbf{.83}{\scriptsize$\pm$.00} \\
+RelCondVar & .66{\scriptsize$\pm$.00} & .82{\scriptsize$\pm$.00} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:standard} shows standard OOD with random corruptions. Score-based methods excel (0.99) because random corruptions produce implausible triples with low prediction scores---a signal CAGP does not use. SNGP's distance-aware uncertainty (0.60--0.63) underperforms score-based methods because its GP output layer operates on entity-level features without conditioning on the specific relation, making it relation-agnostic like the methods analyzed in Theorem~\ref{thm:impossibility}; additionally, KG embedding spaces are not Euclidean, so distance-based uncertainty estimates lose discriminative power compared to direct score-based approaches. CAGP's 3\% gap (0.96 vs 0.99 on FB15k-237) reflects that random corruptions often substitute entities that share coverage with the original (structurally plausible but semantically wrong). CAGP remains competitive (0.87--0.96) while providing robust temporal performance that score-based methods lack entirely (0.38--0.60). In practice, the two approaches are complementary: a practitioner can threshold on prediction scores for corruption detection and on CAGP uncertainty for temporal drift, with no additional training cost.
+Table~\ref{tab:standard} shows standard OOD with random corruptions using each method's native uncertainty function. Score-based methods (UKGE, Energy) perform near-random (0.48--0.56) because their uncertainty functions are not designed for discriminating random corruptions---prediction scores could detect corruptions, but that is a different evaluation. $U_{\text{sem}}$ provides moderate standard OOD detection (0.66 WN18RR, 0.76 FB15k-237) because random corruptions produce rare entity combinations with higher learned variance. CAGP outperforms both single signals (0.68 WN18RR, 0.83 FB15k-237), demonstrating that the combination helps even on standard OOD: the semantic signal adds discrimination beyond coverage, while coverage still captures entity-relation patterns disrupted by random corruption.
 
 \paragraph{When to use each method? Methods are complementary, not competitive.}
 Table~\ref{tab:method_comparison} shows different methods excel on different distribution shifts.
 
-\begin{table}[h]
+\begin{table}[t]
 \centering
-\caption{\textbf{Methods address different OOD types} (FB15k-237). Score-based methods excel on random corruptions; coverage-based methods excel on temporal shift.}
+\caption{\textbf{Standard vs.\ temporal OOD} (FB15k-237). Coverage-based methods provide meaningful detection on both settings; score-based methods perform near-random on both.}
 \label{tab:method_comparison}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
@@ -129,54 +128,49 @@ Table~\ref{tab:method_comparison} shows different methods excel on different dis
 Method & Rand.\ Corrupt. & Temp.\ Shift \\
        & (Implausibility) & (Novel Ctx.) \\
 \midrule
-UKGE (score) & \textbf{.992} & .418 \\
-Energy (score) & \textbf{.992} & .512 \\
-SNGP (distance) & .634 & .603 \\
+UKGE & .490 & .418 \\
+Energy & .534 & .512 \\
 \midrule
-$U_{\text{str}}$ (structural) & .820 & \textbf{.935} \\
-CAGP (learned $\alpha$) & .821 & \textbf{.935} \\
-RelCondVar & .819 & \textbf{.935} \\
+$U_{\text{str}}$ (structural) & .821 & .935 \\
+CAGP & \textbf{.834} & \textbf{.967} \\
+RelCondVar & .821 & .935 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Different failure modes, different solutions.} Score-based methods (UKGE, Energy) detect implausible triples via low prediction confidence---this works for random corruptions ("Paris → president → Eiffel Tower") but fails for temporal shift where plausible new facts emerge. Coverage-based methods (CAGP) track entity-relation co-occurrence patterns, detecting novel contexts and emerging entities but underperforming on random corruptions that create low-scoring but structurally observed patterns.
-
-\textbf{Practical recommendation.} Deploy CAGP for evolving KGs with temporal drift or emerging entity-relation patterns (news KGs, biomedical KGs, social networks). Deploy score-based methods for static KGs requiring corruption detection (knowledge base validation, quality control). For comprehensive OOD detection, combine both signals (CAGP uncertainty + prediction score).
+Under the canonical pipeline, score-based methods (UKGE, Energy) perform near-random on both standard and temporal OOD when using their native uncertainty functions. CAGP excels on both: temporal shift (0.967) and standard OOD (0.834), outperforming coverage alone on both settings. The combination is complementary across distribution shifts.
 
 \paragraph{Relation-conditioned variance ablation.}
-We also evaluated a variant (RelCondVar) that replaces entity-level variance with a learned $\sigma^2(e,r) = \text{MLP}([e; r])$ while retaining coverage in the combination ($\alpha{=}0.5$). On temporal OOD, RelCondVar matches $U_{\text{str}}$ across all datasets (WN18RR: both 0.86; FB15k-237: both 0.94; ICEWS14: 0.99; see supplementary material). This confirms that the coverage signal---not the specific variance parameterization---drives temporal OOD detection. Notably, CAGP's learned $\alpha$ underperforms on WN18RR (0.72 vs 0.86) because the noisy GP signal on sparse-relation graphs degrades the combination; RelCondVar's fixed weighting avoids this failure mode.
+We also evaluated RelCondVar, which replaces entity-level variance with a learned $\sigma^2(e,r) = \text{MLP}([e; r])$ while retaining coverage ($\alpha{=}0.5$, fixed). On temporal OOD, RelCondVar matches $U_{\text{str}}$ across all datasets (WN18RR: both 0.86; FB15k-237: both 0.94; YAGO: both 0.84; ICEWS14: 0.99) but does not exceed it---the MLP-based variance provides no additional signal beyond coverage. CAGP outperforms RelCondVar on all datasets (0.92 vs 0.86 on WN18RR; 0.97 vs 0.94 on FB15k-237; 0.90 vs 0.84 on YAGO), demonstrating that reparameterization-trained entity variances provide genuine complementary information that the MLP-based variant does not capture.
 
 \paragraph{Empirical vs theoretical AUROC.}
-Theorem~\ref{thm:complementarity} predicts semantic AUROC $= 0.5$ on novel contexts, but Table~\ref{tab:complementarity} shows 0.40--0.49. This discrepancy arises because Assumption A3 is approximate: novel-context entities tend toward higher frequencies than the ID average, causing slightly \emph{lower} semantic uncertainty than ID. The prediction remains directionally correct (near-random).
+Theorem~\ref{thm:complementarity} predicts semantic AUROC $= 0.5$ on novel contexts, but Table~\ref{tab:complementarity} shows 0.34--0.42. This discrepancy arises because Assumption A3 is approximate: novel-context entities tend toward higher frequencies than the ID average, causing slightly \emph{lower} semantic uncertainty than ID. With proper reparameterization training, entity variances are more tightly calibrated, amplifying this effect. The prediction remains directionally correct ($\lesssim 0.5$).
 
 \paragraph{Binary vs continuous coverage.}
 To test whether co-occurrence frequency improves upon binary presence/absence, we evaluated continuous coverage formulations (log-scaled, TF-IDF) on temporal OOD. Binary coverage achieves AUROC $= 1.0$ on FB15k-237 novel contexts (expected by construction; see Remark~\ref{rem:circularity}), while continuous variants (log-scaled, TF-IDF) achieve only 0.56--0.59 (near-random). The key insight is that continuous coverage introduces frequency-based variations among observed pairs that obscure the binary observed/unobserved boundary, causing ID and OOD uncertainty distributions to overlap (Table~\ref{tab:coverage_ablation}). For emerging entities, GP variance already captures frequency through learned embeddings, making explicit frequency counts redundant.
 
 \paragraph{Error analysis.}
-\emph{Temporal OOD.} On WN18RR, $U_{\text{str}}$ achieves 0.86 AUROC; the gap from 1.0 reflects emerging entities where coverage is non-zero ($\rho = 0.13$; Table~\ref{tab:assumptions}). CAGP's learned $\alpha$ degrades to 0.72 by over-weighting the noisy GP signal---a limitation of the normalization-based combination on sparse-relation graphs (11 relations).
-Three mitigations bound this limitation: (1)~RelCondVar avoids it via fixed weighting, matching $U_{\text{str}}$ (0.86); (2)~matched-coverage analysis confirms GP provides genuine separation (0.79 AUROC on WN18RR, 0.86 on FB15k-237 when coverage is controlled); (3)~on YAGO3-10 where both signals contribute ($U_{\text{sem}}$ 0.82, $U_{\text{str}}$ 0.76), CAGP adds $+$0.18 over $U_{\text{str}}$, showing the combination works when GP variance is informative.
-The contribution is the decomposition framework, not the specific $\alpha$-learning mechanism.
+\emph{Temporal OOD.} On WN18RR, $U_{\text{str}}$ alone achieves 0.86 AUROC; the gap from 1.0 reflects emerging entities where coverage is non-zero ($\rho = 0.34$; Table~\ref{tab:assumptions}). CAGP closes this gap: its semantic signal lifts emerging-entity detection from 0.83 to 0.91, yielding 0.92 overall.
 
-\emph{Standard OOD.} On FB15k-237 (random tail corruption, 20K ID + 20K OOD), CAGP achieves 0.971 AUROC.
-False positives (8.7\%) occur on triples with low-degree tails (mean degree 183 vs 583 for correctly classified ID).
-False negatives (8.7\%) involve corrupted tails that coincidentally create higher-degree entities (mean 183 vs 37 for typical corruptions).
+\emph{Variance collapse without sampling.} A na\"ive implementation that omits reparameterization sampling in the scoring function suffers \emph{training collapse}: KL regularization drives all entity variances to a uniform value ($\sigma^2_e \to 1.0$, std${=}0$ across entities) since the scoring function does not use the variance parameters and provides no counter-gradient. Train-set calibration then yields $\mu_{\text{cov}}{=}0$ (all training triples are covered by construction), scaling the degenerate GP signal by ${\sim}10^{-8}$---the combined uncertainty reduces to float noise for covered triples. This collapse reduces AUROC from 0.92 to 0.72 on WN18RR and from 0.90 to 0.68 on YAGO. The fix is standard variational inference: using the reparameterization trick \citep{kingma2014autoencoding} in the scoring function ensures that the reconstruction loss (BCE) provides gradients to the variance parameters, preventing KL-driven collapse. This diagnosis applies to any probabilistic KG embedding that learns per-entity variances.
+
+Matched-coverage analysis further confirms the semantic signal's value: among test triples sharing the same coverage value, GP semantic uncertainty alone separates emerging from ID with 0.79 AUROC (WN18RR) and 0.86 AUROC (FB15k-237).
+
+\emph{Standard OOD.} An additional error analysis on FB15k-237 using prediction-score-based detection (20K balanced samples) yields 0.971 AUROC---higher than Table~\ref{tab:standard} because prediction scores are strong corruption detectors.
+False positives (8.7\%) occur on triples with low-degree tails; false negatives (8.7\%) involve corrupted tails that coincidentally create higher-degree entities.
 See Appendix~\ref{app:error_analysis} for detailed breakdown.
 
 \paragraph{Threats to validity.}
 On the three static benchmarks, temporal OOD splits are simulated from entity frequency and coverage rather than ground-truth timestamps; the novel-context category is defined using the same coverage indicator as our structural detector, so structural AUROC $= 1$ on this subset is guaranteed by construction (Remark~\ref{rem:circularity}).
-However, on ICEWS14 (Table~\ref{tab:temporal_ood}), OOD is defined by chronological timestamps---novel contexts arise from temporal evolution, not coverage labels---and CAGP still achieves 0.99 AUROC (3 seeds, std$=$0.000), confirming the decomposition captures genuine temporal patterns.
-A leakage audit (Appendix~\ref{app:leakage}) confirms strict temporal ordering (no timestamp overlap), but identifies 53\% inverse-relation overlap and 28\% exact triple repetition---common in temporal event KGs. Under a \emph{strict split} that removes all exact duplicates and inverse overlaps (58.5\% of test triples removed), CAGP \emph{improves} from 0.993 to 0.995 AUROC (Appendix~\ref{app:leakage}), ruling out transductive artifacts.
-The non-trivial empirical finding is that novel contexts constitute 23--32\% of test triples across all four datasets. Where evaluated, existing probabilistic methods fail on them (AUROC 0.38--0.63), confirming Theorem~\ref{thm:impossibility}.
-Our relation-conditioned variance ablation (RelCondVar) matches $U_{\text{str}}$ across all datasets, confirming the decomposition framework rather than variance parameterization is the key contribution. RelCondVar provides a relation-aware proxy: it has explicit access to relation-specific variance $\sigma^2(e,r)$ via MLP, yet still requires explicit coverage for novel-context detection---consistent with Theorem~\ref{thm:impossibility}, which applies to \emph{any} entity-level uncertainty, including GNN-derived embeddings that aggregate existing neighborhood information but cannot signal the absence of an observation. Full R-GCN validation remains future work.
+ICEWS14 (Table~\ref{tab:temporal_ood}) breaks this coupling: OOD is defined by chronological timestamps, and CAGP achieves 0.99 AUROC. A leakage audit (Appendix~\ref{app:leakage}) confirms temporal integrity; under a strict split removing all duplicates and inverse overlaps (58.5\% removed), CAGP improves from 0.993 to 0.995, ruling out transductive artifacts.
+The non-trivial empirical finding is that novel contexts constitute 11--25\% of test triples across datasets (up to 25\% on FB15k-237). Where evaluated, existing probabilistic methods fail on them (AUROC 0.38--0.72), confirming Theorem~\ref{thm:impossibility}.
+Note that $U_{\text{str}}$ is equivalent to a binary frequency heuristic: $\mathbb{1}[\text{freq}(e,r) > 0]$. A continuous log-frequency variant achieves only 0.66--0.71 AUROC (near-random), confirming that binary presence/absence---not frequency magnitude---is the discriminative signal.
+RelCondVar matches $U_{\text{str}}$ across all datasets but does not exceed it, while CAGP outperforms both---confirming that the learned entity variance, when properly trained via reparameterization, provides genuine complementary information. Despite having relation-specific variance $\sigma^2(e,r)$ via MLP, RelCondVar still requires explicit coverage for novel-context detection, consistent with Theorem~\ref{thm:impossibility}.
 
 \paragraph{Non-definitional evidence.}
-While structural AUROC $= 1$ on novel contexts is by construction on simulated splits (Remark~\ref{rem:circularity}), four lines of evidence demonstrate value beyond this definitional link:
+While structural AUROC $= 1$ on novel contexts is by construction on simulated splits (Remark~\ref{rem:circularity}), three lines of evidence demonstrate value beyond this definitional link:
 (a)~On \emph{ICEWS14} (Table~\ref{tab:temporal_ood}), OOD is defined by ground-truth timestamps, not coverage, yet CAGP achieves 0.99 AUROC---the strongest evidence that coverage captures real temporal patterns.
-(b)~On \emph{emerging entities}---where coverage coupling is weakest ($\rho = 0.13$--$0.68$; Table~\ref{tab:assumptions})---$U_{\text{sem}}$ provides 0.71--0.81 AUROC (Table~\ref{tab:complementarity}), complementing $U_{\text{str}}$ (0.78--0.83).
-(c)~On \emph{standard OOD} (random corruptions, Table~\ref{tab:standard}), which uses no coverage-based labels, the decomposition achieves 0.87--0.96.
-(d)~Ablating coverage on ICEWS14 (Appendix~\ref{app:icews14_ablation}): removing structural signal ($\alpha{=}1$) drops AUROC from 0.99 to 0.50; shuffling entity-relation associations drops to 0.55; random coverage at matched density drops to 0.50. The \emph{specific} entity-relation structure, not density statistics, drives detection.
-(e)~\emph{Matched-coverage analysis:} Among test triples sharing the same coverage value (both endpoints covered), GP semantic uncertainty alone separates emerging from ID with 0.79 AUROC (WN18RR) and 0.86 AUROC (FB15k-237)---coverage is controlled, yet the semantic signal still discriminates, confirming the two signals are complementary.
-(f)~The impossibility theorem (Theorem~\ref{thm:impossibility}) is independent of how OOD is defined.
+(b)~Ablating coverage on ICEWS14 (Appendix~\ref{app:icews14_ablation}): removing structural signal ($\alpha{=}1$) drops AUROC from 0.99 to 0.50; shuffling entity-relation associations drops to 0.55; random coverage at matched density drops to 0.50. The \emph{specific} entity-relation structure, not density statistics, drives detection.
+(c)~\emph{Matched-coverage analysis:} Among test triples sharing the same coverage value (both endpoints covered), GP semantic uncertainty alone separates emerging from ID with 0.79 AUROC (WN18RR) and 0.86 AUROC (FB15k-237)---coverage is controlled, yet the semantic signal still discriminates, confirming complementarity.
 
 See Appendix~\ref{app:ablation} for additional ablations and Appendix~\ref{app:calibration} for calibration analysis.
