@@ -61,12 +61,26 @@ Under assumptions A1--A6 (see Appendix~\ref{app:proof} for precise statements an
 \begin{enumerate}
     \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\epsilon)$ on novel contexts, where $\epsilon$ measures frequency distribution overlap
     \item[\textbf{(ii)}] Structural uncertainty achieves AUROC $< 1$ on emerging entities (imperfect separation)
-    \item[\textbf{(iii)}] Structural uncertainty achieves AUROC $= 1$ on novel contexts (this follows directly from Definition~\ref{def:ood} and assumption A2; see Remark~\ref{rem:circularity})
-    \item[\textbf{(iv)}] Under the additional condition that semantic uncertainty separates emerging entities from ID better than structural uncertainty does (A6, verified empirically), the combination $U_{\text{comb}} = \alpha^* U_{\text{sem}} + (1-\alpha^*) U_{\text{str}}$ improves over either signal alone when both OOD types are present
+    \item[\textbf{(iii)}] Let the OOD set be a mixture of emerging entities (fraction $\pi_e$) and novel contexts ($\pi_n = 1 - \pi_e$). The overall AUROC decomposes as:
+    \begin{equation}
+        \text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + \pi_n \cdot A_{\text{novel}}(U)
+        \label{eq:mixture_auroc}
+    \end{equation}
+    and the synergy of $U_{\text{comb}} = \alpha U_{\text{sem}} + (1{-}\alpha) U_{\text{str}}$ over $U_{\text{str}}$ alone is:
+    \begin{equation}
+        \text{AUROC}(U_{\text{comb}}) - \text{AUROC}(U_{\text{str}}) = \pi_e \cdot (A_{\text{emerge}}^{\text{comb}} - A_{\text{emerge}}^{\text{str}})
+        \label{eq:synergy}
+    \end{equation}
+    which is positive whenever semantic uncertainty separates emerging entities better than structural does (A6, verified empirically).
 \end{enumerate}
 \end{theorem}
 
-\textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities---semantic uncertainty cannot distinguish them. Part (ii): Emerging entities are defined by low \emph{frequency}, but may still have \emph{coverage} for the specific query relation, making some indistinguishable from ID via coverage alone. Part (iii): This is a direct consequence of the definitions---novel contexts have $U_{\text{str}} \geq 1$ while ID has $U_{\text{str}} = 0$ (see Remark~\ref{rem:circularity}). The substantive claim is that this definitional category is empirically prevalent. Part (iv): When the OOD set is a mixture of emerging and novel-context subsets, the overall AUROC is a weighted average over sub-population AUROCs (weights proportional to subset sizes, holding the ID distribution fixed). The combination uses semantic to catch emerging entities that structural misses, and structural to catch novel contexts that semantic misses. Full proof in Appendix~\ref{app:proof}.
+\begin{remark}[Structural detection of novel contexts]
+\label{rem:novel_perfect}
+Structural uncertainty achieves AUROC $= 1$ on novel contexts by construction: novel contexts have $c(e,r)=0$ (Definition~\ref{def:ood}), giving $U_{\text{str}} \geq 1$, while ID has $U_{\text{str}} = 0$ (A2). The substantive claims are the \emph{impossibility} of achieving this with entity-level methods (Theorem~\ref{thm:impossibility}) and the \emph{empirical prevalence} of novel contexts (11--25\% of test triples).
+\end{remark}
+
+\textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities---semantic uncertainty cannot distinguish them. Part (ii): Emerging entities are defined by low \emph{frequency}, but may still have \emph{coverage} for the specific query relation, making some indistinguishable from ID via coverage alone. Part (iii): Eq.~(\ref{eq:mixture_auroc}) follows from the Mann-Whitney U-statistic formulation of AUROC (AUROC $= P(U_{\text{OOD}} > U_{\text{ID}})$, decomposed by law of total probability). Since $A_{\text{novel}}(U_{\text{str}}) = 1$ (Remark~\ref{rem:novel_perfect}) and $A_{\text{novel}}(U_{\text{comb}}) = 1$ for $\alpha < 1/(1{+}\Delta)$, the novel-context terms cancel in Eq.~(\ref{eq:synergy}), and all synergy comes from emerging entities. Eq.~(\ref{eq:synergy}) predicts empirical results to within 0.01 AUROC on all three datasets (Appendix~\ref{app:proof}). Full proof in Appendix~\ref{app:proof}.
 
 \subsection{CAGP}
 \label{sec:cagp}
@@ -78,11 +92,11 @@ Theorem~\ref{thm:complementarity} establishes that relation-specific uncertainty
     \label{eq:cagp}
 \end{equation}
 
-where $U_{\text{sem}}$ is the GP-based semantic uncertainty (entity variance), $U_{\text{str}}$ is the structural uncertainty (coverage), and $\alpha = \sigma(\lambda)$ is a learned mixing weight.
+where $U_{\text{sem}}$ is the GP-based semantic uncertainty (entity variance), $U_{\text{str}}$ is the structural uncertainty (coverage), and $\alpha \in [0,1]$ is a mixing weight (set to $\alpha{=}0.5$; see sensitivity analysis in Appendix~\ref{app:alpha_sensitivity}).
 In Eq.~(\ref{eq:cagp}), we use the normalized variant $\tilde{U}_{\text{sem}}$, scaled so that semantic and structural components have comparable magnitude (normalization statistics computed over the training set).
 
 \paragraph{Implementation.}
-The logit parameter $\lambda$ is initialized to $0$ ($\alpha_0 = 0.5$) and optimized jointly with entity embeddings via the link prediction loss (BCE with negative sampling plus KL regularization; see Appendix~\ref{app:training_config} for $\beta_{\text{KL}}$). Alpha is a single global scalar (shared across all relations). Crucially, the scoring function uses \emph{reparameterization sampling}~\citep{kingma2014autoencoding}: during training, entity embeddings are sampled as $\mathbf{e} = \boldsymbol{\mu}_e + \boldsymbol{\sigma}_e \odot \boldsymbol{\epsilon}$, $\boldsymbol{\epsilon} \sim \mathcal{N}(0, I)$; at evaluation, we use the mean $\boldsymbol{\mu}_e$. This ensures the reconstruction loss provides gradients to the variance parameters, preventing KL-driven collapse (see error analysis in \S\ref{sec:experiments}). To ensure comparable scales, we normalize semantic uncertainty: $\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot \bar{U}_{\text{str}} / \bar{U}_{\text{sem}}$, where $\bar{U}_{\text{str}}$ and $\bar{U}_{\text{sem}}$ are means computed once over the training set.
+We fix $\alpha{=}0.5$ (equal weighting). While $\alpha$ could in principle be learned, the link prediction loss provides no gradient signal to the mixing weight because training triples have zero coverage uncertainty by construction---all observed entity-relation pairs are covered (Appendix~\ref{app:alpha_sensitivity}). Sensitivity analysis shows that AUROC is robust across $\alpha \in [0.1, 0.7]$, with 0.5 within 1pp of optimal on all datasets. Crucially, the scoring function uses \emph{reparameterization sampling}~\citep{kingma2014autoencoding}: during training, entity embeddings are sampled as $\mathbf{e} = \boldsymbol{\mu}_e + \boldsymbol{\sigma}_e \odot \boldsymbol{\epsilon}$, $\boldsymbol{\epsilon} \sim \mathcal{N}(0, I)$; at evaluation, we use the mean $\boldsymbol{\mu}_e$. This ensures the reconstruction loss provides gradients to the variance parameters, preventing KL-driven collapse (see error analysis in \S\ref{sec:experiments}). To ensure comparable scales, we normalize semantic uncertainty: $\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot \bar{U}_{\text{str}} / \bar{U}_{\text{sem}}$, where $\bar{U}_{\text{str}}$ and $\bar{U}_{\text{sem}}$ are means computed once over the training set.
 
 \paragraph{Training objective.}
 The training objective combines three terms:
@@ -104,7 +118,7 @@ We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from
 Structural uncertainty is: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0,1,2\}$.
 
 \paragraph{Design rationale.}
-The linear combination is intentionally simple---a single learned scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}), its \emph{complementarity} with semantic uncertainty (Theorem~\ref{thm:complementarity}), and showing that even this minimal combination consistently outperforms either signal alone (\S\ref{sec:experiments}).
+The linear combination is intentionally simple---a single fixed scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}), its \emph{complementarity} with semantic uncertainty (Theorem~\ref{thm:complementarity}), and showing that even this minimal combination consistently outperforms either signal alone (\S\ref{sec:experiments}).
 
 \paragraph{Why explicit coverage?}
 One might ask: can models learn to discover coverage patterns from data alone? Our impossibility theorem (Theorem~\ref{thm:impossibility}) shows that standard link prediction objectives do not incentivize relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias. Note that coverage-based detection of novel contexts is perfect by construction (Remark~\ref{rem:circularity}); the empirical question is whether this category is prevalent enough to matter, which we validate in \S\ref{sec:experiments}.

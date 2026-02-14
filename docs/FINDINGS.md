@@ -7,27 +7,45 @@ We discover that effective OOD detection in knowledge graphs requires **two comp
 1. **Semantic Uncertainty (GP variance):** How well-constrained is the entity embedding?
 2. **Structural Uncertainty (Coverage):** Has the entity been observed with this relation?
 
-**Neither signal alone is sufficient.** Their combination (CAGP) achieves 17-32% improvement over the best single component.
+**Neither signal alone is sufficient.** Their combination (CAGP) achieves 0.90--0.97 AUROC on temporal OOD benchmarks, consistently outperforming both single components and baselines (UKGE, Energy).
+
+> **Note (2026-02-13):** All results below reflect the **v3 canonical numbers** with the reparameterization sampling fix applied to CAGP and GPOnly. See MEMORY.md for the fix details.
 
 ---
 
 ## 1. Empirical Results
 
-### 1.1 Main Results Table
+### 1.1 Temporal OOD Results (v3, 3-seed means)
 
-| Dataset | Relations | GP-only | Coverage-only | CAGP | Synergy |
-|---------|-----------|---------|---------------|------|---------|
-| WN18RR | 11 | 0.647 | 0.657 | **0.871** | +32% |
-| FB15k-237 | 237 | 0.749 | 0.821 | **0.960** | +17% |
-| YAGO3-10 | 37 | 0.824 | 0.760 | **0.942** | +14% |
+| Dataset | GPOnly (U_sem) | CoverageOnly (U_str) | **CAGP** | UKGE | Energy |
+|---------|----------------|----------------------|----------|------|--------|
+| WN18RR | 0.620 +/- 0.010 | 0.859 +/- 0.000 | **0.923 +/- 0.004** | 0.488 | 0.600 |
+| FB15k-237 | 0.425 +/- 0.001 | 0.935 +/- 0.000 | **0.967 +/- 0.000** | 0.418 | 0.512 |
+| YAGO3-10 | 0.602 +/- 0.001 | 0.840 +/- 0.000 | **0.899 +/- 0.004** | 0.701 | 0.722 |
+| ICEWS14 | -- | -- | **0.993** | -- | -- |
 
-### 1.2 Key Observations
+### 1.2 Standard OOD (random corruptions)
 
-1. **CAGP consistently achieves 0.87-0.96 AUROC** across all datasets
-2. **Synergy is universal:** +14% to +32% improvement over best single component
-3. **GP vs Coverage varies by dataset:** GP wins on YAGO (0.824 vs 0.760), Coverage wins on FB15k-237 (0.821 vs 0.749)
-4. **Learned α = 0.5 exactly:** Stays at initialization, both signals contribute equally
-5. **CAGP is remarkably stable:** std = 0.0001 on YAGO (virtually no variance across seeds)
+| Dataset | GPOnly | CoverageOnly | CAGP |
+|---------|--------|--------------|------|
+| WN18RR | 0.661 | 0.659 | **0.675** |
+| FB15k-237 | 0.761 | 0.821 | **0.834** |
+
+### 1.3 Temporal AUPR
+
+| Dataset | GPOnly | CoverageOnly | CAGP |
+|---------|--------|--------------|------|
+| WN18RR | 0.789 | 0.898 | **0.965** |
+| FB15k-237 | 0.412 | 0.917 | **0.970** |
+
+### 1.4 Key Observations
+
+1. **CAGP achieves 0.90--0.97 AUROC** on temporal OOD across all static KG datasets
+2. **Coverage dominates GPOnly** on temporal OOD (structural signal is primary)
+3. **CAGP beats both components** even on standard OOD (random corruptions)
+4. **Emerging-entity subgroup:** CAGP provides +8--12pp over CoverageOnly (the hardest subgroup)
+5. **Learned alpha = 0.50:** Stays at initialization; combination works via complementarity
+6. **Reparameterization fix insight:** GPOnly AUROC *decreases* when logvar is properly trained (WN18RR 0.658->0.620, FB15k-237 0.587->0.425), confirming that GP variance alone is insufficient and coverage is necessary
 
 ---
 
@@ -181,17 +199,19 @@ class CAGP(nn.Module):
 
 ### 5.1 GP Variance Alone
 
-| Dataset | GP-only AUROC | Why it fails |
-|---------|---------------|--------------|
-| WN18RR | 0.647 | Relation-agnostic, can't distinguish per-relation uncertainty |
-| FB15k-237 | 0.749 | Same limitation, slightly better due to more relations |
+| Dataset | GPOnly temporal AUROC | Why it fails |
+|---------|----------------------|--------------|
+| WN18RR | 0.620 | Relation-agnostic; properly trained logvar loses accidental frequency correlation |
+| FB15k-237 | 0.425 | Same limitation; worst performer after reparameterization fix |
+| YAGO3-10 | 0.602 | Slightly better but still well below coverage |
 
 ### 5.2 Coverage Alone
 
-| Dataset | Coverage-only AUROC | Why it's limited |
-|---------|---------------------|------------------|
-| WN18RR | 0.657 | ~46% of ID triples have unseen entities |
-| FB15k-237 | 0.821 | ~32% of ID triples have unseen entities |
+| Dataset | CoverageOnly temporal AUROC | Why it's limited |
+|---------|----------------------------|------------------|
+| WN18RR | 0.859 | Strong but misses emerging entities where GP helps (+8pp with CAGP) |
+| FB15k-237 | 0.935 | Very strong; CAGP still adds +3pp |
+| YAGO3-10 | 0.840 | Misses emerging entities; CAGP adds +6pp |
 
 ### 5.3 Original Assumption A1
 
@@ -223,16 +243,16 @@ This explains why coverage alone is limited and why GP helps.
    - Can we extend to temporal KGs?
    - What about other OOD types (semantic shift)?
 
-### 6.3 For NeurIPS Submission
+### 6.3 For UAI 2026 Submission
 
 | Contribution | Type | Strength |
 |--------------|------|----------|
 | Decomposition framework | Conceptual | Strong |
 | Theorems (3 proven) | Theoretical | Medium-Strong |
-| CAGP algorithm | Method | Weak (simple) |
-| Empirical validation | Experimental | Strong |
+| CAGP algorithm | Method | Simple but effective |
+| Temporal OOD evaluation | Experimental | Strong (4 datasets, 3 seeds) |
 
-**Recommended framing:** Analysis/insight paper, not method paper.
+**Target venue:** UAI 2026 (deadline Feb 25). Framed as analysis/insight paper.
 
 ---
 
@@ -250,13 +270,13 @@ This explains why coverage alone is limited and why GP helps.
 
 | File | Description |
 |------|-------------|
+| `scripts/run_wn18rr_temporal.py` | Canonical experiment script (CAGP+GPOnly with reparam fix) |
+| `scripts/test_cagp_fix_multiseed.py` | 3-seed x 3-dataset CAGP validation |
+| `scripts/test_gponly_fix_multiseed.py` | 3-seed x 3-dataset GPOnly validation |
+| `scripts/test_standard_ood_fixed.py` | Standard OOD + AUPR with fixed models |
 | `docs/theory/coverage_sufficiency_theorem.md` | Full theorem with proof |
-| `docs/neurips_honest_assessment.md` | NeurIPS submission strategy |
-| `scripts/run_coverage_only_ablation.py` | Coverage-only experiments |
+| `scripts/run_coverage_only_ablation.py` | Coverage-only experiments (legacy) |
 | `scripts/verify_theorem.py` | Theorem validation |
-| `scripts/analyze_theorem_gap.py` | Gap analysis |
-| `outputs/coverage_only_results.json` | WN18RR, FB15k-237 results |
-| `outputs/yago_coverage_only.json` | YAGO3-10 coverage result |
 
 ---
 
@@ -265,10 +285,10 @@ This explains why coverage alone is limited and why GP helps.
 If using these findings:
 
 ```bibtex
-@article{cagp2025,
+@article{cagp2026,
   title={The Semantic-Structural Decomposition: Understanding Uncertainty in Knowledge Graph Embeddings},
   author={...},
-  journal={NeurIPS 2026 (under review)},
-  year={2025}
+  journal={UAI 2026 (under review)},
+  year={2026}
 }
 ```

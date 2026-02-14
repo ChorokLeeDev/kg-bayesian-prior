@@ -8,7 +8,7 @@ Research project on out-of-distribution (OOD) detection in Knowledge Graphs usin
 - **Semantic uncertainty** (GP variance): How well-constrained is the entity embedding?
 - **Structural uncertainty** (Coverage): Has the entity been observed with this relation?
 
-Key result: CAGP achieves 0.87-0.96 AUROC with 14-32% synergy over single components (WN18RR, FB15k-237, YAGO3-10).
+Key result (v3, with reparameterization sampling fix): CAGP achieves 0.90--0.97 temporal OOD AUROC across WN18RR, FB15k-237, YAGO3-10, and ICEWS14. Target venue: UAI 2026 (deadline Feb 25).
 
 ## Commands
 
@@ -76,16 +76,19 @@ Relation-aware kernel computes: `K(i,j) = Σ_r σ_r² · exp(-L_r / ℓ_r²)`
 ### Data Flow
 1. Load KG triples (`src/data/loaders.py`)
 2. Build coverage matrix via `model.precompute_coverage(train_triples)`
-3. Train with BCE loss + KL regularization
-4. Evaluate: compute uncertainties → OOD metrics
+3. Train with BCE loss + KL regularization (beta=0.001) + uncertainty margin loss (weight=0.1)
+4. Reparameterization sampling: `h_emb = entity_mean[h] + exp(0.5*logvar[h]) * randn` during training
+5. Evaluate: compute uncertainties -> OOD metrics
 
 ## Key Files
 
 - `src/models/coverage_augmented_gpkge.py` - Main CAGP model
 - `src/models/gp_kge.py` - Vanilla GP-KGE with relation-aware kernel
 - `src/kernels/relation_aware.py` - Per-relation kernel implementation
+- `scripts/run_wn18rr_temporal.py` - Canonical experiment script (fixed CAGP+GPOnly with reparameterization sampling)
+- `scripts/test_cagp_fix_multiseed.py` - 3-seed x 3-dataset CAGP validation
 - `configs/default.yaml` - Hydra config for experiments
-- `docs/FINDINGS.md` - Detailed research findings
+- `docs/FINDINGS.md` - Detailed research findings (updated to v3 results)
 - `docs/theory/` - Theorem proofs
 
 ## Configuration

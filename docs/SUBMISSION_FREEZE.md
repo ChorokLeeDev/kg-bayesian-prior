@@ -1,8 +1,12 @@
 # Submission Freeze — UAI 2026
 
+> **NOTE (2026-02-13):** The original freeze (2026-02-08) was superseded by the reparameterization
+> sampling fix on 2026-02-12. All paper tables and text were updated to v3 canonical numbers.
+> The current HEAD on `main` reflects the corrected results.
+
 ## Freeze Metadata
-- Workspace base HEAD: `246957265dc6dc3f50ebb0059c25c1974ba29795`
-- Freeze timestamp (local): `2026-02-08`
+- Original freeze HEAD: `246957265dc6dc3f50ebb0059c25c1974ba29795` (2026-02-08)
+- Post-fix HEAD: see `git log --oneline -5` for current state
 - Seed policy: all multi-seed runs use `{42, 123, 456}`
 
 ## Final PDF

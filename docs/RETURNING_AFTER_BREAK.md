@@ -1,33 +1,32 @@
 # Returning After a Long Break
 
-**Last updated:** 2026-02-08
+**Last updated:** 2026-02-13
 
 ## Source of Truth
 
 - Active manuscript: `paper/main.tex`
-- Submitted camera-ready snapshot: `paper/UAI2026_submission.pdf`
 - Active paper sections: `paper/sections/`
 - Archived legacy drafts: `archive/retired_ideas/paper/`
+- Canonical v3 results: see MEMORY.md or `docs/FINDINGS.md`
 
 ## Project Snapshot
 
 - Branch used for active work: `main`
-- The repository includes historical planning docs in `docs/`; treat dates as authoritative.
-- This file is the quickest way back in before reading older notes.
+- **UAI 2026 deadline: Feb 25.** Paper is ~18 pages, compiles cleanly.
+- All tables and text updated with v3 numbers (reparameterization sampling fix, 2026-02-12).
+- The repository includes many historical planning docs in `docs/`; most are stale. Trust `FINDINGS.md` and MEMORY.md.
 
 ## Recommended Re-entry Order
 
 1. Check repo state: `git status --short --branch`
-2. Read this file, then `docs/FINDINGS.md`
+2. Read this file, then `docs/FINDINGS.md` for canonical results
 3. Rebuild manuscript:
-   - `cd paper`
-   - `pdflatex main.tex`
-   - `pdflatex main.tex`
-4. Run targeted experiment scripts only as needed:
-   - `scripts/run_focused_experiments.py`
-   - `scripts/run_wn18rr_temporal.py`
-   - `scripts/run_wn18rr_missing_baselines.py`
-   - `scripts/verify_assumption_a3.py`
+   - `cd paper && pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex`
+4. Key experiment scripts:
+   - `scripts/run_wn18rr_temporal.py` -- canonical experiment (CAGP + GPOnly with reparam fix)
+   - `scripts/test_cagp_fix_multiseed.py` -- 3-seed x 3-dataset CAGP validation
+   - `scripts/test_gponly_fix_multiseed.py` -- 3-seed x 3-dataset GPOnly validation
+   - `scripts/test_standard_ood_fixed.py` -- standard OOD + AUPR with fixed models
 
 ## Housekeeping Rules
 

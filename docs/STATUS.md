@@ -1,9 +1,10 @@
 # Project Status
 
-> NOTE (2026-02-08): This file is a historical snapshot from 2025-12-21.  
-> Use `docs/RETURNING_AFTER_BREAK.md` for the current re-entry workflow and source-of-truth paths.
+> **STALE (2025-12-21):** This file is a historical snapshot. Numbers below are pre-v3 and do not
+> reflect the reparameterization sampling fix (2026-02-12). For current canonical results, see
+> `docs/FINDINGS.md` or the MEMORY.md file. For re-entry workflow, see `docs/RETURNING_AFTER_BREAK.md`.
 
-**Last Updated:** 2025-12-21
+**Last Updated:** 2025-12-21 (historical -- do not treat numbers as current)
 
 ## Executive Summary
 
