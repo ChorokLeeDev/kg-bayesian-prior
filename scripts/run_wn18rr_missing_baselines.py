@@ -23,6 +23,7 @@ from collections import defaultdict
 import time
 
 from src.data.loaders import load_wn18rr, load_fb15k237
+from src.ranking import compute_rank_from_scores
 from scripts.run_wn18rr_temporal import evaluate_temporal as canonical_evaluate_temporal, _is_emerging
 
 
@@ -390,14 +391,6 @@ def evaluate_link_prediction(model, test, train, n_ent, device, max_test=1000):
     hits1 = float(np.mean(ranks <= 1))
 
     return {'mrr': mrr, 'hits@10': hits10, 'hits@1': hits1}
-
-
-def compute_rank_from_scores(scores: np.ndarray, target_idx: int) -> int:
-    """
-    Rank convention used across this repository:
-    rank = (#entities with strictly higher score) + 1.
-    """
-    return int((scores > scores[target_idx]).sum() + 1)
 
 
 # ============================================================

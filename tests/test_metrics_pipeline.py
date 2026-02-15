@@ -11,10 +11,11 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = ROOT / "scripts"
 
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(SCRIPTS))
 
 from create_fig1_minimal import build_figure_series  # noqa: E402
-from run_wn18rr_missing_baselines import compute_rank_from_scores  # noqa: E402
+from src.ranking import compute_rank_from_scores  # noqa: E402
 
 
 class MetricsPipelineTest(unittest.TestCase):

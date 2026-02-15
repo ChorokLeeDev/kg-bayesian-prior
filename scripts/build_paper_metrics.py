@@ -13,6 +13,7 @@ import glob
 import json
 import math
 import statistics
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -55,9 +56,23 @@ YAGO_PER_SEED_METHOD_TO_STEM = {
 }
 
 
-def _load_json(path: Path) -> dict:
-    with path.open() as f:
-        return json.load(f)
+def _load_json(path: Path, retries: int = 5, backoff_seconds: float = 0.05) -> dict:
+    """
+    Read JSON with short retries to tolerate concurrent non-atomic writers.
+    """
+    last_exc: Optional[Exception] = None
+    for attempt in range(retries):
+        try:
+            with path.open() as f:
+                return json.load(f)
+        except json.JSONDecodeError as exc:
+            last_exc = exc
+            if attempt == retries - 1:
+                break
+            time.sleep(backoff_seconds * (attempt + 1))
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError(f"Failed to load JSON from {path}")
 
 
 def _mean(values: Iterable[float]) -> float:

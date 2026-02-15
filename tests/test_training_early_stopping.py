@@ -1,11 +1,16 @@
 import unittest
 
-import torch
-import torch.nn as nn
+try:
+    import torch
+    import torch.nn as nn
+    from src.utils.training import EarlyStopping
+except ModuleNotFoundError:
+    torch = None
+    nn = None
+    EarlyStopping = None
 
-from src.utils.training import EarlyStopping
 
-
+@unittest.skipIf(torch is None or EarlyStopping is None, "torch is not installed")
 class EarlyStoppingSnapshotTest(unittest.TestCase):
     def test_best_snapshot_is_deep_cloned(self) -> None:
         model = nn.Linear(2, 1, bias=False)

@@ -34,8 +34,10 @@ OUTPUT_PATH = project_root / 'outputs' / 'yago_missing_baselines.json'
 def save_results(results):
     """Save results incrementally so partial results survive crashes."""
     OUTPUT_PATH.parent.mkdir(exist_ok=True)
-    with open(OUTPUT_PATH, 'w') as f:
+    tmp_path = OUTPUT_PATH.with_suffix(f"{OUTPUT_PATH.suffix}.tmp")
+    with open(tmp_path, 'w') as f:
         json.dump(results, f, indent=2, default=float)
+    tmp_path.replace(OUTPUT_PATH)
     print(f"  [saved to {OUTPUT_PATH}]")
 
 
