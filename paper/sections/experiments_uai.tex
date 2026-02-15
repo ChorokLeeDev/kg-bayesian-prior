@@ -50,8 +50,8 @@ SNGP       & .62  & .58\tiny{$\pm$.00} & .62 & .46\tiny{$\pm$.00}
            & ---  & ---               & .85 & .74\tiny{$\pm$.00} \\
 \midrule
 \multicolumn{9}{l}{\textit{Single Signals}} \\
-$U_{\text{sem}}$ & .66 & .62\tiny{$\pm$.01} & .62 & .42\tiny{$\pm$.00}
-                  & .80 & .60\tiny{$\pm$.00} & .98 & .84\tiny{$\pm$.00} \\
+$U_{\text{sem}}$ & .71 & .66\tiny{$\pm$.00} & .89 & .79\tiny{$\pm$.00}
+                  & .69 & .54\tiny{$\pm$.00} & .98 & .84\tiny{$\pm$.00} \\
 $U_{\text{str}}$ & .83 & .86\tiny{$\pm$.00} & .78 & .94\tiny{$\pm$.00}
                   & .67 & .84\tiny{$\pm$.00} & .98 & .99\tiny{$\pm$.00} \\
 \midrule
@@ -157,14 +157,14 @@ Method & Rand.\ Corrupt. & Temp.\ Shift \\
 UKGE & .499 & .403 \\
 Energy & .535 & .513 \\
 \midrule
-$U_{\text{str}}$ (structural) & .822 & .840 \\
-CAGP & \textbf{.822} & \textbf{.840} \\
+$U_{\text{str}}$ (structural) & .822 & .935 \\
+CAGP & \textbf{.822} & \textbf{.967} \\
 RelCondVar & .820 & .840 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Under the canonical pipeline, score-based methods (UKGE, Energy) perform near-random on both standard and temporal OOD when using their native uncertainty functions. Coverage-based methods dominate temporal shift on FB15k-237 (0.84 AUROC), while standard OOD remains around 0.82. Crucially, the combination does not degrade performance relative to structural uncertainty.
+Under the canonical pipeline, score-based methods (UKGE, Energy) perform near-random on both standard and temporal OOD when using their native uncertainty functions. Coverage-based uncertainty is strong on temporal shift (0.935 AUROC), while CAGP further improves to 0.967 by recovering emerging-entity errors. On standard OOD, CAGP remains tied with the best single signal at 0.822, so temporal gains do not trade off random-corruption detection.
 
 \paragraph{Relation-conditioned variance ablation.}
 We also evaluated RelCondVar, which replaces entity-level variance with a learned $\sigma^2(e,r) = \text{MLP}([e; r])$ while retaining coverage ($\alpha{=}0.5$, fixed). On temporal OOD, RelCondVar matches $U_{\text{str}}$ on WN18RR, YAGO, and ICEWS14 (0.86/0.84/0.99) and is lower on FB15k-237 (0.84 vs 0.94), without exceeding coverage in any setting. CAGP outperforms RelCondVar across all datasets (0.92 vs 0.86 on WN18RR; 0.97 vs 0.84 on FB15k-237; 0.90 vs 0.84 on YAGO; 0.99 vs 0.99 tie on ICEWS14), supporting that reparameterization-trained entity variance provides complementary information that the MLP-based variant does not reliably capture.

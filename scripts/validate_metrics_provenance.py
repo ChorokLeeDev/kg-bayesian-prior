@@ -110,10 +110,18 @@ def _extract_temporal_table_values(tex: str) -> Dict[str, Dict[str, Dict[str, fl
     Parse temporal table rows in paper/sections/experiments_uai.tex.
     Returns dataset->method->{emerging_auroc, overall_auroc}
     """
+    # Restrict parsing to the temporal table to avoid collisions with similarly
+    # named rows in other tables.
+    table_match = re.search(
+        r"\\label\{tab:temporal_ood\}(.*?)\\end\{table\}", tex, flags=re.DOTALL
+    )
+    if table_match:
+        tex = table_match.group(1)
+
     # Remove tiny std annotations to make number parsing stable.
     tex = re.sub(r"\\tiny\{[^}]*\}", "", tex)
     # Collapse multiline rows like method + continuation line.
-    tex = tex.replace("\n           &", " &")
+    tex = re.sub(r"\n\s+&", " &", tex)
 
     method_map = {
         "UKGE": "UKGE",
@@ -131,27 +139,33 @@ def _extract_temporal_table_values(tex: str) -> Dict[str, Dict[str, Dict[str, fl
     out: Dict[str, Dict[str, Dict[str, float]]] = {d: {} for d in datasets}
     for raw_label, method in method_map.items():
         row_re = re.compile(rf"^{re.escape(raw_label)}\s*&(.+?)\\\\", re.MULTILINE)
-        m = row_re.search(tex)
-        if not m:
-            continue
-        row = m.group(1)
-        cells = [c.strip() for c in row.split("&")]
-        values = []
-        for cell in cells:
-            if cell == "---":
-                values.append(None)
+        parsed = False
+        for m in row_re.finditer(tex):
+            row = m.group(1)
+            cells = [c.strip() for c in row.split("&")]
+            values = []
+            for cell in cells:
+                if cell == "---":
+                    values.append(None)
+                    continue
+                num_match = re.search(r"(-?\d+(?:\.\d+)?|\.\d+)", cell)
+                values.append(
+                    _parse_tex_number(num_match.group(1)) if num_match else None
+                )
+            # Temporal table must have 4 datasets x 2 metrics = 8 values.
+            if len(values) != 8:
                 continue
-            num_match = re.search(r"(-?\d+(?:\.\d+)?|\.\d+)", cell)
-            values.append(_parse_tex_number(num_match.group(1)) if num_match else None)
-        if len(values) != 8:
+            for i, dataset in enumerate(datasets):
+                em = values[2 * i]
+                overall = values[2 * i + 1]
+                if em is not None:
+                    out[dataset].setdefault(method, {})["emerging_auroc"] = em
+                if overall is not None:
+                    out[dataset].setdefault(method, {})["overall_auroc"] = overall
+            parsed = True
+            break
+        if not parsed:
             continue
-        for i, dataset in enumerate(datasets):
-            em = values[2 * i]
-            overall = values[2 * i + 1]
-            if em is not None:
-                out[dataset].setdefault(method, {})["emerging_auroc"] = em
-            if overall is not None:
-                out[dataset].setdefault(method, {})["overall_auroc"] = overall
     return out
 
 
@@ -175,20 +189,108 @@ def _extract_aupr_table_values(main_tex: str) -> Dict[str, Dict[str, float]]:
 
     for raw_label, method in method_map.items():
         row_re = re.compile(rf"^{re.escape(raw_label)}\s*&(.+?)\\\\", re.MULTILINE)
-        m = row_re.search(main_tex)
+        parsed = False
+        for m in row_re.finditer(main_tex):
+            row = m.group(1)
+            cells = [c.strip() for c in row.split("&")]
+            # AUPR table has 3 dataset columns.
+            if len(cells) != 3:
+                continue
+            for dataset, cell in zip(datasets, cells):
+                if cell == "---":
+                    continue
+                num_match = re.search(r"(-?\d+(?:\.\d+)?|\.\d+)", cell)
+                if not num_match:
+                    continue
+                out[dataset][method] = _parse_tex_number(num_match.group(1))
+            parsed = True
+            break
+        if not parsed:
+            continue
+    return out
+
+
+def _extract_standard_table_fb_values(exp_tex: str) -> Dict[str, float]:
+    """
+    Parse Table `tab:standard` in experiments_uai.tex and return FB15k-237 AUROC
+    per method.
+    """
+    table_match = re.search(
+        r"\\label\{tab:standard\}(.*?)\\end\{table\}", exp_tex, flags=re.DOTALL
+    )
+    if not table_match:
+        return {}
+    table_tex = table_match.group(1)
+    table_tex = re.sub(r"\{\\scriptsize[^}]*\}", "", table_tex)
+    table_tex = table_tex.replace("\n", "\n")
+
+    method_map = {
+        "UKGE": "UKGE",
+        "Energy": "Energy",
+        "$U_{\\text{sem}}$": "GPOnly",
+        "$U_{\\text{str}}$": "CoverageOnly",
+        "CAGP": "CAGP",
+        "RelCondVar": "RelCondVar",
+    }
+    out: Dict[str, float] = {}
+    for raw_label, method in method_map.items():
+        row_re = re.compile(
+            rf"^{re.escape(raw_label)}\s*&\s*([^&]+?)\s*&\s*([^\\\\]+?)\\\\",
+            flags=re.MULTILINE,
+        )
+        m = row_re.search(table_tex)
         if not m:
             continue
-        row = m.group(1)
-        cells = [c.strip() for c in row.split("&")]
-        if len(cells) != 3:
+        fb_cell = m.group(2).strip()
+        num_match = re.search(r"(-?\d+(?:\.\d+)?|\.\d+)", fb_cell)
+        if not num_match:
             continue
-        for dataset, cell in zip(datasets, cells):
-            if cell == "---":
-                continue
-            num_match = re.search(r"(-?\d+(?:\.\d+)?|\.\d+)", cell)
-            if not num_match:
-                continue
-            out[dataset][method] = _parse_tex_number(num_match.group(1))
+        out[method] = _parse_tex_number(num_match.group(1))
+    return out
+
+
+def _extract_method_comparison_values(exp_tex: str) -> Dict[str, Dict[str, float]]:
+    """
+    Parse Table `tab:method_comparison` in experiments_uai.tex and return
+    per-method standard-vs-temporal AUROC entries on FB15k-237.
+    """
+    table_match = re.search(
+        r"\\label\{tab:method_comparison\}(.*?)\\end\{table\}",
+        exp_tex,
+        flags=re.DOTALL,
+    )
+    if not table_match:
+        return {}
+    table_tex = table_match.group(1)
+    table_tex = re.sub(r"\{\\scriptsize[^}]*\}", "", table_tex)
+    table_tex = table_tex.replace("\n           &", " &")
+
+    method_map = {
+        "UKGE": "UKGE",
+        "Energy": "Energy",
+        "$U_{\\text{str}}$ (structural)": "CoverageOnly",
+        "CAGP": "CAGP",
+        "RelCondVar": "RelCondVar",
+    }
+    out: Dict[str, Dict[str, float]] = {}
+    for raw_label, method in method_map.items():
+        row_re = re.compile(
+            rf"^{re.escape(raw_label)}\s*&\s*([^&]+?)\s*&\s*([^\\\\]+?)\\\\",
+            flags=re.MULTILINE,
+        )
+        m = row_re.search(table_tex)
+        if not m:
+            continue
+        std_cell = m.group(1).strip()
+        tmp_cell = m.group(2).strip()
+        std_match = re.search(r"(-?\d+(?:\.\d+)?|\.\d+)", std_cell)
+        tmp_match = re.search(r"(-?\d+(?:\.\d+)?|\.\d+)", tmp_cell)
+        if not std_match or not tmp_match:
+            continue
+        out[method] = {
+            "standard_auroc": _parse_tex_number(std_match.group(1)),
+            "temporal_auroc": _parse_tex_number(tmp_match.group(1)),
+        }
     return out
 
 
@@ -223,6 +325,40 @@ def _check_paper_cross_reference(metrics: dict, root: Path) -> List[str]:
                         f"paper temporal table mismatch {dataset}/{method}/{key}: "
                         f"paper={tex_val}, metrics={metric_val}"
                     )
+
+    # Ensure the FB15k-237 "standard vs temporal" comparison table is internally
+    # consistent with the canonical standard table (standard column) and
+    # canonical temporal table (temporal column).
+    standard_fb_vals = _extract_standard_table_fb_values(exp_tex)
+    method_cmp_vals = _extract_method_comparison_values(exp_tex)
+    fb_temporal_vals = temporal_tex_vals.get("fb15k237", {})
+    for method, mm in method_cmp_vals.items():
+        std_val = mm["standard_auroc"]
+        tmp_val = mm["temporal_auroc"]
+
+        std_ref = standard_fb_vals.get(method)
+        if std_ref is None:
+            issues.append(
+                f"method comparison table has {method} standard={std_val} "
+                "but no reference in tab:standard"
+            )
+        elif not math.isclose(float(std_ref), float(std_val), abs_tol=0.01):
+            issues.append(
+                f"method comparison mismatch standard FB15k-237/{method}: "
+                f"table={std_val}, tab:standard={std_ref}"
+            )
+
+        tmp_ref = fb_temporal_vals.get(method, {}).get("overall_auroc")
+        if tmp_ref is None:
+            issues.append(
+                f"method comparison table has {method} temporal={tmp_val} "
+                "but no reference in tab:temporal_ood"
+            )
+        elif not math.isclose(float(tmp_ref), float(tmp_val), abs_tol=0.01):
+            issues.append(
+                f"method comparison mismatch temporal FB15k-237/{method}: "
+                f"table={tmp_val}, tab:temporal_ood={tmp_ref}"
+            )
 
     aupr_tex_vals = _extract_aupr_table_values(main_tex)
     aupr_metrics = metrics["paper_summary"]["aupr"]
