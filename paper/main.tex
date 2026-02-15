@@ -363,7 +363,7 @@ To test whether relation-conditioned scoring improves entity-level OOD detection
 
 \begin{table}[h]
 \centering
-\caption{Bilinear scoring vs.\ entity-level baselines on temporal OOD (3-seed mean$\pm$std). Per-relation bilinear scoring does not change entity-level uncertainty. Neither $U_{\text{sem}}$ nor Bilinear achieves novel-context AUROC above 0.55, consistent with Theorem~\ref{thm:impossibility}. Adding coverage (Bilinear+CAGP) recovers to match standard CAGP.}
+\caption{Bilinear scoring vs.\ entity-level baselines on temporal OOD (3-seed mean). Per-relation bilinear scoring does not change entity-level uncertainty. Neither $U_{\text{sem}}$ nor Bilinear achieves novel-context AUROC above 0.55, consistent with Theorem~\ref{thm:impossibility}. Adding coverage (Bilinear+CAGP) recovers to match standard CAGP.}
 \label{tab:bilinear}
 
 \scriptsize
@@ -374,7 +374,7 @@ To test whether relation-conditioned scoring improves entity-level OOD detection
 \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
 Method & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All \\
 \midrule
-$U_{\text{sem}}$ & .67 & .41 & .62 & .62 & .34 & .42 & .80 & .42 & .60 \\
+$U_{\text{sem}}$ & .66 & .41 & .62 & .62 & .34 & .42 & .80 & .42 & .60 \\
 Bilinear & .71 & .37 & .65 & .69 & .40 & .49 & .82 & .43 & .62 \\
 \midrule
 CAGP & .90 & 1.0 & .92 & .89 & 1.0 & .97 & .79 & 1.0 & .90 \\
@@ -391,7 +391,7 @@ Neither $U_{\text{sem}}$ nor the bilinear scorer achieves novel-context AUROC ab
 \begin{figure}[h]
 \centering
 \includegraphics[width=\linewidth]{figures/fig2_complementarity.pdf}
-\caption{Uncertainty distributions on FB15k-237, illustrating why neither signal alone suffices. \textbf{Top row} ($U_{\text{sem}}$): semantic uncertainty overlaps heavily between ID and emerging (AUC=0.62) and is \emph{below random} on novel contexts (AUC=0.33)---high-frequency entities have low variance regardless of relational experience. \textbf{Bottom row} ($U_{\text{str}}$): structural uncertainty perfectly separates novel contexts (AUC=1.00) but ${\sim}44\%$ of emerging entities have $U_{\text{str}}{=}0$ (covered for the query relation), making them indistinguishable from ID (AUC=0.78). CAGP combines both signals to achieve 0.97 overall.}
+\caption{Uncertainty distributions on FB15k-237, illustrating why neither signal alone suffices. \textbf{Top row} ($U_{\text{sem}}$): semantic uncertainty overlaps heavily between ID and emerging (AUC=0.62) and is \emph{below random} on novel contexts (AUC=0.34)---high-frequency entities have low variance regardless of relational experience. \textbf{Bottom row} ($U_{\text{str}}$): structural uncertainty perfectly separates novel contexts (AUC=1.00) but ${\sim}44\%$ of emerging entities have $U_{\text{str}}{=}0$ (covered for the query relation), making them indistinguishable from ID (AUC=0.78). CAGP combines both signals to achieve 0.97 overall.}
 \label{fig:complementarity}
 \end{figure}
 
@@ -647,6 +647,7 @@ Table & Dataset & Seeds & Source \\
 3 & All & (same as Table 1) & (same as Table 1) \\
 4 & All & (same as Table 1) & (same as Table 1) \\
 5 & FB15k-237 & 42 & \texttt{run\_focused\_experiments.py} \\
+\ref{tab:bilinear} & All & 42, 123, 456 & \texttt{run\_bilinear\_theorem1.py} \\
 \bottomrule
 \end{tabular}
 \vspace{2pt}
