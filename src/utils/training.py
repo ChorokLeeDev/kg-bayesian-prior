@@ -57,7 +57,10 @@ class EarlyStopping:
         """
         if self.best_value is None:
             self.best_value = value
-            self.best_model_state = model.state_dict().copy()
+            # Deep-clone tensors so later optimizer steps do not mutate the snapshot.
+            self.best_model_state = {
+                k: v.detach().clone() for k, v in model.state_dict().items()
+            }
             return False
 
         if self.mode == "min":
@@ -67,7 +70,9 @@ class EarlyStopping:
 
         if improved:
             self.best_value = value
-            self.best_model_state = model.state_dict().copy()
+            self.best_model_state = {
+                k: v.detach().clone() for k, v in model.state_dict().items()
+            }
             self.counter = 0
         else:
             self.counter += 1

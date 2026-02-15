@@ -352,7 +352,10 @@ def evaluate_temporal(model, train, test, n_ent, device):
 def evaluate_link_prediction(model, test, train, n_ent, device, max_test=1000):
     """Compute MRR and Hits@10 for base model link prediction."""
     model.eval()
-    test_subset = test[:min(len(test), max_test)]
+    if max_test and max_test > 0:
+        test_subset = test[:min(len(test), max_test)]
+    else:
+        test_subset = test
 
     # Build filter set (all known triples)
     all_triples = np.concatenate([train, test], axis=0)
@@ -378,7 +381,7 @@ def evaluate_link_prediction(model, test, train, n_ent, device, max_test=1000):
                     scores[tt] = -1e9
 
             # Rank of correct tail
-            rank = (scores >= scores[t]).sum()
+            rank = compute_rank_from_scores(scores, t)
             ranks.append(rank)
 
     ranks = np.array(ranks, dtype=float)
@@ -389,6 +392,14 @@ def evaluate_link_prediction(model, test, train, n_ent, device, max_test=1000):
     return {'mrr': mrr, 'hits@10': hits10, 'hits@1': hits1}
 
 
+def compute_rank_from_scores(scores: np.ndarray, target_idx: int) -> int:
+    """
+    Rank convention used across this repository:
+    rank = (#entities with strictly higher score) + 1.
+    """
+    return int((scores > scores[target_idx]).sum() + 1)
+
+
 # ============================================================
 # Main
 # ============================================================
@@ -397,6 +408,12 @@ def main():
     parser = argparse.ArgumentParser(description="Run MC Dropout, Deep Ensemble, SNGP baselines.")
     parser.add_argument('--dataset', choices=['wn18rr', 'fb15k237'], default='wn18rr',
                         help="Dataset to evaluate on.")
+    parser.add_argument(
+        '--lp-max-test',
+        type=int,
+        default=0,
+        help='Max test triples for link prediction sanity check (0 = full test set).',
+    )
     args = parser.parse_args()
 
     device = setup_device()
@@ -478,7 +495,14 @@ def main():
         model = BaseModel(n_ent, n_rel)
         model.precompute_coverage(train)
         model = train_model(model, train, device, epochs=30)
-        lp_results = evaluate_link_prediction(model, test, train, n_ent, device, max_test=500)
+        lp_results = evaluate_link_prediction(
+            model,
+            test,
+            train,
+            n_ent,
+            device,
+            max_test=args.lp_max_test,
+        )
         print(f"  MRR: {lp_results['mrr']:.3f}, Hits@10: {lp_results['hits@10']:.3f}, Hits@1: {lp_results['hits@1']:.3f}")
         all_results['link_prediction'] = lp_results
 

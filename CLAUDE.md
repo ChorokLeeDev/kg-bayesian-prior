@@ -21,6 +21,9 @@ pip install -e .  # Development mode
 python scripts/run_coverage_only_ablation.py
 python scripts/verify_theorem.py
 
+# Held-out relation experiment (breaks circularity critique)
+python scripts/run_held_out_relations.py  # FB15k-237 + YAGO3-10, 3 seeds
+
 # Full GPU experiments require Colab - see notebooks/colab_yago_full.ipynb
 
 # Compile paper
@@ -87,8 +90,10 @@ Relation-aware kernel computes: `K(i,j) = Σ_r σ_r² · exp(-L_r / ℓ_r²)`
 - `src/kernels/relation_aware.py` - Per-relation kernel implementation
 - `scripts/run_wn18rr_temporal.py` - Canonical experiment script (fixed CAGP+GPOnly with reparameterization sampling)
 - `scripts/test_cagp_fix_multiseed.py` - 3-seed x 3-dataset CAGP validation
+- `scripts/run_held_out_relations.py` - Held-out relation experiment (breaks circularity critique)
 - `configs/default.yaml` - Hydra config for experiments
 - `docs/FINDINGS.md` - Detailed research findings (updated to v3 results)
+- `docs/HELD_OUT_RELATIONS_EXPERIMENT.md` - Documentation for held-out relations experiment
 - `docs/theory/` - Theorem proofs
 
 ## Configuration

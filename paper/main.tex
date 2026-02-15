@@ -187,7 +187,7 @@ Table~\ref{tab:assumptions} quantifies violations (all values from the reparamet
 \end{tabular}
 \end{table}
 
-Assumptions (A1)--(A3) hold across datasets (with YAGO showing weaker A1 monotonicity at $\rho{=}{-}0.68$). (A4) is marginally violated on all three datasets (FB15k-237: $\Delta{=}1.10$, WN18RR: $\Delta{=}1.00$, YAGO: $\Delta{=}1.36$); when $\Delta \gtrsim 1$ a fraction of novel-context samples may be misranked, but the qualitative predictions---semantic fails on novel contexts, structural fails on some emerging entities, combination helps---remain valid.
+Assumptions (A1)--(A3) hold across datasets (with YAGO showing weaker A1 monotonicity at $\rho{=}{-}0.68$). (A4) is violated on all three datasets ($\Delta \geq 1.0$; FB15k-237: 1.10, WN18RR: 1.00, YAGO: 1.36), meaning the sufficient condition $\Delta < 1$ for perfect novel-context separation by $U_{\text{comb}}$ does not hold. Despite this, the qualitative predictions---semantic fails on novel contexts, structural fails on some emerging entities, and the combination helps---remain valid across all datasets. The assumptions are idealized sufficient conditions; the theorems provide directional insights whose predictions we validate empirically (Table~\ref{tab:temporal_ood}).
 
 \subsubsection{Empirical Verification of Assumption A3}
 \label{app:assumption_verification}
@@ -311,12 +311,13 @@ CAGP achieves 37--47\% ECE reduction over single signals. The decomposition prod
 \subsection{Selective Prediction}
 \label{app:selective}
 
-We evaluate selective prediction (abstaining on high-uncertainty queries) on FB15k-237 link prediction. The setup follows the standard selective prediction framework~\citep{geifman2017selective}: given a link prediction model that ranks candidate entities, we use each uncertainty method to rank test triples by predicted uncertainty and abstain from the top $k$\% (highest uncertainty). ``Accuracy'' is Hits@1 on the remaining $(100{-}k)$\% of queries, computed using the base DistMult model's entity rankings. We report results at 85\% coverage ($k{=}15$).
+We present an \emph{oracle analysis} of selective prediction (abstaining on high-uncertainty queries) on FB15k-237 link prediction, designed to illustrate the upper bound on error reduction achievable by each uncertainty signal. The setup follows the standard selective prediction framework~\citep{geifman2017selective}: given a link prediction model that ranks candidate entities, we use each uncertainty method to rank test triples by predicted uncertainty and abstain from the top $k$\% (highest uncertainty). ``Accuracy'' is Hits@1 on the remaining $(100{-}k)$\% of queries, computed using the base DistMult model's entity rankings. We report results at 85\% coverage ($k{=}15$).
+
+\paragraph{Oracle caveat.}
+The abstention threshold is selected on the test set; this is \emph{not} a deployable protocol but an oracle evaluation that quantifies the potential of each uncertainty signal for selective prediction. In a deployment setting, a held-out calibration set or conformal prediction framework~\citep{zhu2025certainty} would be required to set the threshold while guaranteeing a target coverage rate.
 
 \paragraph{Methodology details.}
 For each test triple $(h,r,?)$, the base model ranks all candidate tail entities by score $s(h,r,t')$. The ``correct'' prediction is Hits@1: whether the ground-truth $t$ is ranked first. Each uncertainty method produces $U(h,r,t)$ for the ground-truth triple; we abstain from the 15\% of triples with highest $U$. All methods share the same base model predictions---only the abstention ranking differs.
-
-The abstention threshold is selected on the test set to illustrate the \emph{potential} of uncertainty-guided selective prediction. In deployment, a held-out calibration set or conformal prediction framework would set the threshold to achieve a target coverage rate.
 
 \begin{table}[h]
 \centering
@@ -342,7 +343,7 @@ Abstaining on 15\% highest-uncertainty queries reduces errors by 43\% (78.4\% ac
 
 \begin{table}[h]
 \centering
-\caption{Generalization across architectures on FB15k-237. CAGP achieves consistent performance (0.959--0.963 AUROC) across DistMult, TransE, and ComplEx.}
+\caption{Generalization across architectures on FB15k-237 (standard OOD, random corruptions). CAGP achieves consistent performance (0.959--0.963 AUROC) across DistMult, TransE, and ComplEx.}
 \begin{tabular}{lccc}
 \toprule
 Base Model & $U_{\text{sem}}$ & $U_{\text{str}}$ & CAGP \\
@@ -399,7 +400,7 @@ Neither $U_{\text{sem}}$ nor the bilinear scorer achieves novel-context AUROC ab
 \label{app:discussion}
 
 \paragraph{Dataset-specific signal composition.}
-Table~\ref{tab:temporal_ood} reveals the optimal signal composition varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels. On YAGO3-10, structural uncertainty is strong ($U_{\text{str}}$ 0.84), while semantic uncertainty alone is moderate (0.60)---a similar pattern to WN18RR, where few relations limit GP expressiveness. CAGP improves over $U_{\text{str}}$ on all datasets by contributing semantic information on emerging entities: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO. The improvement is largest where single-signal emerging detection is weakest, consistent with the complementarity predicted by Theorem~\ref{thm:complementarity}. Note: without reparameterization sampling, entity variances collapse under KL regularization (see error analysis in \S\ref{sec:experiments}), reducing CAGP to a coverage-only detector. CAGP achieves 0.90--0.97 AUROC across static benchmarks and 0.993 on ICEWS14.
+Table~\ref{tab:temporal_ood} reveals the optimal signal composition varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels. On YAGO3-10, structural uncertainty is strong ($U_{\text{str}}$ 0.84), while semantic uncertainty alone is moderate (0.54)---a similar pattern to WN18RR, where few relations limit GP expressiveness. CAGP improves over $U_{\text{str}}$ on all datasets by contributing semantic information on emerging entities: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO. The improvement is largest where single-signal emerging detection is weakest, consistent with the complementarity predicted by Theorem~\ref{thm:complementarity}. Note: without reparameterization sampling, entity variances collapse under KL regularization (see error analysis in \S\ref{sec:experiments}), reducing CAGP to a coverage-only detector. CAGP achieves 0.90--0.97 AUROC across static benchmarks and 0.993 on ICEWS14.
 
 \paragraph{Why doesn't the embedding model discover coverage?}
 A natural question: if coverage is so effective, why don't learned embeddings discover it automatically? The impossibility theorem (Theorem~\ref{thm:impossibility}) provides the answer: standard link prediction objectives incentivize predictive accuracy, not relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias.
@@ -409,21 +410,21 @@ A natural question: if coverage is so effective, why don't learned embeddings di
 
 \begin{table}[h]
 \centering
-\caption{Temporal OOD detection AUPR (mean over 3 seeds). CAGP leads on all datasets. ICEWS14 baselines added.}
+\caption{Temporal OOD detection AUPR (mean over 3 seeds). Values are synchronized from \texttt{outputs/paper\_metrics.json}. YAGO baseline entries remain --- where runs are incomplete at freeze.}
 \small
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc}
 \toprule
-Method & WN18RR & FB15k-237 & ICEWS14 \\
+Method & WN18RR & FB15k-237 & YAGO & ICEWS14 \\
 \midrule
-UKGE & 0.641 & 0.325 & 0.399 \\
-Energy & 0.732 & 0.421 & 0.607 \\
-MC Dropout & --- & --- & 0.573 \\
-Deep Ensemble & --- & --- & 0.658 \\
-SNGP & --- & --- & 0.626 \\
+UKGE & 0.64 & 0.45 & 0.42 & 0.40 \\
+Energy & 0.72 & 0.56 & 0.46 & 0.61 \\
+MC Dropout & 0.67 & 0.52 & --- & 0.57 \\
+Deep Ensemble & 0.71 & 0.51 & --- & 0.66 \\
+SNGP & 0.79 & 0.46 & --- & 0.63 \\
 \midrule
-$U_{\text{sem}}$ & 0.789 & 0.412 & 0.820 \\
-$U_{\text{str}}$ & 0.898 & 0.917 & 0.992 \\
-CAGP & \textbf{0.965} & \textbf{0.970} & \textbf{0.992} \\
+$U_{\text{sem}}$ & 0.79 & 0.77 & 0.42 & 0.82 \\
+$U_{\text{str}}$ & 0.90 & 0.84 & 0.76 & 0.99 \\
+CAGP & \textbf{0.90} & \textbf{0.84} & \textbf{0.76} & \textbf{0.99} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -547,7 +548,7 @@ Dataset & Entities & Relations & Train & Valid & Test \\
 \midrule
 WN18RR & 40,943 & 11 & 86,835 & 3,034 & 3,134 \\
 FB15k-237 & 14,541 & 237 & 272,115 & 17,535 & 20,466 \\
-YAGO3-10 & 123,161 & 37 & 1,079,040 & 5,000 & 5,000 \\
+YAGO3-10 & 123,182 & 37 & 1,079,040 & 5,000 & 5,000 \\
 ICEWS14 & 7,128 & 230 & 63,685 & 13,823 & 13,222 \\
 \bottomrule
 \end{tabular}
@@ -635,7 +636,7 @@ Table & Dataset & Seeds & Source \\
 1 & WN18RR (baselines$^b$) & 42, 123, 456 & \texttt{run\_wn18rr\_missing\_baselines.py} \\
 1 & FB15k-237 (CAGP) & 42, 123, 456 & \texttt{test\_cagp\_fix\_multiseed.py} \\
 1 & FB15k-237 (baselines$^b$) & 42, 123, 456 & \texttt{run\_wn18rr\_missing\_baselines.py} \\
-1 & YAGO3-10$^c$ & 42, 123, 456 & \texttt{test\_cagp\_fix\_multiseed.py} \\
+1 & YAGO3-10$^c$ & 42, 123, 456 & \texttt{test\_cagp\_fix\_multiseed.py} + per-seed temporal JSONs \\
 1 & ICEWS14 (ours$^a$) & 42, 123, 456 & \texttt{run\_icews14\_temporal.py} \\
 1 & ICEWS14 (baselines$^b$) & 42, 123, 456 & \texttt{run\_icews14\_missing\_baselines.py} \\
 \ref{tab:icews14_ablation} & ICEWS14 & 42, 123, 456 & \texttt{icews14\_ablation.py} \\
@@ -655,7 +656,7 @@ Table & Dataset & Seeds & Source \\
 \scriptsize
 $^a$UKGE, Energy, $U_{\text{sem}}$, $U_{\text{str}}$, CAGP, RelCondVar. \quad
 $^b$MC Dropout, Deep Ensemble, SNGP. \quad
-$^c$All methods (3 seeds). CAGP/$U_{\text{sem}}$ use reparameterization fix.
+$^c$Reported YAGO methods use 3 seeds; MC Dropout/Deep Ensemble/SNGP are omitted at freeze (\texttt{---} in tables).
 \end{table}
 
 \subsection{Per-Seed Breakdowns}

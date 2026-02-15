@@ -25,10 +25,10 @@ The novel-context category is defined via the same coverage indicator $c(e,r)$ u
 
 \subsection{Uncertainty Signals}
 
-\textbf{Semantic uncertainty} from learned variance: $U_{\text{sem}}(h,r,t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)$ where $\bar{\sigma}^2_e$ is mean variance across dimensions.
+\textbf{Semantic uncertainty} (entity embedding variance) from learned variance: $U_{\text{sem}}(h,r,t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)$ where $\bar{\sigma}^2_e$ is mean variance across dimensions.
 In practice, $U_{\text{sem}}$ is computed as the mean diagonal variance of the entity embedding distribution: $U_{\text{sem}}(e) = \frac{1}{d}\sum_{j=1}^{d} \exp(\ell_{e,j})$, where $\ell_{e,j}$ are learned log-variance parameters. While a full GP posterior with the relation-aware kernel (Section~\ref{sec:background}) could provide richer uncertainty estimates, we find that even this simpler variational approximation, when combined with structural coverage, achieves strong OOD detection.
 
-\textbf{Structural uncertainty} from coverage: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0, 1, 2\}$.
+\textbf{Structural uncertainty} (coverage indicator) from coverage: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0, 1, 2\}$.
 
 $U_{\text{str}} \in \{0, 1, 2\}$ is discrete; $U_{\text{sem}}$ is continuous and rescaled to match (see \S\ref{sec:cagp}). Crucially, $U_{\text{sem}}$ is \emph{relation-agnostic}: it depends only on entity variances, not the query relation.
 
@@ -57,7 +57,7 @@ where $\epsilon$ measures the tightness of frequency matching between novel-cont
 
 \begin{theorem}[Complementarity of Uncertainty Signals]
 \label{thm:complementarity}
-Under assumptions A1--A6 (see Appendix~\ref{app:proof} for precise statements and robustness analysis):
+Under assumptions A1--A6 (sufficient conditions; see Appendix~\ref{app:proof} for precise statements and robustness analysis):
 \begin{enumerate}
     \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\epsilon)$ on novel contexts, where $\epsilon$ measures frequency distribution overlap
     \item[\textbf{(ii)}] Structural uncertainty achieves AUROC $< 1$ on emerging entities (imperfect separation)
@@ -75,6 +75,11 @@ Under assumptions A1--A6 (see Appendix~\ref{app:proof} for precise statements an
 \end{enumerate}
 \end{theorem}
 
+\begin{remark}[Role of assumptions]
+\label{rem:assumptions}
+Assumptions A1--A6 are idealized sufficient conditions that enable clean theoretical statements. In practice, several are only approximately satisfied---notably A4, which is violated on all three benchmarks (Appendix~\ref{app:assumptions}). Nevertheless, the qualitative predictions of Theorem~\ref{thm:complementarity} (semantic fails on novel contexts, structural is imperfect on emerging entities, and the combination helps) hold across all datasets and seeds, suggesting the theorem captures the correct structural insight even when its formal conditions do not strictly hold.
+\end{remark}
+
 \begin{remark}[Structural detection of novel contexts]
 \label{rem:novel_perfect}
 Structural uncertainty achieves AUROC $= 1$ on novel contexts by construction: novel contexts have $c(e,r)=0$ (Definition~\ref{def:ood}), giving $U_{\text{str}} \geq 1$, while ID has $U_{\text{str}} = 0$ (A2). The substantive claims are the \emph{impossibility} of achieving this with entity-level methods (Theorem~\ref{thm:impossibility}) and the \emph{empirical prevalence} of novel contexts (11--25\% of test triples).
@@ -88,12 +93,11 @@ Structural uncertainty achieves AUROC $= 1$ on novel contexts by construction: n
 Theorem~\ref{thm:complementarity} establishes that relation-specific uncertainty is necessary for detecting novel contexts. We propose CAGP, which explicitly combines semantic and structural uncertainty:
 
 \begin{equation}
-    U_{\text{CAGP}}(h,r,t) = \alpha \cdot U_{\text{sem}}(h,r,t) + (1-\alpha) \cdot U_{\text{str}}(h,r,t)
+    U_{\text{CAGP}}(h,r,t) = \alpha \cdot \tilde{U}_{\text{sem}}(h,r,t) + (1-\alpha) \cdot U_{\text{str}}(h,r,t)
     \label{eq:cagp}
 \end{equation}
 
-where $U_{\text{sem}}$ is the GP-based semantic uncertainty (entity variance), $U_{\text{str}}$ is the structural uncertainty (coverage), and $\alpha \in [0,1]$ is a mixing weight (set to $\alpha{=}0.5$; see sensitivity analysis in Appendix~\ref{app:alpha_sensitivity}).
-In Eq.~(\ref{eq:cagp}), we use the normalized variant $\tilde{U}_{\text{sem}}$, scaled so that semantic and structural components have comparable magnitude (normalization statistics computed over the training set).
+where $\tilde{U}_{\text{sem}}$ is the normalized GP-based semantic uncertainty (entity variance, rescaled to match the structural component's magnitude; details below), $U_{\text{str}}$ is the structural uncertainty (coverage), and $\alpha \in [0,1]$ is a mixing weight (set to $\alpha{=}0.5$; see sensitivity analysis in Appendix~\ref{app:alpha_sensitivity}).
 
 \paragraph{Implementation.}
 We fix $\alpha{=}0.5$ (equal weighting). While $\alpha$ could in principle be learned, the link prediction loss provides no gradient signal to the mixing weight because training triples have zero coverage uncertainty by construction---all observed entity-relation pairs are covered (Appendix~\ref{app:alpha_sensitivity}). Sensitivity analysis shows that AUROC is robust across $\alpha \in [0.05, 0.95]$, with 0.5 within 1pp of optimal on all datasets. Crucially, the scoring function uses \emph{reparameterization sampling}~\citep{kingma2014autoencoding}: during training, entity embeddings are sampled as $\mathbf{e} = \boldsymbol{\mu}_e + \boldsymbol{\sigma}_e \odot \boldsymbol{\epsilon}$, $\boldsymbol{\epsilon} \sim \mathcal{N}(0, I)$; at evaluation, we use the mean $\boldsymbol{\mu}_e$. This ensures the reconstruction loss provides gradients to the variance parameters, preventing KL-driven collapse (see error analysis in \S\ref{sec:experiments}). To ensure comparable scales, we normalize semantic uncertainty: $\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot \bar{U}_{\text{str}} / \bar{U}_{\text{sem}}$, where $\bar{U}_{\text{str}}$ and $\bar{U}_{\text{sem}}$ are means computed once over the training set.
@@ -122,3 +126,6 @@ The linear combination is intentionally simple---a single fixed scalar $\alpha$.
 
 \paragraph{Why explicit coverage?}
 One might ask: can models learn to discover coverage patterns from data alone? Our impossibility theorem (Theorem~\ref{thm:impossibility}) shows that standard link prediction objectives do not incentivize relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias. Note that coverage-based detection of novel contexts is perfect by construction (Remark~\ref{rem:circularity}); the empirical question is whether this category is prevalent enough to matter, which we validate in \S\ref{sec:experiments}.
+
+\paragraph{RelCondVar ablation.}
+As an ablation, we also evaluate \textbf{RelCondVar}, which replaces entity-level variance with a learned relation-conditioned variance $\sigma^2(e,r) = \text{MLP}([\mathbf{e}; \mathbf{r}])$ while retaining coverage ($\alpha{=}0.5$, fixed). This tests whether a richer, relation-aware variance model can substitute for explicit coverage---results in \S\ref{sec:experiments} show it cannot.
