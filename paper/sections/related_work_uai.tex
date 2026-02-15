@@ -10,6 +10,7 @@ While relation-aware scoring functions exist (R-GCN~\citep{schlichtkrull2018mode
 \paragraph{OOD Detection.}
 MC Dropout~\citep{gal2016dropout}, Deep Ensembles~\citep{lakshminarayanan2017simple}, and Energy-based methods~\citep{liu2020energy} capture model uncertainty but not structural observation patterns.
 Simple Neural Gaussian Process (SNGP)~\citep{liu2020simple} estimates distance to training data but remains relation-agnostic.
+Classification-oriented evidential approaches (e.g., \citep{sensoy2018evidential}) are not directly comparable to KG-tail OOD detection in this setup, so our empirical baseline set is the above methods plus SNGP.
 Graph Posterior Networks~\citep{stadler2021graph} propagate uncertainty through graphs but treat edges homogeneously.
 Classical feature-space methods (Mahalanobis distance~\citep{lee2018simple}, energy scores) assume continuous feature geometry; KGs' discrete combinatorial structure motivates our coverage-based alternative.
 In graph-structured data more broadly, GNNSafe~\citep{wu2023energy} applies energy-based detection to graph neural networks, while recent work explores spectral and topological signals for graph-level OOD detection. Our work differs by targeting the knowledge graph triple classification setting, where the relational structure creates a distinct challenge: entity-level signals conflate relation-specific contexts.

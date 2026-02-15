@@ -61,14 +61,14 @@ Under assumptions A1--A6 (sufficient conditions; see Appendix~\ref{app:proof} fo
 \begin{enumerate}
     \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\epsilon)$ on novel contexts, where $\epsilon$ measures frequency distribution overlap
     \item[\textbf{(ii)}] Structural uncertainty achieves AUROC $< 1$ on emerging entities (imperfect separation)
-    \item[\textbf{(iii)}] Let the OOD set be a mixture of emerging entities (fraction $\pi_e$) and novel contexts ($\pi_n = 1 - \pi_e$). The overall AUROC decomposes as:
+    \item[\textbf{(iii)}] Let the OOD set be a mixture of emerging entities (fraction $\pi_e$) and novel contexts ($\pi_n = 1 - \pi_e$). Under the AUROC pairwise-comparison convention used here, the decomposition is:
     \begin{equation}
-        \text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + \pi_n \cdot A_{\text{novel}}(U)
+        \text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + \pi_n \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}
         \label{eq:mixture_auroc}
     \end{equation}
-    and the synergy of $U_{\text{comb}} = \alpha U_{\text{sem}} + (1{-}\alpha) U_{\text{str}}$ over $U_{\text{str}}$ alone is:
+    where $\delta_{\text{tie}}$ is the finite-sample tie correction (zero under a continuous-score convention). The leading-order gain of $U_{\text{comb}} = \alpha U_{\text{sem}} + (1{-}\alpha) U_{\text{str}}$ over $U_{\text{str}}$ is:
     \begin{equation}
-        \text{AUROC}(U_{\text{comb}}) - \text{AUROC}(U_{\text{str}}) = \pi_e \cdot (A_{\text{emerge}}^{\text{comb}} - A_{\text{emerge}}^{\text{str}})
+        \text{AUROC}(U_{\text{comb}}) - \text{AUROC}(U_{\text{str}}) \approx \pi_e \cdot (A_{\text{emerge}}^{\text{comb}} - A_{\text{emerge}}^{\text{str}})
         \label{eq:synergy}
     \end{equation}
     which is positive whenever semantic uncertainty separates emerging entities better than structural does (A6, verified empirically).
@@ -85,7 +85,7 @@ Assumptions A1--A6 are idealized sufficient conditions that enable clean theoret
 Structural uncertainty achieves AUROC $= 1$ on novel contexts by construction: novel contexts have $c(e,r)=0$ (Definition~\ref{def:ood}), giving $U_{\text{str}} \geq 1$, while ID has $U_{\text{str}} = 0$ (A2). The substantive claims are the \emph{impossibility} of achieving this with entity-level methods (Theorem~\ref{thm:impossibility}) and the \emph{empirical prevalence} of novel contexts (11--25\% of test triples).
 \end{remark}
 
-\textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities---semantic uncertainty cannot distinguish them. Part (ii): Emerging entities are defined by low \emph{frequency}, but may still have \emph{coverage} for the specific query relation, making some indistinguishable from ID via coverage alone. Part (iii): Eq.~(\ref{eq:mixture_auroc}) follows from the Mann-Whitney U-statistic formulation of AUROC (AUROC $= P(U_{\text{OOD}} > U_{\text{ID}})$, decomposed by law of total probability). Since $A_{\text{novel}}(U_{\text{str}}) = 1$ (Remark~\ref{rem:novel_perfect}) and $A_{\text{novel}}(U_{\text{comb}}) = 1$ for $\alpha < 1/(1{+}\Delta)$, the novel-context terms cancel in Eq.~(\ref{eq:synergy}), and all synergy comes from emerging entities. Eq.~(\ref{eq:synergy}) predicts empirical results to within 0.01 AUROC on all three datasets (Appendix~\ref{app:proof}). Full proof in Appendix~\ref{app:proof}.
+\textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities---semantic uncertainty cannot distinguish them. Part (ii): Emerging entities are defined by low \emph{frequency}, but may still have \emph{coverage} for the specific query relation, making some indistinguishable from ID via coverage alone. Part (iii): Eq.~(\ref{eq:mixture_auroc}) follows from the Mann-Whitney U-statistic formulation of AUROC (AUROC $= P(U_{\text{OOD}} > U_{\text{ID}})$, decomposed by law of total probability and a fixed tie policy). Since $A_{\text{novel}}(U_{\text{str}}) = 1$ (Remark~\ref{rem:novel_perfect}) and $A_{\text{novel}}(U_{\text{comb}}) = 1$ for $\alpha < 1/(1{+}\Delta)$, the novel-context terms cancel in Eq.~(\ref{eq:synergy}) and the decomposition term is dominated by emerging entities. Eq.~(\ref{eq:synergy}) predicts empirical results to within 0.01 AUROC on all three datasets (Appendix~\ref{app:proof}). Full proof in Appendix~\ref{app:proof}.
 
 \subsection{CAGP}
 \label{sec:cagp}
@@ -128,4 +128,4 @@ The linear combination is intentionally simple---a single fixed scalar $\alpha$.
 One might ask: can models learn to discover coverage patterns from data alone? Our impossibility theorem (Theorem~\ref{thm:impossibility}) shows that standard link prediction objectives do not incentivize relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias. Note that coverage-based detection of novel contexts is perfect by construction (Remark~\ref{rem:circularity}); the empirical question is whether this category is prevalent enough to matter, which we validate in \S\ref{sec:experiments}.
 
 \paragraph{RelCondVar ablation.}
-As an ablation, we also evaluate \textbf{RelCondVar}, which replaces entity-level variance with a learned relation-conditioned variance $\sigma^2(e,r) = \text{MLP}([\mathbf{e}; \mathbf{r}])$ while retaining coverage ($\alpha{=}0.5$, fixed). This tests whether a richer, relation-aware variance model can substitute for explicit coverage---results in \S\ref{sec:experiments} show it cannot.
+As an ablation, we also evaluate \textbf{RelCondVar}, which replaces entity-level variance with a learned relation-conditioned variance $\sigma^2(e,r) = \text{MLP}([\mathbf{e}; \mathbf{r}])$ while retaining coverage ($\alpha{=}0.5$, fixed). We report it as an alternative baseline rather than the primary method; CAGP is the default method used in all headline results because it is parameter-free relative to RelCondVar and the two methods show similar performance on three of four benchmarks.
