@@ -9,7 +9,7 @@ But these variances are \emph{relation-agnostic}: entity $e$ receives a single v
 Consider $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
 The model assigns low variance (well-observed), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions.
 
-This causes systematic failures (Figure~\ref{fig:main_results}): existing probabilistic methods achieve only 0.38--0.80 AUROC on temporal OOD (emerging entities and novel relational contexts), while our decomposition-based approach reaches 0.90--0.99. The key non-circular validation is ICEWS14 with ground-truth temporal splits (0.993 AUROC).
+This causes systematic failures (Figure~\ref{fig:main_results}): probabilistic methods achieve only 0.38--0.80 AUROC on temporal OOD, while our decomposition-based approach reaches 0.90--0.99. ICEWS14 and ICEWS18 with ground-truth timestamps are the non-circular validations (0.993 and 0.987 AUROC).
 
 \paragraph{Two OOD Types.}
 We identify two distinct scenarios:
@@ -19,15 +19,15 @@ We identify two distinct scenarios:
 \paragraph{Contributions.}
 We diagnose why probabilistic KG embeddings fail at temporal OOD detection and show how to fix them.
 
-\textbf{(1) Impossibility result:} We prove that \emph{any} relation-agnostic uncertainty estimator---one whose output depends only on entity-level statistics---achieves near-random detection on novel relational contexts (Theorem~\ref{thm:impossibility}). This directly explains the poor performance of UKGE, Energy, MC Dropout, Deep Ensembles, and SNGP (0.38--0.80 AUROC) on temporal distribution shift.
-\textbf{(2) Decomposition with mixture AUROC:} We decompose KG uncertainty into \emph{semantic} (entity variance) and \emph{structural} (binary entity-relation co-occurrence) components and prove their complementary failure modes (Theorem~\ref{thm:complementarity}): semantic uncertainty detects emerging entities but is blind to novel contexts; structural uncertainty detects novel contexts perfectly but degrades on emerging entities. An exact mixture AUROC decomposition predicts overall performance to within 0.002 on all datasets.
-\textbf{(3) Minimal realization validates the framework:} We construct CAGP, an intentionally simple model that combines semantic and structural signals, to validate the decomposition. On ICEWS14 with ground-truth temporal splits---the only non-circular test of temporal OOD---CAGP achieves 0.993 AUROC, confirming the framework works beyond static benchmark artifacts. On WN18RR~\citep{dettmers2018convolutional}, FB15k-237~\citep{toutanova2015observed}, and YAGO3-10~\citep{mahdisoltani2015yago3}, the decomposition structure is verified: CAGP achieves 0.79--0.91 AUROC on emerging entities (+8--12pp over coverage alone), precisely where the theory predicts synergy, while overall performance (0.90--0.97) matches the mixture formula.
+\textbf{(1) Impossibility result:} We prove that any relation-agnostic uncertainty estimator---whose output uses only entity-level statistics---is near-random on novel relational contexts (Theorem~\ref{thm:impossibility}). This explains the weak temporal-OOD performance of UKGE, Energy, MC Dropout, Deep Ensembles, and SNGP (0.38--0.80 AUROC).
+\textbf{(2) Decomposition with mixture AUROC:} We split KG uncertainty into \emph{semantic} (entity variance) and \emph{structural} (entity--relation co-occurrence) components, with complementary failure modes (Theorem~\ref{thm:complementarity}): semantic uncertainty is effective on emerging entities but weak on novel contexts; structural uncertainty is strong on novel contexts but imperfect on emerging entities. An exact mixture AUROC decomposition predicts overall results within 0.002 on all datasets.
+\textbf{(3) Minimal realization validates the framework:} We construct CAGP, which combines semantic and structural signals, to test the decomposition. On ICEWS14/18 temporal splits, CAGP reaches 0.99 AUROC, confirming the framework beyond static artifacts. On WN18RR~\citep{dettmers2018convolutional}, FB15k-237~\citep{toutanova2015observed}, and YAGO3-10~\citep{mahdisoltani2015yago3}, CAGP reaches 0.79--0.91 AUROC on emerging entities (+8--12pp over coverage alone), while overall AUROC (0.90--0.97) matches the mixture formula.
 \textbf{(4) Variance collapse diagnosis:} We identify a subtle failure mode in variational KG embeddings: when the scoring function ignores variance parameters, KL regularization collapses all entity variances to a uniform value. Reparameterization sampling in the scoring function prevents this collapse, enabling meaningful semantic uncertainty. This diagnosis applies broadly to probabilistic KG embedding methods.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.75\textwidth]{figures/fig1_main_results.pdf}
 
-\caption{Temporal OOD detection on FB15k-237~\citep{toutanova2015observed} (AUROC). Existing probabilistic methods achieve 0.42--0.63; CAGP reaches 0.97. The pattern holds across all four benchmarks (Table~\ref{tab:temporal_ood}).}
+\caption{Temporal OOD detection on FB15k-237~\citep{toutanova2015observed} (AUROC). Existing probabilistic methods achieve 0.42--0.63; CAGP reaches 0.97. The pattern holds across all evaluated benchmarks (Table~\ref{tab:temporal_ood}).}
 \label{fig:main_results}
 \end{figure*}

@@ -26,9 +26,12 @@ The novel-context category is defined via the same coverage indicator $c(e,r)$ u
 \subsection{Uncertainty Signals}
 
 \textbf{Semantic uncertainty} (entity embedding variance) from learned variance: $U_{\text{sem}}(h,r,t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)$ where $\bar{\sigma}^2_e$ is mean variance across dimensions.
-In practice, $U_{\text{sem}}$ is computed as the mean diagonal variance of the entity embedding distribution: $U_{\text{sem}}(e) = \frac{1}{d}\sum_{j=1}^{d} \exp(\ell_{e,j})$, where $\ell_{e,j}$ are learned log-variance parameters. While a full GP posterior with the relation-aware kernel (Section~\ref{sec:background}) could provide richer uncertainty estimates, we find that even this simpler variational approximation, when combined with structural coverage, achieves strong OOD detection.
+In practice, $U_{\text{sem}}$ is the mean diagonal variance of the entity embedding posterior:
+$U_{\text{sem}}(e) = \frac{1}{d}\sum_{j=1}^{d} \exp(\ell_{e,j})$,
+where $\ell_{e,j}$ are learned log-variance parameters. This is a standard relation-agnostic variational embedding, not a full Gaussian-process posterior; we evaluate it here because it is the common baseline used in temporal-OOD KG uncertainty work and is sufficient when combined with explicit coverage.
 
 \textbf{Structural uncertainty} (coverage indicator) from coverage: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0, 1, 2\}$.
+\textbf{Equivalent rule view:} $U_{\text{str}}$ is a deterministic coverage rule (no learned parameters): it is 0 iff both entity-relation pairs were observed in training, and 1 or 2 whenever at least one pair is unseen.
 
 $U_{\text{str}} \in \{0, 1, 2\}$ is discrete; $U_{\text{sem}}$ is continuous and rescaled to match (see \S\ref{sec:cagp}). Crucially, $U_{\text{sem}}$ is \emph{relation-agnostic}: it depends only on entity variances, not the query relation.
 
@@ -68,8 +71,12 @@ Under assumptions A1--A6 (sufficient conditions; see Appendix~\ref{app:proof} fo
     \end{equation}
     where $\delta_{\text{tie}}$ is the finite-sample tie correction (zero under a continuous-score convention). The leading-order gain of $U_{\text{comb}} = \alpha U_{\text{sem}} + (1{-}\alpha) U_{\text{str}}$ over $U_{\text{str}}$ is:
     \begin{equation}
-        \text{AUROC}(U_{\text{comb}}) - \text{AUROC}(U_{\text{str}}) \approx \pi_e \cdot (A_{\text{emerge}}^{\text{comb}} - A_{\text{emerge}}^{\text{str}})
-        \label{eq:synergy}
+    \begin{split}
+    \text{AUROC}(U_{\text{comb}})
+    -\text{AUROC}(U_{\text{str}}) \approx \pi_e \cdot \\
+    \left(A_{\text{emerge}}^{\text{comb}}-A_{\text{emerge}}^{\text{str}}\right)
+    \end{split}
+    \label{eq:synergy}
     \end{equation}
     which is positive whenever semantic uncertainty separates emerging entities better than structural does (A6, verified empirically).
 \end{enumerate}
@@ -128,4 +135,4 @@ The linear combination is intentionally simple---a single fixed scalar $\alpha$.
 One might ask: can models learn to discover coverage patterns from data alone? Our impossibility theorem (Theorem~\ref{thm:impossibility}) shows that standard link prediction objectives do not incentivize relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias. Note that coverage-based detection of novel contexts is perfect by construction (Remark~\ref{rem:circularity}); the empirical question is whether this category is prevalent enough to matter, which we validate in \S\ref{sec:experiments}.
 
 \paragraph{RelCondVar ablation.}
-As an ablation, we also evaluate \textbf{RelCondVar}, which replaces entity-level variance with a learned relation-conditioned variance $\sigma^2(e,r) = \text{MLP}([\mathbf{e}; \mathbf{r}])$ while retaining coverage ($\alpha{=}0.5$, fixed). We report it as an alternative baseline rather than the primary method; CAGP is the default method used in all headline results because it is parameter-free relative to RelCondVar and the two methods show similar performance on three of four benchmarks.
+As an ablation, we also evaluate \textbf{RelCondVar}, which replaces entity-level variance with a learned relation-conditioned variance $\sigma^2(e,r) = \text{MLP}([\mathbf{e}; \mathbf{r}])$ while retaining coverage ($\alpha{=}0.5$, fixed). We evaluate it as a training-signal control: when implemented with variance-aware scoring, it learns, but its best observed behavior does not consistently improve over explicit structural coverage and is not used as the headline method.

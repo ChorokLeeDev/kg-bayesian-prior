@@ -73,6 +73,58 @@ def _load_triples(
     return triples, entity_to_id, relation_to_id
 
 
+def _load_temporal_triples(
+    path: Path,
+    entity_to_id: Optional[Dict[str, int]] = None,
+    relation_to_id: Optional[Dict[str, int]] = None,
+):
+    """
+    Load temporal KG triples from files in the ICEWS format:
+    head<TAB>relation<TAB>tail<TAB>timestamp<TAB>...
+
+    Supports either integer or string node/edge IDs.
+    """
+    if entity_to_id is None:
+        entity_to_id = {}
+    if relation_to_id is None:
+        relation_to_id = {}
+
+    triples = []
+    timestamps = []
+
+    with open(path) as f:
+        for line in f:
+            parts = line.strip().split('\t')
+            if len(parts) < 4:
+                continue
+
+            h_raw, r_raw, t_raw, ts_raw = parts[0], parts[1], parts[2], parts[3]
+
+            # Robust to either int IDs (ICEWS14/18) or mapped string IDs.
+            try:
+                h = int(h_raw)
+            except ValueError:
+                h = entity_to_id.setdefault(h_raw, len(entity_to_id))
+            try:
+                r = int(r_raw)
+            except ValueError:
+                r = relation_to_id.setdefault(r_raw, len(relation_to_id))
+            try:
+                t = int(t_raw)
+            except ValueError:
+                t = entity_to_id.setdefault(t_raw, len(entity_to_id))
+
+            try:
+                ts = int(ts_raw)
+            except ValueError:
+                continue
+
+            triples.append([h, r, t])
+            timestamps.append(ts)
+
+    return np.array(triples, dtype=int), np.array(timestamps, dtype=int), entity_to_id, relation_to_id
+
+
 def _download_fb15k237(data_dir: Path):
     """Download FB15k-237 dataset."""
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -451,6 +503,83 @@ def _download_icews14(data_dir: Path):
             _download_file(url, dest, f"Downloading {fname}")
 
     print("ICEWS14 download complete!")
+
+
+def load_icews18(data_dir: Optional[Path] = None) -> Tuple[KGDataset, KGDataset, KGDataset]:
+    """
+    Load ICEWS18 dataset (temporal knowledge graph).
+
+    ICEWS18 contains temporal events with numeric IDs and timestamps.
+    Format per line: subject_id  relation_id  object_id  timestamp_id  (optional extras).
+
+    Returns:
+        Tuple of (train_dataset, valid_dataset, test_dataset)
+        Each dataset's triples are (h, r, t) with timestamps stored separately.
+    """
+    if data_dir is None:
+        data_dir = DATA_DIR / "icews18"
+    else:
+        data_dir = Path(data_dir)
+
+    train_path = data_dir / "train.txt"
+    stat_path = data_dir / "stat.txt"
+
+    if not train_path.exists():
+        print("ICEWS18 not found. Downloading...")
+        _download_icews18(data_dir)
+
+    with open(stat_path) as f:
+        parts = f.readline().strip().split('\t')
+        num_entities = int(parts[0])
+        num_relations = int(parts[1])
+
+    train_triples, train_ts, e2i, r2i = _load_temporal_triples(
+        data_dir / "train.txt",
+        entity_to_id={},
+        relation_to_id={},
+    )
+    valid_triples, valid_ts, _, _ = _load_temporal_triples(
+        data_dir / "valid.txt",
+        entity_to_id=e2i,
+        relation_to_id=r2i,
+    )
+    test_triples, test_ts, _, _ = _load_temporal_triples(
+        data_dir / "test.txt",
+        entity_to_id=e2i,
+        relation_to_id=r2i,
+    )
+
+    # Defensive: ensure all IDs are in range.
+    all_triples = np.concatenate([train_triples, valid_triples, test_triples])
+    actual_n_ent = max(num_entities, all_triples[:, 0].max() + 1, all_triples[:, 2].max() + 1)
+    actual_n_rel = max(num_relations, all_triples[:, 1].max() + 1)
+
+    train_ds = KGDataset(train_triples, actual_n_ent, actual_n_rel)
+    valid_ds = KGDataset(valid_triples, actual_n_ent, actual_n_rel)
+    test_ds = KGDataset(test_triples, actual_n_ent, actual_n_rel)
+
+    train_ds.timestamps = train_ts
+    valid_ds.timestamps = valid_ts
+    test_ds.timestamps = test_ts
+
+    return train_ds, valid_ds, test_ds
+
+
+def _download_icews18(data_dir: Path):
+    """Download ICEWS18 dataset from TiRGN repository."""
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    base_url = "https://raw.githubusercontent.com/Liyyy2122/TiRGN/main/data/ICEWS18"
+
+    for fname in ["train.txt", "test.txt", "valid.txt", "stat.txt"]:
+        url = f"{base_url}/{fname}"
+        dest = data_dir / fname
+
+        if not dest.exists():
+            print(f"Downloading {fname}...")
+            _download_file(url, dest, f"Downloading {fname}")
+
+    print("ICEWS18 download complete!")
 
 
 def _create_sample_data(data_dir: Path):

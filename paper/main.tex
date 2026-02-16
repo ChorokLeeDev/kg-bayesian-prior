@@ -19,6 +19,11 @@
 \usepackage{subcaption}
 \usepackage{xcolor}
 \usepackage{bm}
+\setlength{\emergencystretch}{1em}
+\hbadness=10000
+\vbadness=10000
+\tolerance=3000
+\emergencystretch=3em
 
 % Theorem environments
 \newtheorem{proposition}{Proposition}
@@ -47,28 +52,40 @@
 \maketitle
 
 \begin{abstract}
+\begingroup\sloppy
 \input{sections/abstract_uai}
+\endgroup
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
+\begingroup\sloppy
 \input{sections/introduction_uai}
+\endgroup
 
 \section{Related Work}
 \label{sec:related}
+\begingroup\sloppy
 \input{sections/related_work_uai}
+\endgroup
 
 \section{Background}
 \label{sec:background}
+\begingroup\sloppy
 \input{sections/background}
+\endgroup
 
 \section{Method}
 \label{sec:method}
+\begingroup\sloppy
 \input{sections/method_uai_v2}
+\endgroup
 
 \section{Experiments}
 \label{sec:experiments}
+\begingroup\sloppy
 \input{sections/experiments_uai}
+\endgroup
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -82,7 +99,12 @@
     We thank the anonymous reviewers for their constructive feedback.
 \end{acknowledgements}
 
+\begingroup
+\sloppy
+\setlength{\emergencystretch}{4em}
+\raggedright
 \bibliography{references}
+\endgroup
 
 \newpage
 
@@ -166,7 +188,7 @@ Table~\ref{tab:assumptions} quantifies violations (all values from the reparamet
 \subsection{Assumption Verification}
 \label{app:assumptions}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Empirical verification of theorem assumptions: variance-frequency monotonicity (A1), bounded semantic gap (A4), non-degenerate coverage (A5), and semantic separation (A6). A2 (ID coverage) is definitional and included for completeness.}
 \label{tab:assumptions}
@@ -214,7 +236,7 @@ Representative results (3-seed mean): on WN18RR, $\alpha{=}0$ yields 0.859 (cove
 
 On ICEWS14, coverage dominates ($>$96\% of temporal OOD has $U_{\text{str}} > 0$), so any $\alpha < 0.9$ achieves $>$0.99 AUROC.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \includegraphics[width=0.7\linewidth]{figures/fig3_alpha_sensitivity.pdf}
 \caption{Alpha sensitivity: AUROC vs.\ mixing weight $\alpha$ on WN18RR, FB15k-237, and YAGO3-10 (3-seed mean $\pm$ std). Performance is robust across $\alpha \in [0.05, 0.95]$, degrading only at the two extremes ($\alpha{=}0$: coverage only; $\alpha{=}1$: semantic only). The broad plateau supports using a fixed $\alpha{=}0.5$ without tuning.}
@@ -229,7 +251,7 @@ We fix $\alpha{=}0.5$ as the default (Figure~\ref{fig:alpha_sensitivity}). No va
 
 We validate the mixture AUROC decomposition (Eq.~\ref{eq:mixture_auroc}) by comparing predicted and observed AUROC at varying emerging-to-novel ratios. No retraining is performed; we resample from per-triple uncertainties and verify that $\text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + (1{-}\pi_e) \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}$ holds to within 0.01 on all datasets.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Oracle combination gain over best single signal at varying emerging/(emerging+novel) ratios. The combination outperforms at all mixed proportions, validating Theorem~\ref{thm:complementarity}(iii).}
 \label{tab:mixture}
@@ -257,7 +279,7 @@ We compute per-category AUROC from per-triple uncertainties and verify the syner
 \subsection{Binary vs Continuous Coverage}
 \label{app:coverage_ablation}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Binary vs continuous coverage on novel-context OOD (FB15k-237). Binary achieves AUROC = 1.0 (by construction; see Remark~\ref{rem:circularity}) while continuous variants fail (AUROC = 0.56--0.59).}
 \label{tab:coverage_ablation}
@@ -288,7 +310,7 @@ On datasets with more emerging entities (e.g., YAGO3-10), the structural signal 
 \subsection{Calibration Analysis}
 \label{app:calibration}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Calibration metrics on FB15k-237. ECE = Expected Calibration Error (lower is better).}
 \begin{tabular}{lcc}
@@ -319,7 +341,7 @@ The abstention threshold is selected on the test set; this is \emph{not} a deplo
 \paragraph{Methodology details.}
 For each test triple $(h,r,?)$, the base model ranks all candidate tail entities by score $s(h,r,t')$. The ``correct'' prediction is Hits@1: whether the ground-truth $t$ is ranked first. Each uncertainty method produces $U(h,r,t)$ for the ground-truth triple; we abstain from the 15\% of triples with highest $U$. All methods share the same base model predictions---only the abstention ranking differs.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Selective prediction on FB15k-237. Systems answer 85\% of queries. Accuracy = Hits@1 on non-abstained triples. Error reduction relative to no-abstention baseline.}
 \begin{tabular}{lcc}
@@ -341,7 +363,7 @@ Abstaining on 15\% highest-uncertainty queries reduces errors by 43\% (78.4\% ac
 \subsection{Architecture Generalization}
 \label{app:architectures}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Generalization across architectures on FB15k-237 (standard OOD, random corruptions). CAGP achieves consistent performance (0.959--0.963 AUROC) across DistMult, TransE, and ComplEx.}
 \begin{tabular}{lccc}
@@ -362,7 +384,7 @@ The decomposition is architecture-agnostic, achieving $\sim$0.96 AUROC across Di
 
 To test whether relation-conditioned scoring improves entity-level OOD detection, we replace DistMult's element-wise product with a bilinear scorer $h^\top W_r t$, where $W_r = \sum_{b=1}^{B} c_{rb} \mathbf{B}_b$ uses basis decomposition ($B{=}10$ bases). Entity embeddings retain the same variational structure (mean + logvar with reparameterization sampling). Uncertainty remains entity-level: $U(h,r,t) = (\exp(\text{logvar}_h) + \exp(\text{logvar}_t))/2$---identical to $U_{\text{sem}}$, with $r$ unused.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Bilinear scoring vs.\ entity-level baselines on temporal OOD (3-seed mean). Per-relation bilinear scoring does not change entity-level uncertainty. Neither $U_{\text{sem}}$ nor Bilinear achieves novel-context AUROC above 0.55, consistent with Theorem~\ref{thm:impossibility}. Adding coverage (Bilinear+CAGP) recovers to match standard CAGP.}
 \label{tab:bilinear}
@@ -389,7 +411,7 @@ Neither $U_{\text{sem}}$ nor the bilinear scorer achieves novel-context AUROC ab
 \subsection{Uncertainty Distribution Visualization}
 \label{app:distributions}
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \includegraphics[width=\linewidth]{figures/fig2_complementarity.pdf}
 \caption{Uncertainty distributions on FB15k-237, illustrating why neither signal alone suffices. \textbf{Top row} ($U_{\text{sem}}$): semantic uncertainty overlaps heavily between ID and emerging (AUC=0.62) and is \emph{below random} on novel contexts (AUC=0.34)---high-frequency entities have low variance regardless of relational experience. \textbf{Bottom row} ($U_{\text{str}}$): structural uncertainty perfectly separates novel contexts (AUC=1.00) but ${\sim}44\%$ of emerging entities have $U_{\text{str}}{=}0$ (covered for the query relation), making them indistinguishable from ID (AUC=0.78). CAGP combines both signals to achieve 0.97 overall.}
@@ -400,7 +422,7 @@ Neither $U_{\text{sem}}$ nor the bilinear scorer achieves novel-context AUROC ab
 \label{app:discussion}
 
 \paragraph{Dataset-specific signal composition.}
-Table~\ref{tab:temporal_ood} reveals the optimal signal composition varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels. On YAGO3-10, structural uncertainty remains the stronger single-signal contributor ($U_{\text{str}}$ 0.84), while semantic uncertainty alone is moderate (0.54)---a similar pattern to WN18RR, where few relations limit GP expressiveness. CAGP improves over $U_{\text{str}}$ on all datasets by contributing semantic information on emerging entities: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO. The improvement is largest where single-signal emerging detection is weakest, consistent with the complementarity predicted by Theorem~\ref{thm:complementarity}. Note: without reparameterization sampling, entity variances collapse under KL regularization (see error analysis in \S\ref{sec:experiments}), reducing CAGP to a coverage-only detector. CAGP achieves 0.90--0.97 AUROC across static benchmarks and 0.993 on ICEWS14.
+Table~\ref{tab:temporal_ood} reveals the optimal signal composition varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels. On YAGO3-10, structural uncertainty remains the stronger single-signal contributor ($U_{\text{str}}$ 0.84), while semantic uncertainty alone is moderate (0.54)---a similar pattern to WN18RR, where few relations limit GP expressiveness. CAGP improves over $U_{\text{str}}$ on all datasets by contributing semantic information on emerging entities: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO. The improvement is largest where single-signal emerging detection is weakest, consistent with the complementarity predicted by Theorem~\ref{thm:complementarity}. Note: without reparameterization sampling, entity variances collapse under KL regularization (see error analysis in \S\ref{sec:experiments}), reducing CAGP to a coverage-only detector. CAGP achieves 0.90--0.97 AUROC across static benchmarks and 0.993/0.987 on ICEWS14/18.
 
 \paragraph{Why doesn't the embedding model discover coverage?}
 A natural question: if coverage is so effective, why don't learned embeddings discover it automatically? The impossibility theorem (Theorem~\ref{thm:impossibility}) provides the answer: standard link prediction objectives incentivize predictive accuracy, not relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias.
@@ -408,9 +430,9 @@ A natural question: if coverage is so effective, why don't learned embeddings di
 \subsection{AUPR Results}
 \label{app:aupr}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
-\caption{Temporal OOD detection AUPR (mean over 3 seeds). Values are synchronized from \texttt{outputs/paper\_metrics.json}.}
+\caption{Temporal OOD detection AUPR (mean over 3 seeds).}
 \small
 \begin{tabular}{lcccc}
 \toprule
@@ -434,7 +456,7 @@ CAGP & \textbf{0.90} & \textbf{0.84} & \textbf{0.76} & \textbf{0.99} \\
 
 We analyzed CAGP's failure modes on FB15k-237 standard OOD detection (random tail corruption, 20,000 ID + 20,000 OOD samples).
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Error analysis on FB15k-237 standard OOD. FP = false positive (ID flagged as OOD), FN = false negative (OOD missed).}
 \label{tab:error_analysis}
@@ -539,7 +561,7 @@ We set $\tau$ to the 25th percentile of entity frequencies. In preliminary exper
 \subsection{Dataset Statistics}
 \label{app:datasets}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Dataset statistics: number of entities, relations, and triples in train/validation/test splits.}
 \begin{tabular}{lccccc}
@@ -550,6 +572,7 @@ WN18RR & 40,943 & 11 & 86,835 & 3,034 & 3,134 \\
 FB15k-237 & 14,541 & 237 & 272,115 & 17,535 & 20,466 \\
 YAGO3-10 & 123,182 & 37 & 1,079,040 & 5,000 & 5,000 \\
 ICEWS14 & 7,128 & 230 & 63,685 & 13,823 & 13,222 \\
+ICEWS18 & 23,033 & 256 & 373,018 & 45,995 & 49,545 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -574,7 +597,7 @@ The novel-context category (2,982 triples, 22.6\%) has zero overlap with exact t
 \paragraph{Strict split validation.}
 To rule out transductive artifacts, we construct a \emph{strict test set} by removing all exact duplicates and inverse overlaps (58.5\% removed: 715 exact-only + 2,555 inverse-only + 4,466 both; remaining 5,486 = 1,223 emerging + 1,886 novel + 2,377 ID). Table~\ref{tab:strict_split} shows that CAGP's AUROC \emph{improves} from 0.993 to 0.995, while Energy drops from 0.59 to 0.50, ruling out train/test memorization artifacts.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{ICEWS14: original vs strict split (3-seed mean$\pm$std). Strict split removes all exact+inverse overlaps (58.5\% of test triples). CAGP improves; Energy drops.}
 \label{tab:strict_split}
@@ -597,7 +620,7 @@ $U_{\text{str}}$ & .993$\pm$.000 & .995$\pm$.000 \\
 
 To confirm that CAGP's high AUROC on ICEWS14 is driven by the specific entity-relation structure rather than statistical artifacts, we evaluate five ablation variants (Table~\ref{tab:icews14_ablation}). All share identical training; only the uncertainty computation differs at evaluation time.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{ICEWS14 ablation (3-seed mean$\pm$std). Removing or corrupting the structural signal degrades AUROC to near-random, confirming that the specific entity-relation coverage structure drives detection.}
 \label{tab:icews14_ablation}
@@ -624,7 +647,7 @@ Random coverage & .502$\pm$.004 & .809$\pm$.219 & .502$\pm$.004 \\
 \subsection{Reproducibility: Result Provenance}
 \label{app:provenance}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Mapping of paper tables to experimental sources. All code is included in the supplementary material.}
 \small
@@ -639,6 +662,8 @@ Table & Dataset & Seeds & Source \\
 1 & YAGO3-10$^c$ & 42, 123, 456 & \texttt{test\_cagp\_fix\_multiseed.py} + per-seed temporal JSONs \\
 1 & ICEWS14 (ours$^a$) & 42, 123, 456 & \texttt{run\_icews14\_temporal.py} \\
 1 & ICEWS14 (baselines$^b$) & 42, 123, 456 & \texttt{run\_icews14\_missing\_baselines.py} \\
+1 & ICEWS18 (ours$^a$) & 42, 123, 456 & \texttt{run\_icews14\_temporal.py --dataset icews18} \\
+1 & ICEWS18 (baselines$^b$) & 42, 123, 456 & \texttt{run\_icews14\_temporal.py --dataset icews18} \\
 \ref{tab:icews14_ablation} & ICEWS14 & 42, 123, 456 & \texttt{icews14\_ablation.py} \\
 \ref{tab:strict_split} & ICEWS14 & 42, 123, 456 & \texttt{icews14\_strict\_split.py} \\
 \midrule
@@ -662,7 +687,7 @@ $^c$Reported YAGO methods use 3 seeds; all baseline values in tables are from co
 \subsection{Per-Seed Breakdowns}
 \label{app:per_seed}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Per-seed CAGP temporal OOD AUROC (overall and emerging-entity). Coverage ($U_{\text{str}}$) is deterministic given the data split, so all seeds yield identical values.}
 \small

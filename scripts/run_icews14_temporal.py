@@ -22,6 +22,7 @@ sys.path.insert(0, str(project_root))
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import argparse
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 from sklearn.metrics import roc_auc_score, average_precision_score
@@ -29,7 +30,7 @@ import json
 from collections import defaultdict
 import time
 
-from src.data.loaders import load_icews14
+from src.data.loaders import load_icews14, load_icews18
 
 
 def setup_device():
@@ -426,13 +427,43 @@ def evaluate_temporal_real(model, train, test, n_ent, device):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Temporal OOD experiments on ICEWS14/ICEWS18 temporal splits."
+    )
+    parser.add_argument(
+        '--dataset',
+        choices=['icews14', 'icews18'],
+        default='icews14',
+        help="Temporal dataset to evaluate (icews14 or icews18).",
+    )
+    parser.add_argument('--epochs', type=int, default=30)
+    parser.add_argument('--lr', type=float, default=1e-3)
+    parser.add_argument(
+        '--output',
+        type=str,
+        default=None,
+        help="Output JSON path (defaults to temporal results for selected dataset).",
+    )
+    args = parser.parse_args()
+
+    if args.output is None:
+        args.output = str(
+            project_root / 'outputs' / f"{args.dataset}_temporal_results.json"
+        )
+
     device = setup_device()
     print(f"Device: {device}")
-    print(f"\n{'='*60}")
-    print(f"  ICEWS14 - Ground-Truth Temporal OOD")
-    print(f"{'='*60}")
 
-    train_ds, _, test_ds = load_icews14()
+    dataset_loaders = {
+        'icews14': (load_icews14, 'ICEWS14'),
+        'icews18': (load_icews18, 'ICEWS18'),
+    }
+    loader, ds_name = dataset_loaders[args.dataset]
+    train_ds, _, test_ds = loader()
+
+    print(f"\n{'='*60}")
+    print(f"  {ds_name} - Ground-Truth Temporal OOD")
+    print(f"{'='*60}")
     train = train_ds.triples
     test = test_ds.triples
     n_ent = train_ds.num_entities
@@ -465,7 +496,7 @@ def main():
             t0 = time.time()
             model = cls(n_ent, n_rel)
             model.precompute_coverage(train)
-            model = train_model(model, train, device, epochs=30)
+            model = train_model(model, train, device, epochs=args.epochs, lr=args.lr)
 
             if hasattr(model, 'calibrate_normalization'):
                 model.calibrate_normalization(test, device)
@@ -504,7 +535,7 @@ def main():
 
     # Also store dataset stats
     all_seed_results['dataset_info'] = {
-        'name': 'ICEWS14',
+        'name': ds_name,
         'num_entities': int(n_ent),
         'num_relations': int(n_rel),
         'train_triples': int(len(train)),
@@ -513,7 +544,7 @@ def main():
     }
 
     # Save results
-    out = project_root / 'outputs' / 'icews14_temporal_results.json'
+    out = Path(args.output)
     out.parent.mkdir(exist_ok=True)
     with open(out, 'w') as f:
         json.dump(all_seed_results, f, indent=2, default=float)
@@ -521,7 +552,7 @@ def main():
 
     # Print summary table
     print("\n" + "=" * 70)
-    print("ICEWS14 SUMMARY (Ground-Truth Temporal)")
+    print(f"{ds_name} SUMMARY (Ground-Truth Temporal)")
     print("=" * 70)
     print(f"  {'Method':<15} {'Overall AUROC':>16} {'Emerging':>12} {'Novel Ctx':>12}")
     print(f"  {'-'*15} {'-'*16} {'-'*12} {'-'*12}")

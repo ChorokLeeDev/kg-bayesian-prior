@@ -25,7 +25,12 @@ import json
 from collections import defaultdict
 import time
 
-from src.data.loaders import load_fb15k237, load_wn18rr, load_yago310
+from src.data.loaders import (
+    load_fb15k237,
+    load_wn18rr,
+    load_icews18,
+    load_yago310,
+)
 
 
 def setup_device():
@@ -155,13 +160,14 @@ class CAGP(nn.Module):
 
 
 class RelCondVar(nn.Module):
-    def __init__(self, num_entities, num_relations, dim=100):
+    def __init__(self, num_entities, num_relations, dim=100, use_reparam=False):
         super().__init__()
         self.num_entities = num_entities
         self.num_relations = num_relations
         self.entity_mean = nn.Parameter(torch.randn(num_entities, dim) * 0.1)
         self.relation_emb = nn.Embedding(num_relations, dim)
         self.register_buffer('coverage', torch.zeros(num_entities, num_relations))
+        self.use_reparam = use_reparam
         self._norm_stats = None  # cached normalization statistics
 
         self.var_net = nn.Sequential(
@@ -176,7 +182,18 @@ class RelCondVar(nn.Module):
         self.entity_base_logvar = nn.Parameter(torch.zeros(num_entities) - 1.0)
 
     def forward(self, h, r, t):
-        return (self.entity_mean[h] * self.relation_emb(r) * self.entity_mean[t]).sum(-1)
+        h_emb = self.entity_mean[h]
+        t_emb = self.entity_mean[t]
+
+        if self.training and self.use_reparam:
+            h_scale = torch.sqrt(self.get_entity_relation_var(h, r))
+            t_scale = torch.sqrt(self.get_entity_relation_var(t, r))
+            h_noise = torch.randn_like(h_emb)
+            t_noise = torch.randn_like(t_emb)
+            h_emb = h_emb + h_scale.unsqueeze(-1) * h_noise
+            t_emb = t_emb + t_scale.unsqueeze(-1) * t_noise
+
+        return (h_emb * self.relation_emb(r) * t_emb).sum(-1)
 
     def get_entity_relation_var(self, e, r):
         e_emb = self.entity_mean[e]
@@ -474,12 +491,14 @@ def run_dataset(
     ds_name,
     loader,
     device,
+    models=None,
     seeds=None,
     epochs=30,
     lr=0.001,
     kl_beta=0.001,
     unc_weight=0.1,
     emerging_operator='leq',
+    relcondvar_reparam=False,
 ):
     """Run all models on a dataset across multiple seeds."""
     if seeds is None:
@@ -497,6 +516,11 @@ def run_dataset(
 
     print(f"Entities: {n_ent}, Relations: {n_rel}")
     print(f"Train: {len(train)}, Test: {len(test)}")
+
+    if models is None:
+        models = ['UKGE', 'Energy', 'GPOnly', 'CoverageOnly', 'CAGP', 'RelCondVar']
+    else:
+        models = [m for m in models if m]
 
     all_seed_results = {}
 
@@ -516,10 +540,14 @@ def run_dataset(
             'RelCondVar': RelCondVar,
         }
 
-        for name, cls in model_classes.items():
+        for name in models:
+            cls = model_classes[name]
             print(f"\n  {name}:")
             t0 = time.time()
-            model = cls(n_ent, n_rel)
+            if name == 'RelCondVar':
+                model = cls(n_ent, n_rel, use_reparam=relcondvar_reparam)
+            else:
+                model = cls(n_ent, n_rel)
             model.precompute_coverage(train)
             model = train_model(model, train, device, epochs=epochs, lr=lr, kl_beta=kl_beta, unc_weight=unc_weight)
 
@@ -605,12 +633,18 @@ def run_dataset(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Temporal OOD experiments on WN18RR/FB15k-237.")
+    parser = argparse.ArgumentParser(description="Temporal OOD experiments on WN18RR/FB15k-237/ICEWS18.")
     parser.add_argument(
         '--datasets',
         type=str,
         default='wn18rr,fb15k237',
-        help="Comma-separated datasets: wn18rr,fb15k237",
+        help="Comma-separated datasets: wn18rr,fb15k237,icews18.",
+    )
+    parser.add_argument(
+        '--models',
+        type=str,
+        default='UKGE,Energy,GPOnly,CoverageOnly,CAGP,RelCondVar',
+        help="Comma-separated models to evaluate.",
     )
     parser.add_argument(
         '--seeds',
@@ -624,6 +658,11 @@ def main():
     parser.add_argument('--unc-weight', type=float, default=0.1,
                         help="Weight for uncertainty margin loss (pos_unc < neg_unc).")
     parser.add_argument(
+        '--relcondvar-reparam',
+        action='store_true',
+        help="Enable reparameterization sampling in RelCondVar scoring during training.",
+    )
+    parser.add_argument(
         '--emerging-operator',
         choices=['leq', 'lt'],
         default='leq',
@@ -633,6 +672,7 @@ def main():
         '--output',
         type=str,
         default=str(project_root / 'outputs' / 'wn18rr_temporal_results.json'),
+        help="Output JSON path.",
     )
     args = parser.parse_args()
 
@@ -642,10 +682,12 @@ def main():
     results = {}
     seeds = [int(s.strip()) for s in args.seeds.split(',') if s.strip()]
     requested = [d.strip().lower() for d in args.datasets.split(',') if d.strip()]
+    requested_models = [m.strip() for m in args.models.split(',') if m.strip()]
 
     dataset_loaders = {
         'wn18rr': ('WN18RR', load_wn18rr),
         'fb15k237': ('FB15k-237', load_fb15k237),
+        'icews18': ('ICEWS18', load_icews18),
         'yago310': ('YAGO3-10', load_yago310),
     }
 
@@ -657,12 +699,14 @@ def main():
             pretty_name,
             loader,
             device,
+            models=requested_models,
             seeds=seeds,
             epochs=args.epochs,
             lr=args.lr,
             kl_beta=args.kl_beta,
             unc_weight=args.unc_weight,
             emerging_operator=args.emerging_operator,
+            relcondvar_reparam=args.relcondvar_reparam,
         )
 
     # Save results

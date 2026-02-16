@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS = ROOT / "outputs"
 
 SEEDS = [42, 123, 456]
-DATASETS = ["wn18rr", "fb15k237", "yago", "icews14"]
+DATASETS = ["wn18rr", "fb15k237", "yago", "icews14", "icews18"]
 
 METHODS = [
     "UKGE",
@@ -178,6 +178,48 @@ def _collect_from_fixed_multiseed(
     )
 
 
+def _collect_reparam_relcondvar_for_fb15k237(path: Path, method: str) -> dict:
+    if not path.exists():
+        return _build_metric_block(
+            seed_values={metric: {} for metric in TEMPORAL_METRICS},
+            source_files=[str(path)],
+            source_kind="temporal_results_reparam",
+            provenance_tag="fb15k237_reparam_missing",
+            status_override="not_evaluated",
+            allow_lt3_seeds=True,
+        )
+
+    blob = _load_json(path)
+    dataset_blob = blob.get("fb15k237", {})
+    if not dataset_blob:
+        return _build_metric_block(
+            seed_values={metric: {} for metric in TEMPORAL_METRICS},
+            source_files=[str(path)],
+            source_kind="temporal_results_reparam",
+            provenance_tag="fb15k237_reparam_missing",
+            status_override="not_evaluated",
+            allow_lt3_seeds=True,
+        )
+
+    metrics = _collect_from_seed_dict(
+        seed_dict=dataset_blob,
+        method=method,
+        source_file=path,
+        source_kind="temporal_results_reparam",
+        provenance_tag="fb15k237_temporal_relcondvar_reparam",
+    )
+    if all(m["status"] == "not_evaluated" for m in metrics.values()):
+        metrics = _build_metric_block(
+            seed_values={metric: {} for metric in TEMPORAL_METRICS},
+            source_files=[str(path)],
+            source_kind="temporal_results_reparam",
+            provenance_tag="fb15k237_reparam_missing",
+            status_override="not_evaluated",
+            allow_lt3_seeds=True,
+        )
+    return metrics
+
+
 def _load_temporal_dataset_blob(dataset: str) -> Tuple[dict, List[str]]:
     """
     Return dataset blob and list of source files used.
@@ -194,6 +236,8 @@ def _load_temporal_dataset_blob(dataset: str) -> Tuple[dict, List[str]]:
         ]
     elif dataset == "icews14":
         candidates = [OUTPUTS / "icews14_temporal_results.json"]
+    elif dataset == "icews18":
+        candidates = [OUTPUTS / "icews18_temporal_results.json"]
     else:
         return {}, []
 
@@ -203,6 +247,8 @@ def _load_temporal_dataset_blob(dataset: str) -> Tuple[dict, List[str]]:
         data = _load_json(candidate)
         if dataset in data and isinstance(data[dataset], dict):
             return data[dataset], [str(candidate)]
+        if dataset == "icews18" and "seed_42" in data:
+            return data, [str(candidate)]
         # ICEWS file can be top-level seed map.
         if dataset == "icews14" and "seed_42" in data:
             return data, [str(candidate)]
@@ -291,6 +337,15 @@ def _collect_from_yago_per_seed(method: str) -> dict:
 
 
 def _collect_for_dataset_method(dataset: str, method: str) -> dict:
+    if dataset == "fb15k237" and method == "RelCondVar":
+        reparam_path = OUTPUTS / "fb15k237_temporal_relcondvar_reparam.json"
+        reparam_metrics = _collect_reparam_relcondvar_for_fb15k237(
+            reparam_path,
+            method=method,
+        )
+        if reparam_metrics["overall_auroc"]["status"] == "ok":
+            return reparam_metrics
+
     # Precedence rules from the implementation plan.
     if dataset in {"wn18rr", "fb15k237"} and method in {"CAGP", "CoverageOnly"}:
         path = OUTPUTS / f"{dataset}_fixed_cagp_multiseed.json"
@@ -346,6 +401,52 @@ def _collect_for_dataset_method(dataset: str, method: str) -> dict:
     return _collect_from_temporal_results(dataset=dataset, method=method, provenance_tag=provenance)
 
 
+def _collect_standard_ood(dataset: str, method: str) -> dict:
+    if dataset not in {"wn18rr", "fb15k237"}:
+        return {
+            "status": "not_evaluated",
+            "source_files": [],
+            "source_kind": "canonical_temporal_results",
+            "provenance_tag": "standard_ood_not_applicable",
+        }
+
+    path = OUTPUTS / "canonical_temporal_results.json"
+    if not path.exists():
+        return {
+            "status": "not_available",
+            "source_files": [str(path)],
+            "source_kind": "canonical_temporal_results",
+            "provenance_tag": "standard_ood_missing_source",
+            "value": None,
+            "std": None,
+            "status_reason": "missing_source",
+        }
+
+    data = _load_json(path)
+    ds_blob = data.get(dataset, {})
+    summary = ds_blob.get("summary", {})
+    method_blob = summary.get(method, {})
+    if not method_blob or method_blob.get("random_auroc_mean") is None:
+        return {
+            "status": "not_evaluated",
+            "source_files": [str(path)],
+            "source_kind": "canonical_temporal_results",
+            "provenance_tag": "standard_ood_not_available",
+            "value": None,
+            "std": None,
+            "status_reason": "missing_method_or_value",
+        }
+
+    return {
+        "status": "ok",
+        "source_files": [str(path)],
+        "source_kind": "canonical_temporal_results",
+        "provenance_tag": "standard_ood_from_canonical",
+        "value": float(method_blob["random_auroc_mean"]),
+        "std": float(method_blob.get("random_auroc_std", 0.0)),
+    }
+
+
 def _summary_consistency_checks(result: dict, tolerance: float = 1e-9) -> List[str]:
     """
     Validate metric "value" equals recomputed mean(seed_values) exactly (within tolerance).
@@ -374,15 +475,21 @@ def _build_paper_summary(datasets_blob: dict) -> dict:
         "temporal_ood": {},
         "complementarity": {},
         "aupr": {},
+        "standard_ood": {},
+        "method_comparison": {},
         "not_evaluated": {},
     }
     for dataset, ds_blob in datasets_blob.items():
         summary["temporal_ood"][dataset] = {}
         summary["complementarity"][dataset] = {}
         summary["aupr"][dataset] = {}
+        summary["standard_ood"][dataset] = {}
+        summary["method_comparison"][dataset] = {}
         summary["not_evaluated"][dataset] = {}
         for method, method_blob in ds_blob["methods"].items():
             metrics = method_blob["metrics"]
+            standard_block = _collect_standard_ood(dataset=dataset, method=method)
+            standard_status = standard_block["status"]
             summary["temporal_ood"][dataset][method] = {
                 "emerging_auroc": _round2(metrics["emerging_auroc"]["value"]),
                 "overall_auroc": _round2(metrics["overall_auroc"]["value"]),
@@ -401,6 +508,26 @@ def _build_paper_summary(datasets_blob: dict) -> dict:
                 "overall_aupr_std": _round2(metrics["overall_aupr"]["std"]),
                 "status": metrics["overall_aupr"]["status"],
             }
+            if standard_status == "ok":
+                summary["standard_ood"][dataset][method] = {
+                    "standard_auroc": _round2(standard_block["value"]),
+                    "standard_auroc_std": _round2(standard_block["std"]),
+                    "status": standard_status,
+                }
+            if dataset == "fb15k237":
+                if (
+                    standard_status == "ok"
+                    and metrics["overall_auroc"]["status"] == "ok"
+                ):
+                    summary["method_comparison"][dataset][method] = {
+                        "standard_auroc": _round2(standard_block["value"]),
+                        "temporal_auroc": _round2(metrics["overall_auroc"]["value"]),
+                        "status": "ok",
+                    }
+                else:
+                    summary["method_comparison"][dataset][method] = {
+                        "status": "not_evaluated",
+                    }
             if metrics["overall_auroc"]["status"] != "ok":
                 summary["not_evaluated"][dataset][method] = {
                     "reason": "missing_or_incomplete_source_data",

@@ -134,7 +134,7 @@ def _extract_temporal_table_values(tex: str) -> Dict[str, Dict[str, Dict[str, fl
         "CAGP": "CAGP",
         "RelCondVar": "RelCondVar",
     }
-    datasets = ["wn18rr", "fb15k237", "yago", "icews14"]
+    datasets = ["wn18rr", "fb15k237", "yago", "icews14", "icews18"]
 
     out: Dict[str, Dict[str, Dict[str, float]]] = {d: {} for d in datasets}
     for raw_label, method in method_map.items():
@@ -152,9 +152,11 @@ def _extract_temporal_table_values(tex: str) -> Dict[str, Dict[str, Dict[str, fl
                 values.append(
                     _parse_tex_number(num_match.group(1)) if num_match else None
                 )
-            # Temporal table must have 4 datasets x 2 metrics = 8 values.
-            if len(values) != 8:
+
+            # Temporal table must have 5 datasets x 2 metrics = 10 values.
+            if len(values) != 10:
                 continue
+
             for i, dataset in enumerate(datasets):
                 em = values[2 * i]
                 overall = values[2 * i + 1]
@@ -184,18 +186,23 @@ def _extract_aupr_table_values(main_tex: str) -> Dict[str, Dict[str, float]]:
         "$U_{\\text{str}}$": "CoverageOnly",
         "CAGP": "CAGP",
     }
-    datasets = ["wn18rr", "fb15k237", "icews14"]
+    datasets = ["wn18rr", "fb15k237", "yago", "icews14", "icews18"]
     out: Dict[str, Dict[str, float]] = {d: {} for d in datasets}
+
+    table_match = re.search(
+        r"Temporal OOD detection AUPR.*?\\begin\{tabular\}\{l[^\}]*\}(.*?)\\end\{tabular\}",
+        main_tex,
+        flags=re.DOTALL,
+    )
+    if not table_match:
+        return out
 
     for raw_label, method in method_map.items():
         row_re = re.compile(rf"^{re.escape(raw_label)}\s*&(.+?)\\\\", re.MULTILINE)
         parsed = False
-        for m in row_re.finditer(main_tex):
+        for m in row_re.finditer(table_match.group(1)):
             row = m.group(1)
             cells = [c.strip() for c in row.split("&")]
-            # AUPR table has 3 dataset columns.
-            if len(cells) != 3:
-                continue
             for dataset, cell in zip(datasets, cells):
                 if cell == "---":
                     continue
