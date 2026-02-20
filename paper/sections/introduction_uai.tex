@@ -4,7 +4,7 @@ Knowledge graph (KG) embeddings enable efficient reasoning over structured knowl
 As KGs evolve---new entities emerge, existing entities appear in novel relationships---robust uncertainty quantification becomes critical.
 
 \paragraph{The Relation-Agnostic Limitation.}
-Recent probabilistic methods learn distributions over embeddings~\citep{chen2019embedding,chen2021probabilistic,Chen2021PERM}, where rare entities have higher variance.
+Recent probabilistic methods learn distributions over embeddings~\citep{chen2019embedding,chen2021probabilistic,choudhary2021perm}, where rare entities have higher variance.
 But these variances are \emph{relation-agnostic}: entity $e$ receives a single variance $\sigma^2_e$ regardless of relational context.
 Consider $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
 The model assigns low variance (well-observed), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions.

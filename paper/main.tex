@@ -445,11 +445,13 @@ Deep Ensemble & 0.71 & 0.51 & 0.40 & 0.66 \\
 SNGP & 0.79 & 0.46 & 0.48 & 0.63 \\
 \midrule
 $U_{\text{sem}}$ & 0.79 & 0.77 & 0.42 & 0.82 \\
-$U_{\text{str}}$ & 0.90 & 0.84 & 0.76 & 0.99 \\
-CAGP & \textbf{0.90} & \textbf{0.84} & \textbf{0.76} & \textbf{0.99} \\
+$U_{\text{str}}$ & 0.90 & 0.92 & 0.76 & 0.99 \\
+CAGP & \textbf{0.90} & \textbf{0.92} & \textbf{0.76} & \textbf{0.99} \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\textbf{Why CAGP = $U_{\text{str}}$ on AUPR.} AUPR rewards high-precision retrieval. On all static benchmarks, novel-context triples ($c(h,r)=0$ or $c(t,r)=0$) receive coverage uncertainty $\geq 1$ and are ranked above all emerging-entity triples in both $U_{\text{str}}$ and CAGP. Since novel contexts constitute the most precisely-detected positives, the PR curve's high-precision region is identical for both methods. CAGP's improvement over $U_{\text{str}}$ is concentrated in the lower-precision emerging-entity regime (recovered by the GP signal), which contributes minimally to AUPR. This confirms that AUPR and AUROC measure complementary aspects: AUROC reflects the full emerging-entity gain (+8--12pp), while AUPR is dominated by coverage-driven novel-context detection.
 
 \subsection{Error Analysis}
 \label{app:error_analysis}

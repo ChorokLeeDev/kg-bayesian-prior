@@ -1,7 +1,7 @@
 % Related Work - UAI version (condensed)
 
 \paragraph{Probabilistic KG Embeddings.}
-UKGE~\citep{chen2019embedding} associates confidence scores with triples; BEUrRE~\citep{chen2021probabilistic} uses box embeddings where volume indicates uncertainty; GP-KGE~\citep{Chen2021PERM} learns Gaussian distributions over entities.
+UKGE~\citep{chen2019embedding} associates confidence scores with triples; BEUrRE~\citep{chen2021probabilistic} uses box embeddings where volume indicates uncertainty; GP-KGE~\citep{choudhary2021perm} learns Gaussian distributions over entities.
 Earlier, KG2E~\citep{he2015learning} represented both entities and relations as Gaussian distributions, capturing per-relation uncertainty through covariance matrices; however, KG2E targets link prediction rather than OOD detection, and its learned covariances remain entity-level statistics that do not explicitly track whether specific entity-relation combinations have been observed.
 All these methods share the limitation we identify: learned variances are relation-agnostic.
 Despite being trained on data containing entity-relation co-occurrence patterns, these methods do not autonomously learn relation-specific uncertainty, necessitating explicit decomposition.
@@ -16,7 +16,7 @@ Classical feature-space methods (Mahalanobis distance~\citep{lee2018simple}, ene
 In graph-structured data more broadly, GNNSafe~\citep{wu2023energy} applies energy-based detection to graph neural networks, while recent work explores spectral and topological signals for graph-level OOD detection. Our work differs by targeting the knowledge graph triple classification setting, where the relational structure creates a distinct challenge: entity-level signals conflate relation-specific contexts.
 
 \paragraph{Temporal Knowledge Graphs.}
-Temporal KG methods extend embedding models with time-aware scoring functions for link prediction over evolving graphs~\citep{garcia2018learning,lacroix2020tensor,lacroix2021tntcomplex}. These methods model \emph{when} facts hold but do not address uncertainty quantification or OOD detection---the problem we target. Our simulated temporal splits test whether methods can flag unseen entity-relation patterns, complementing temporal KG research.
+Temporal KG methods extend embedding models with time-aware scoring functions for link prediction over evolving graphs~\citep{garcia2018learning,lacroix2020tensor,lacroix2021tntcomplex}. These methods model \emph{when} facts hold but do not address uncertainty quantification or OOD detection---the problem we target. Our ground-truth temporal evaluation uses ICEWS14 and ICEWS18, which are included in the TGB 2.0 benchmark suite for temporal KGs~\citep{gastinger2024tgb2}. Our simulated temporal splits test whether methods can flag unseen entity-relation patterns, complementing temporal KG research.
 Recent conformal prediction approaches~\citep{zhu2025certainty} provide coverage guarantees for answer sets but do not decompose the sources of uncertainty; our decomposition complements such approaches by identifying \emph{which} uncertainty type---semantic or structural---drives each prediction's unreliability.
 Uncertainty-aware KG reasoning has also been studied from a trustworthy AI perspective~\citep{ni2025trustworthy}, which targets confidence calibration for downstream reasoning tasks. Our work differs by targeting OOD \emph{detection} rather than calibration, and by providing a decomposition theorem identifying why entity-level methods fail on relational novelty.
 
