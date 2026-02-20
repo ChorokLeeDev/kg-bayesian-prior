@@ -644,6 +644,63 @@ Random coverage & .502$\pm$.004 & .809$\pm$.219 & .502$\pm$.004 \\
 (3)~Random binary coverage at matched density (1.7\%) yields 0.50, ruling out density-driven performance.
 (4)~Coverage alone ($\alpha{=}0$) matches full CAGP at 0.99 overall, indicating structural (coverage) signal is the primary driver on temporal OOD, while semantic uncertainty contributes complementary value on emerging-entity slices (0.975 vs 1.00).
 
+\subsection{ICEWS18 Per-Subset Breakdown}
+\label{app:icews18_subsets}
+
+Table~\ref{tab:icews18_subsets} reports ICEWS18 results broken down by OOD category (emerging entities, novel contexts, and overall). These results use the same evaluation pipeline and chronological train/test split as ICEWS14. Split sizes: 2,747 emerging, 8,587 novel contexts, 38,211 ID.
+
+\begin{table}[ht]
+\centering
+\caption{ICEWS18 per-subset AUROC (3-seed mean). $U_{\text{str}}$ and CAGP are identical across all subsets: coverage fully saturates detection and the semantic signal adds no lift, confirming a ceiling effect on this benchmark.}
+\label{tab:icews18_subsets}
+\small
+\begin{tabular}{lccc}
+\toprule
+Method & Emerging & Novel Ctx & Overall \\
+\midrule
+UKGE & .808 & .757 & .776 \\
+Energy & .924 & .809 & .865 \\
+GPOnly ($U_{\text{sem}}$) & .985 & .828 & .908 \\
+\midrule
+$U_{\text{str}}$ & .976 & 1.000 & .987 \\
+CAGP & .976 & 1.000 & .987 \\
+\bottomrule
+\multicolumn{4}{l}{\scriptsize Std $< 0.001$ across all 3 seeds for all methods.}
+\end{tabular}
+\end{table}
+
+\paragraph{Discussion.}
+The identical CAGP and $U_{\text{str}}$ values arise because ICEWS18 temporal OOD is dominated by novel-context triples ($>$96\% have $U_{\text{str}} > 0$), leaving the emerging-entity slice (2,747 triples) with near-perfect coverage due to the recurrent event structure of geopolitical KGs. The semantic signal ($U_{\text{sem}}$) achieves 0.985 on this slice alone---but combining with coverage does not improve beyond what coverage already achieves. This is the ceiling effect discussed in the main text: CAGP's decomposition adds analytical clarity but not additional detection power on ICEWS18.
+
+\subsection{Uncertainty Margin Loss Ablation}
+\label{app:margin_ablation}
+
+As disclosed in the main text, models with learned variance (GPOnly, CAGP, RelCondVar) receive an uncertainty margin loss during training that encourages higher uncertainty on negative samples. Baselines without variance parameters (UKGE, Energy, CoverageOnly) cannot use this loss because they have no variance parameter to optimize. This section quantifies the effect of the margin loss on GPOnly and CAGP.
+
+\paragraph{Setup.}
+We train GPOnly and CAGP on WN18RR with seed 42, setting $w_{\text{unc}}{=}0$ (no margin loss) versus the default $w_{\text{unc}}{=}0.1$. All other hyperparameters are identical.
+
+\begin{table}[ht]
+\centering
+\caption{Effect of uncertainty margin loss on WN18RR temporal OOD AUROC (seed 42). The margin loss has negligible effect on both GPOnly and CAGP, confirming it does not create a meaningful performance advantage over baselines.}
+\label{tab:margin_ablation}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Method & $w_{\text{unc}}$ & Emerging & Novel Ctx & Overall \\
+\midrule
+GPOnly & 0.0 (ablation) & .663 & .405 & .620 \\
+GPOnly & 0.1 (default) & .663 & .405 & .621 \\
+\midrule
+CAGP & 0.0 (ablation) & .912 & 1.000 & .927 \\
+CAGP & 0.1 (default) & .911 & 1.000 & .926 \\
+\bottomrule
+\multicolumn{5}{l}{\scriptsize Differences $< 0.001$; seed 42 only.}
+\end{tabular}
+\end{table}
+
+The margin loss has negligible effect on temporal OOD AUROC for both models ($\Delta < 0.001$). This holds because: (1)~for CAGP, coverage already provides the dominant structural signal and the margin loss cannot add information beyond what binary coverage conveys; (2)~for GPOnly, frequency-based variance already captures the primary signal for emerging entities. The training signal asymmetry is therefore a structural transparency disclosure, not a driver of the reported performance advantage. Coverage ($U_{\text{str}}$) is deterministic and unaffected by the margin loss, so the disclosed asymmetry does not affect the key comparison between CAGP and $U_{\text{str}}$.
+
 \subsection{Reproducibility: Result Provenance}
 \label{app:provenance}
 
@@ -689,24 +746,24 @@ $^c$Reported YAGO methods use 3 seeds; all baseline values in tables are from co
 
 \begin{table}[ht]
 \centering
-\caption{Per-seed CAGP temporal OOD AUROC (overall and emerging-entity). Coverage ($U_{\text{str}}$) is deterministic given the data split, so all seeds yield identical values.}
+\caption{Per-seed CAGP temporal OOD AUROC (overall and emerging-entity). Coverage ($U_{\text{str}}$) is deterministic given the data split, so all seeds yield identical values. WN18RR uses 5 seeds; FB15k-237 and YAGO3-10 use 3 seeds.}
 \small
-\begin{tabular}{llccc}
+\begin{tabular}{llccccc}
 \toprule
-Dataset & Metric & Seed 42 & Seed 123 & Seed 456 \\
+Dataset & Metric & Seed 42 & Seed 123 & Seed 456 & Seed 789 & Seed 1000 \\
 \midrule
-WN18RR & Overall & .926 & .917 & .926 \\
-       & Emerging & .911 & .900 & .911 \\
+WN18RR & Overall & .926 & .917 & .926 & .918 & .928 \\
+       & Emerging & .911 & .900 & .911 & .902 & .913 \\
 \midrule
-FB15k-237 & Overall & .966 & .967 & .967 \\
-          & Emerging & .888 & .889 & .890 \\
+FB15k-237 & Overall & .966 & .967 & .967 & --- & --- \\
+          & Emerging & .888 & .889 & .890 & --- & --- \\
 \midrule
-YAGO3-10 & Overall & .894 & .902 & .902 \\
-         & Emerging & .779 & .796 & .797 \\
+YAGO3-10 & Overall & .894 & .902 & .902 & --- & --- \\
+         & Emerging & .779 & .796 & .797 & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Variance across seeds is small: WN18RR std$=$0.004, FB15k-237 std$<$0.001, YAGO std$=$0.004. The variation arises entirely from the learned entity variances (different random initializations), since coverage is deterministic. Novel-context AUROC is 1.000 for all seeds on all datasets (by construction; Remark~\ref{rem:circularity}).
+Variance across seeds is small: WN18RR 5-seed std$=$0.005, FB15k-237 std$<$0.001, YAGO std$=$0.004. The variation arises entirely from the learned entity variances (different random initializations), since coverage is deterministic. Novel-context AUROC is 1.000 for all seeds on all datasets (by construction; Remark~\ref{rem:circularity}).
 
 \end{document}
