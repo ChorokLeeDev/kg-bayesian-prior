@@ -9,7 +9,7 @@ But these variances are \emph{relation-agnostic}: entity $e$ receives a single v
 Consider $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
 The model assigns low variance (well-observed), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions.
 
-This causes systematic failures (Figure~\ref{fig:main_results}): probabilistic methods achieve only 0.38--0.80 AUROC on temporal OOD, while our decomposition-based approach reaches 0.90--0.99. On the non-circular ground-truth benchmarks (ICEWS14 and ICEWS18, where OOD is defined by time rather than coverage), CAGP achieves 0.993 and 0.987 AUROC respectively.
+This causes systematic failures (Figure~\ref{fig:main_results}): probabilistic methods achieve only 0.35--0.87 AUROC on temporal OOD, while our decomposition-based approach reaches 0.90--0.99. On the non-circular ground-truth benchmarks (ICEWS14 and ICEWS18, where OOD is defined by time rather than coverage), CAGP achieves 0.993 and 0.987 AUROC respectively.
 
 \paragraph{Two OOD Types.}
 We identify two distinct scenarios:
@@ -19,7 +19,7 @@ We identify two distinct scenarios:
 \paragraph{Contributions.}
 We diagnose why probabilistic KG embeddings fail at temporal OOD detection and show how to fix them.
 
-\textbf{(1) Impossibility result:} We prove that any relation-agnostic uncertainty estimator---whose output uses only entity-level statistics---is near-random on novel relational contexts (Theorem~\ref{thm:impossibility}). This explains the weak temporal-OOD performance of UKGE, Energy, MC Dropout, Deep Ensembles, and SNGP (0.38--0.80 AUROC).
+\textbf{(1) Impossibility result:} We prove that any relation-agnostic uncertainty estimator---whose output uses only entity-level statistics---is near-random on novel relational contexts (Theorem~\ref{thm:impossibility}). This explains the weak temporal-OOD performance of UKGE, Energy, MC Dropout, Deep Ensembles, and SNGP (0.35--0.87 AUROC).
 \textbf{(2) Decomposition with mixture AUROC:} We split KG uncertainty into \emph{semantic} (entity variance) and \emph{structural} (entity--relation co-occurrence) components, with complementary failure modes (Theorem~\ref{thm:complementarity}): semantic uncertainty is effective on emerging entities but weak on novel contexts; structural uncertainty is strong on novel contexts but imperfect on emerging entities. An exact mixture AUROC decomposition predicts overall results within 0.002 on all datasets.
 \textbf{(3) Minimal realization validates the framework:} We construct CAGP, which combines semantic and structural signals, to test the decomposition. On ICEWS14/18 (ground-truth temporal splits, no circularity), CAGP reaches 0.99 AUROC, confirming the framework beyond static artifacts; coverage is the dominant signal, with semantic variance recovering residual emerging-entity errors (+2.5pp on ICEWS14). On simulated-OOD benchmarks (WN18RR, FB15k-237, YAGO3-10), CAGP reaches 0.79--0.91 AUROC on emerging entities (+8--12pp over coverage alone), while overall AUROC (0.90--0.97) matches the mixture formula; novel-context AUROC equals 1.0 by construction on these benchmarks (Remark~\ref{rem:circularity}).
 \textbf{(4) Variance collapse diagnosis:} We identify a subtle failure mode in variational KG embeddings: when the scoring function ignores variance parameters, KL regularization collapses all entity variances to a uniform value. Reparameterization sampling in the scoring function prevents this collapse, enabling meaningful semantic uncertainty. This diagnosis applies broadly to probabilistic KG embedding methods.
@@ -28,6 +28,6 @@ We diagnose why probabilistic KG embeddings fail at temporal OOD detection and s
 \centering
 \includegraphics[width=0.75\textwidth]{figures/fig1_main_results.pdf}
 
-\caption{Temporal OOD detection on FB15k-237~\citep{toutanova2015observed} (AUROC; simulated OOD splits, see \S\ref{sec:experiments} Remark~\ref{rem:circularity}). Existing probabilistic methods achieve 0.42--0.63; CAGP reaches 0.97. Non-circular validation on ground-truth temporal benchmarks (ICEWS14/18) confirms 0.99 AUROC. The pattern holds across all evaluated benchmarks (Table~\ref{tab:temporal_ood}).}
+\caption{Temporal OOD detection on FB15k-237~\citep{toutanova2015observed} (AUROC; simulated OOD splits, see \S\ref{sec:experiments} Remark~\ref{rem:circularity}). Existing probabilistic methods achieve 0.40--0.63; CAGP reaches 0.97. Non-circular validation on ground-truth temporal benchmarks (ICEWS14/18) confirms 0.99 AUROC. The pattern holds across all evaluated benchmarks (Table~\ref{tab:temporal_ood}).}
 \label{fig:main_results}
 \end{figure*}
