@@ -503,9 +503,9 @@ def main():
             model.precompute_coverage(train)
             model = train_model(model, train, device, epochs=30)
 
-            # Calibrate normalization on full test set to avoid batch-dependent leakage
+            # Calibrate normalization on training set (not test) to avoid data leakage
             if hasattr(model, 'calibrate_normalization'):
-                model.calibrate_normalization(test, device)
+                model.calibrate_normalization(train, device)
 
             m_results = {}
 

@@ -341,7 +341,7 @@ def main():
         # --- Variant 1: CAGP (full) ---
         print(f"\n  [1/5] CAGP (full) — learned alpha, both signals")
         model_full = copy.deepcopy(model)
-        model_full.calibrate_normalization(test, device)
+        model_full.calibrate_normalization(train, device)
         res = evaluate_temporal_real(model_full, train, test, device)
         all_results['CAGP (full)'].append(res)
         print(f"    Overall AUROC: {res.get('overall_auroc', 'N/A')}")
@@ -349,7 +349,7 @@ def main():
         # --- Variant 2: CAGP (alpha=0, coverage only) ---
         print(f"\n  [2/5] CAGP (alpha=0, cov only) — removes semantic signal")
         model_cov = copy.deepcopy(model)
-        model_cov.calibrate_normalization(test, device)
+        model_cov.calibrate_normalization(train, device)
         unc_fn_a0 = lambda m, h, r, t: m.get_uncertainty_fixed_alpha(h, r, t, fixed_alpha=0.0)
         res = evaluate_temporal_real(model_cov, train, test, device, get_unc_fn=unc_fn_a0)
         all_results['CAGP (alpha=0, cov only)'].append(res)
@@ -358,7 +358,7 @@ def main():
         # --- Variant 3: CAGP (alpha=1, GP only) ---
         print(f"\n  [3/5] CAGP (alpha=1, GP only) — removes structural signal")
         model_gp = copy.deepcopy(model)
-        model_gp.calibrate_normalization(test, device)
+        model_gp.calibrate_normalization(train, device)
         unc_fn_a1 = lambda m, h, r, t: m.get_uncertainty_fixed_alpha(h, r, t, fixed_alpha=1.0)
         res = evaluate_temporal_real(model_gp, train, test, device, get_unc_fn=unc_fn_a1)
         all_results['CAGP (alpha=1, GP only)'].append(res)
@@ -369,7 +369,7 @@ def main():
         print(f"\n  [4/5] CAGP (shuffled cov) — permuted entity-relation associations")
         model_shuf = make_shuffled_coverage_model(model, seed)
         model_shuf = model_shuf.to(device)
-        model_shuf.calibrate_normalization(test, device)
+        model_shuf.calibrate_normalization(train, device)
         res = evaluate_temporal_real(model_shuf, train, test, device,
                                      original_coverage=original_cov)
         all_results['CAGP (shuffled cov)'].append(res)
@@ -380,7 +380,7 @@ def main():
         print(f"\n  [5/5] CAGP (random cov) — random binary matrix, same density")
         model_rand = make_random_coverage_model(model, seed)
         model_rand = model_rand.to(device)
-        model_rand.calibrate_normalization(test, device)
+        model_rand.calibrate_normalization(train, device)
         res = evaluate_temporal_real(model_rand, train, test, device,
                                      original_coverage=original_cov)
         all_results['CAGP (random cov)'].append(res)

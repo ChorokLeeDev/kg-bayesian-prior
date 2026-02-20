@@ -499,7 +499,7 @@ def main():
             model = train_model(model, train, device, epochs=args.epochs, lr=args.lr)
 
             if hasattr(model, 'calibrate_normalization'):
-                model.calibrate_normalization(test, device)
+                model.calibrate_normalization(train, device)
 
             temporal = evaluate_temporal_real(model, train, test, n_ent, device)
             elapsed = time.time() - t0
