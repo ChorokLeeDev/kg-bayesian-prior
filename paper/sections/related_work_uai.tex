@@ -5,7 +5,7 @@ UKGE~\citep{chen2019embedding} associates confidence scores with triples; BEUrRE
 Earlier, KG2E~\citep{he2015learning} represented both entities and relations as Gaussian distributions, capturing per-relation uncertainty through covariance matrices; however, KG2E targets link prediction rather than OOD detection, and its learned covariances remain entity-level statistics that do not explicitly track whether specific entity-relation combinations have been observed.
 All these methods share the limitation we identify: learned variances are relation-agnostic.
 Despite being trained on data containing entity-relation co-occurrence patterns, these methods do not autonomously learn relation-specific uncertainty, necessitating explicit decomposition.
-While relation-aware scoring functions exist (R-GCN~\citep{schlichtkrull2018modeling}, CompGCN~\citep{vashishth2019composition}), these condition \emph{predictions} on relations but still produce relation-agnostic uncertainty estimates; our decomposition addresses uncertainty orthogonally to scoring architecture.
+While relation-aware scoring functions exist (R-GCN~\citep{schlichtkrull2018modeling}, CompGCN~\citep{vashishth2019composition}), these condition \emph{predictions} on relations but still produce relation-agnostic uncertainty estimates; our decomposition addresses uncertainty independently of the scoring architecture.
 
 \paragraph{OOD Detection.}
 MC Dropout~\citep{gal2016dropout}, Deep Ensembles~\citep{lakshminarayanan2017simple}, and Energy-based methods~\citep{liu2020energy} capture model uncertainty but not structural observation patterns.

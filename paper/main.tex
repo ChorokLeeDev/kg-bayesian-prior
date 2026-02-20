@@ -548,7 +548,7 @@ Significance tests use seed-level bootstrap over per-seed AUROC values (10,000 i
 \textbf{Memory complexity.} CAGP's coverage matrix $\mat{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ requires:
 \begin{itemize}
 \item FB15k-237: $14{,}541 \times 237 = 3.4$M entries $\approx$ 13MB (dense float32)
-\item YAGO3-10: $123{,}161 \times 37 = 4.6$M entries $\approx$ 17.5MB dense
+\item YAGO3-10: $123{,}182 \times 37 = 4.6$M entries $\approx$ 18MB dense
 \item Wikidata-scale (90M entities, 1K relations): 360GB dense
 \end{itemize}
 Sparse storage reduces memory: $<$5\% non-zero on FB15k-237 yields $<$1MB. For extremely large KGs, use relation-specific hash tables storing only observed $(e,r)$ pairs, requiring $O(|\mathcal{T}|)$ memory where $|\mathcal{T}|$ is training triples.
