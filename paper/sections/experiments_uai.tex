@@ -10,7 +10,7 @@ Score-based (UKGE~\citep{chen2019embedding}, Energy~\citep{liu2020energy}), ense
 All methods share identical OOD splits, evaluation protocol, training hyperparameters (dim$=$100, lr$=$1e-3, 30 epochs), and negative sampling strategy per dataset; ICEWS14/ICEWS18 baselines use the same chronological split and categorization threshold ($\tau{=}$25th percentile).
 
 \paragraph{Metrics.}
-AUROC (primary; AUPR in Appendix~\ref{app:aupr}). We also report calibration diagnostics (ECE, Brier) and selective prediction in the appendix. Statistical significance via paired bootstrap ($p < 0.01$).
+AUROC (primary; AUPR in Appendix~\ref{app:aupr}). We also report calibration diagnostics (ECE, Brier) and selective prediction in the appendix. Statistical significance via seed-level bootstrap ($p < 0.01$, 10K iterations over per-seed AUROC values).
 
 \paragraph{Reproducibility.}
 All datasets use a unified pipeline with 30 epochs, $\beta_{\text{KL}}{=}0.001$, $w_{\text{unc}}{=}0.1$, seeds $\{42, 123, 456\}$ (5 seeds for WN18RR; CAGP 5-seed std $= 0.005$, confirming stability). Per-seed breakdowns are in the supplementary material. Code and outputs will be released upon acceptance.
@@ -60,7 +60,7 @@ SNGP       & .62  & .58\tiny{$\pm$.00} & .62 & .46\tiny{$\pm$.00}
            & .85 & .76\tiny{$\pm$.00} \\
 \midrule
 \multicolumn{11}{l}{\textit{Single Signals}} \\
-$U_{\text{sem}}$ & .71 & .66\tiny{$\pm$.00} & .89 & .79\tiny{$\pm$.00}
+$U_{\text{sem}}$ & .71 & .66\tiny{$\pm$.00} & .81 & .59\tiny{$\pm$.00}
                   & .69 & .54\tiny{$\pm$.00} & .98 & .84\tiny{$\pm$.00}
                   & .99 & .91\tiny{$\pm$.00} \\
 $U_{\text{str}}$ & .83 & .86\tiny{$\pm$.00} & .78 & .94\tiny{$\pm$.00}
@@ -82,7 +82,7 @@ RelCondVar & .83 & .86\tiny{$\pm$.00} & .93 & .98\tiny{$\pm$.00}
 \end{tabular}}
 \end{table}
 
-\textbf{Key findings:} The decomposition framework predicts that combining semantic and structural signals should achieve 0.79--0.91 AUROC on emerging entities and near-perfect detection on novel contexts. ICEWS14 and ICEWS18 are both non-circular validation points: structural coverage is the strongest single-signal contributor (CAGP and $U_{\text{str}}$ are both $\sim$0.99 on overall AUROC). On ICEWS14, the semantic term provides a modest gain on residual emerging entities ($U_{\text{str}}$: 0.975 $\to$ CAGP: 1.000, +2.5pp). On ICEWS18, CAGP and $U_{\text{str}}$ are identical across all subsets (emerging: 0.976, novel contexts: 1.000), indicating coverage fully saturates detection on this benchmark and the semantic signal adds no lift (Appendix~\ref{app:icews18_subsets}). CAGP's primary value on temporal benchmarks is as a \emph{unified} estimator convenient for deployment, not a strict performance improvement over $U_{\text{str}}$ alone. On the static benchmarks, CAGP---the minimal realization of this decomposition---validates these predictions: 0.79--0.91 on emerging entities and 1.0 on novel contexts.\footnote{Our base DistMult \citep{yang2015embedding} achieves MRR/Hits@10 of 0.21/0.34 (FB15k-237) and 0.27/0.42 (WN18RR), comparable to vanilla DistMult in the literature. OOD detection is not sensitive to base model quality (\S\ref{app:architectures}).} Coverage alone achieves 0.67--0.83 on emerging entities; combining with semantic variance adds +8--12pp as predicted. This is consistent with the core message: coverage is strongest where novel-context OOD dominates, but semantic uncertainty is necessary for complete coverage of emerging cases. Overall AUROC (0.90--0.99) reflects the additional boost from novel-context detection. All CAGP vs.\ best-baseline differences are significant ($p < 0.01$, paired bootstrap, 10K iterations).
+\textbf{Key findings:} The decomposition framework predicts that combining semantic and structural signals should achieve 0.79--0.91 AUROC on emerging entities and near-perfect detection on novel contexts. ICEWS14 and ICEWS18 are both non-circular validation points: structural coverage is the strongest single-signal contributor (CAGP and $U_{\text{str}}$ are both $\sim$0.99 on overall AUROC). On ICEWS14, the semantic term provides a modest gain on residual emerging entities ($U_{\text{str}}$: 0.975 $\to$ CAGP: 1.000, +2.5pp). On ICEWS18, CAGP and $U_{\text{str}}$ are identical across all subsets (emerging: 0.976, novel contexts: 1.000), indicating coverage fully saturates detection on this benchmark and the semantic signal adds no lift (Appendix~\ref{app:icews18_subsets}). CAGP's primary value on temporal benchmarks is as a \emph{unified} estimator convenient for deployment, not a strict performance improvement over $U_{\text{str}}$ alone. On the static benchmarks, CAGP---the minimal realization of this decomposition---validates these predictions: 0.79--0.91 on emerging entities and 1.0 on novel contexts.\footnote{Our base DistMult \citep{yang2015embedding} achieves MRR/Hits@10 of 0.21/0.34 (FB15k-237) and 0.27/0.42 (WN18RR), comparable to vanilla DistMult in the literature. OOD detection is not sensitive to base model quality (\S\ref{app:architectures}).} Coverage alone achieves 0.67--0.83 on emerging entities; combining with semantic variance adds +8--12pp as predicted. This is consistent with the core message: coverage is strongest where novel-context OOD dominates, but semantic uncertainty is necessary for complete coverage of emerging cases. Overall AUROC (0.90--0.99) reflects the additional boost from novel-context detection. All CAGP vs.\ best-baseline differences are significant ($p < 0.01$, seed-level bootstrap, 10K iterations).
 
 \paragraph{Relation-conditioned scoring does not help.}
 We test whether relation-conditioned scoring (bilinear $h^\top W_r t$ with basis decomposition) improves OOD detection when uncertainty remains entity-level.
@@ -111,7 +111,7 @@ For ICEWS14/18, temporal OOD breaks static-coverage coupling.
 Method & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All \\
 \midrule
 \multicolumn{16}{l}{\textit{Single Signals}} \\
-$U_{\text{sem}}$ & .89 & .54 & .79 & .71 & .40 & .66 & .69 & .40 & .54 & .99 & .78 & .84 & .99 & .83 & .91 \\
+$U_{\text{sem}}$ & .81 & .49 & .59 & .71 & .40 & .66 & .69 & .40 & .54 & .99 & .78 & .84 & .99 & .83 & .91 \\
 $U_{\text{str}}$ & .78 & \textbf{1.0} & .94 & .83 & \textbf{1.0} & .86 & .67 & \textbf{1.0} & .84 & .98 & \textbf{1.0} & .99 & .98 & \textbf{1.0} & .99 \\
 \midrule
 \multicolumn{16}{l}{\textit{Decomposition (Ours)}} \\
@@ -123,7 +123,7 @@ RelCondVar & .93 & \textbf{1.0} & .98 & .83 & \textbf{1.0} & .86 & .67 & \textbf
 \end{table}
 \textbf{Theorem predictions vs.\ observations.} Table~\ref{tab:complementarity} checks each part of Theorem~\ref{thm:complementarity} on the reported settings:
 \begin{itemize}
-\item \textbf{Part (i):} Semantic uncertainty achieves 0.54/0.40/0.40 on novel contexts on static benchmarks (near-random on WN18RR/YAGO; mildly above-random on FB15k-237). On ICEWS14 and ICEWS18, $U_{\text{sem}}$ achieves 0.78/0.83 on novel contexts---higher because temporal novel contexts are defined by time, not coverage, so they include additional frequency-correlated signal
+\item \textbf{Part (i):} Semantic uncertainty achieves 0.49/0.40/0.40 on novel contexts on static benchmarks (near-random on WN18RR/YAGO/FB15k-237). On ICEWS14 and ICEWS18, $U_{\text{sem}}$ achieves 0.78/0.83 on novel contexts---higher because temporal novel contexts are defined by time, not coverage, so they include additional frequency-correlated signal
 \item \textbf{Part (ii):} Structural uncertainty achieves 0.78/0.83/0.67/0.98 on emerging entities (imperfect $<1$ on static benchmarks, as predicted; near-perfect on ICEWS14/18 where most emerging entities also lack coverage)
 \item \textbf{Remark~\ref{rem:novel_perfect}:} Structural AUROC $= 1.000$ on novel contexts across the reported settings---by construction on static benchmarks, and also in ICEWS14/18 where the temporal definition is by time and relation novelty
 \item \textbf{Part (iii):} Using the mixture decomposition (Eq.~\ref{eq:mixture_auroc}), the predicted CAGP AUROC matches observations to within 0.01 on all datasets (e.g., WN18RR: $0.83 \times 0.91 + 0.17 \times 1.0 \approx 0.93$, observed $0.92$). The synergy formula (Eq.~\ref{eq:synergy}) correctly predicts that all improvement comes from emerging entities (+0.08/+0.11/+0.12 over $U_{\text{str}}$ on static benchmarks)
