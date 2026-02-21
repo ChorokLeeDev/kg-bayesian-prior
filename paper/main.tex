@@ -424,8 +424,38 @@ Neither $U_{\text{sem}}$ nor the bilinear scorer achieves novel-context AUROC ab
 \paragraph{Dataset-specific signal composition.}
 Table~\ref{tab:temporal_ood} reveals the optimal signal composition varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels. On YAGO3-10, structural uncertainty remains the stronger single-signal contributor ($U_{\text{str}}$ 0.84), while semantic uncertainty alone is moderate (0.54)---a similar pattern to WN18RR, where few relations limit GP expressiveness. CAGP improves over $U_{\text{str}}$ on all datasets by contributing semantic information on emerging entities: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO. The improvement is largest where single-signal emerging detection is weakest, consistent with the complementarity predicted by Theorem~\ref{thm:complementarity}. Note: without reparameterization sampling, entity variances collapse under KL regularization (see error analysis in \S\ref{sec:experiments}), reducing CAGP to a coverage-only detector. CAGP achieves 0.90--0.97 AUROC across static benchmarks and 0.993/0.987 on ICEWS14/18.
 
+\paragraph{Per-dataset signal analysis.}
+On YAGO3-10, CAGP achieves 0.79 on emerging entities, improving over both $U_{\text{sem}}$ (0.69) and $U_{\text{str}}$ (0.67). Both signals are weaker on YAGO than FB15k-237: YAGO's variance-frequency correlation (Spearman $\rho{=}{-}0.68$) is weaker than FB15k-237 ($\rho{=}{-}0.88$), and YAGO's 37 relations produce an emerging-entity slice ($\pi_e{=}0.48$) where coverage gaps partially overlap with entity frequency. Despite this, CAGP's +12pp gain over $U_{\text{str}}$ on YAGO is the largest across all static benchmarks.
+
 \paragraph{Why doesn't the embedding model discover coverage?}
 A natural question: if coverage is so effective, why don't learned embeddings discover it automatically? The impossibility theorem (Theorem~\ref{thm:impossibility}) provides the answer: standard link prediction objectives incentivize predictive accuracy, not relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias.
+
+\subsection{Standard OOD and Method Comparison}
+\label{app:standard_ood_full}
+
+\begin{table}[ht]
+\centering
+\caption{\textbf{Standard OOD} (random corruptions, WN18RR and FB15k-237, 3-seed mean). \textbf{Bold} marks the proposed method (CAGP); it is not necessarily highest in every column.}
+\label{tab:standard}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcc}
+\toprule
+Method & WN18RR & FB15k-237 \\
+\midrule
+UKGE & .48{\scriptsize$\pm$.000} & .49{\scriptsize$\pm$.000} \\
+Energy & .56{\scriptsize$\pm$.000} & .53{\scriptsize$\pm$.000} \\
+\midrule
+$U_{\text{sem}}$ & .67{\scriptsize$\pm$.000} & .72{\scriptsize$\pm$.000} \\
+$U_{\text{str}}$ & .66{\scriptsize$\pm$.000} & .82{\scriptsize$\pm$.000} \\
+\midrule
+CAGP & \textbf{.66}{\scriptsize$\pm$.000} & \textbf{.82}{\scriptsize$\pm$.000} \\
+RelCondVar & .66{\scriptsize$\pm$.000} & .82{\scriptsize$\pm$.000} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On standard OOD (random corruptions), CAGP ties the best single signal. On WN18RR, CAGP (0.66) is marginally below $U_{\text{sem}}$ (0.67) because random corruptions typically sample entities with the query relation in training ($U_{\text{str}}{=}0$ for most), making the coverage signal uninformative. Coverage-based methods succeed on both standard and temporal OOD; score-based methods (UKGE, Energy) fail near-randomly on both (FB15k-237: $U_{\text{str}}$ 0.935 temporal vs UKGE 0.403).
 
 \subsection{AUPR Results}
 \label{app:aupr}
@@ -673,7 +703,7 @@ CAGP & .976 & 1.000 & .987 \\
 \end{table}
 
 \paragraph{Discussion.}
-The identical CAGP and $U_{\text{str}}$ values arise because ICEWS18 temporal OOD is dominated by novel-context triples ($>$96\% have $U_{\text{str}} > 0$), leaving the emerging-entity slice (2,747 triples) with near-perfect coverage due to the recurrent event structure of geopolitical KGs. Note: we conducted a leakage audit for ICEWS14 (Appendix~\ref{app:icews14_audit}) but not for ICEWS18; given the ceiling effect (CAGP~$=$~$U_{\text{str}}$ everywhere), leakage patterns on ICEWS18 do not affect the paper's claims. The semantic signal ($U_{\text{sem}}$) achieves 0.985 on this slice alone---but combining with coverage does not improve beyond what coverage already achieves. This is the ceiling effect discussed in the main text: CAGP's decomposition adds analytical clarity but not additional detection power on ICEWS18.
+The identical CAGP and $U_{\text{str}}$ values arise because ICEWS18 temporal OOD is dominated by novel-context triples ($>$96\% have $U_{\text{str}} > 0$), leaving the emerging-entity slice (2,747 triples) with near-perfect coverage due to the recurrent event structure of geopolitical KGs. Note: we conducted a leakage audit for ICEWS14 (Appendix~\ref{app:leakage}) but not for ICEWS18; given the ceiling effect (CAGP~$=$~$U_{\text{str}}$ everywhere), leakage patterns on ICEWS18 do not affect the paper's claims. The semantic signal ($U_{\text{sem}}$) achieves 0.985 on this slice alone---but combining with coverage does not improve beyond what coverage already achieves. This is the ceiling effect discussed in the main text: CAGP's decomposition adds analytical clarity but not additional detection power on ICEWS18.
 
 \subsection{Uncertainty Margin Loss Ablation}
 \label{app:margin_ablation}
