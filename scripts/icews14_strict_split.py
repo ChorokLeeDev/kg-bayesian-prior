@@ -547,9 +547,9 @@ def main():
             model.precompute_coverage(train)
             model = train_model(model, train, device, epochs=30)
 
-            # Calibrate on original test if applicable
+            # Calibrate on training set (not test) to avoid leakage
             if hasattr(model, 'calibrate_normalization'):
-                model.calibrate_normalization(test_orig, device)
+                model.calibrate_normalization(train, device)
 
             # Evaluate on ORIGINAL test set
             print(f"    Evaluating on original test set...")
