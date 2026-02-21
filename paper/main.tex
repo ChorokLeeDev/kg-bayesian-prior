@@ -249,7 +249,7 @@ We fix $\alpha{=}0.5$ as the default (Figure~\ref{fig:alpha_sensitivity}). No va
 \subsection{Theorem~\ref{thm:complementarity}(iii) Validation: Mixture Decomposition}
 \label{app:mixture}
 
-We validate the mixture AUROC decomposition (Eq.~\ref{eq:mixture_auroc}) by comparing predicted and observed AUROC at varying emerging-to-novel ratios. No retraining is performed; we resample from per-triple uncertainties and verify that $\text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + (1{-}\pi_e) \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}$ holds to within 0.01 on all datasets across all resampled ratios (within 0.005 at the natural emerging/novel ratio; see Appendix~\ref{app:mixture} discussion below).
+We validate the mixture AUROC decomposition (Eq.~\ref{eq:mixture_auroc}) by comparing predicted and observed AUROC at varying emerging-to-novel ratios. No retraining is performed; we resample from per-triple uncertainties and verify that $\text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + (1{-}\pi_e) \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}$ holds to within 0.01 on all datasets across all resampled ratios (within 0.005 at the natural emerging/novel ratio; see discussion below).
 
 \begin{table}[ht]
 \centering
