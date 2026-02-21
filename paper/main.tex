@@ -312,7 +312,7 @@ On datasets with more emerging entities (e.g., YAGO3-10), the structural signal 
 
 \begin{table}[ht]
 \centering
-\caption{Calibration metrics on FB15k-237. ECE = Expected Calibration Error (lower is better).}
+\caption{Calibration metrics on FB15k-237 (seed 42; illustrative single-seed result). ECE = Expected Calibration Error (lower is better).}
 \begin{tabular}{lcc}
 \toprule
 Method & ECE $\downarrow$ & Brier $\downarrow$ \\
@@ -333,7 +333,7 @@ CAGP achieves 37--47\% ECE reduction over single signals. The decomposition prod
 \subsection{Selective Prediction}
 \label{app:selective}
 
-We present an \emph{oracle analysis} of selective prediction (abstaining on high-uncertainty queries) on FB15k-237 link prediction, designed to illustrate the upper bound on error reduction achievable by each uncertainty signal. The setup follows the standard selective prediction framework~\citep{geifman2017selective}: given a link prediction model that ranks candidate entities, we use each uncertainty method to rank test triples by predicted uncertainty and abstain from the top $k$\% (highest uncertainty). ``Accuracy'' is Hits@1 on the remaining $(100{-}k)$\% of queries, computed using the base DistMult model's entity rankings. We report results at 85\% coverage ($k{=}15$).
+We present an \emph{oracle analysis} of selective prediction (abstaining on high-uncertainty queries) on FB15k-237 link prediction (seed 42, 2000-triple subset), designed to illustrate the upper bound on error reduction achievable by each uncertainty signal. The setup follows the standard selective prediction framework~\citep{geifman2017selective}: given a link prediction model that ranks candidate entities, we use each uncertainty method to rank test triples by predicted uncertainty and abstain from the top $k$\% (highest uncertainty). ``Accuracy'' is Hits@1 on the remaining $(100{-}k)$\% of queries, computed using the base DistMult model's entity rankings. We report results at 85\% coverage ($k{=}15$).
 
 \paragraph{Oracle caveat.}
 The abstention threshold is selected on the test set; this is \emph{not} a deployable protocol but an oracle evaluation that quantifies the potential of each uncertainty signal for selective prediction. In a deployment setting, a held-out calibration set or conformal prediction framework~\citep{zhu2025certainty} would be required to set the threshold while guaranteeing a target coverage rate.
@@ -377,7 +377,7 @@ ComplEx & 0.755 & 0.821 & 0.960 \\
 \end{tabular}
 \end{table}
 
-The decomposition is architecture-agnostic, achieving $\sim$0.96 AUROC across DistMult, TransE, and ComplEx.
+The decomposition is architecture-agnostic, achieving $\sim$0.96 AUROC across DistMult, TransE, and ComplEx on standard OOD. Architecture generalization on temporal OOD is left to future work; we expect similar results since the coverage signal is architecture-independent.
 
 \subsection{Relation-Conditioned Scoring Does Not Help OOD Detection}
 \label{app:bilinear}
@@ -456,7 +456,7 @@ CAGP & \textbf{0.90} & \textbf{0.92} & \textbf{0.76} & \textbf{0.99} \\
 \subsection{Error Analysis}
 \label{app:error_analysis}
 
-We analyzed CAGP's failure modes on FB15k-237 standard OOD detection (random tail corruption, 20,000 ID + 20,000 OOD samples).
+We analyzed CAGP's failure modes on FB15k-237 standard OOD detection (random tail corruption, 20,000 ID + 20,000 OOD samples; seed 42). We report error characteristics at the equal-error-rate (EER) threshold, selected as the median uncertainty on this balanced evaluation set; FP=FN follows by construction at this operating point.
 
 \begin{table}[ht]
 \centering
@@ -498,7 +498,7 @@ FP tail entities have mean degree 183 compared to 583 for correctly classified I
 \textbf{False negatives} (8.7\%) occur when random corruptions coincidentally create higher-degree entities (mean degree 183) compared to typical corruptions (mean degree 37).
 These corrupted tails are better-represented in the training data, leading to lower uncertainty.
 
-The balanced error rates (8.7\% FP = FN) and high AUROC (0.971) demonstrate effective discrimination.
+At the EER operating point, equal error rates (8.7\% FP = FN) and high AUROC (0.971) demonstrate effective discrimination.
 Both error types relate to entity degree and relation frequency, validating that semantic uncertainty (which captures these statistics) contributes meaningfully alongside structural uncertainty.
 
 \section{Implementation Details}
