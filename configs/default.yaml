@@ -28,13 +28,16 @@ training:
   num_epochs: 30
   batch_size: 1024
   learning_rate: 0.001
-  num_negatives: 10
+  num_negatives: 1  # 1 negative per positive (uniform random tail replacement)
   patience: 10
   eval_every: 5
 
   # Loss weights
   kl_weight: 0.001
   regularization: 0.0001
+  unc_weight: 0.1   # uncertainty margin loss weight
+  margin: 0.3       # uncertainty margin value
+  grad_clip: 1.0    # gradient clipping (max norm)
 
 # Evaluation
 evaluation:

@@ -159,7 +159,7 @@ The deviation from exactly 0.5 is $O(\epsilon)$, controlled by the tightness of 
 \textbf{Implication.} This impossibility result is structural: \emph{any} function $f$ of entity-level statistics fails. It applies to averages ($f = \text{mean}$), maxima ($f = \max$), learned combinations, etc. The only escape is to make $\sigma^2$ depend on the relation $r$, breaking the relation-agnostic assumption. $\square$
 
 \paragraph{Instantiating $O(\epsilon)$.}
-We bound $\epsilon$ using the Spearman rank correlation $\rho_s$ between entity frequency and learned variance, which quantifies the tightness of the variance-frequency coupling (A1). Under the Mann-Whitney formulation, $|\text{AUROC} - 0.5| \leq C \sqrt{1 - \rho_s^2}$ where $C \leq 0.5$. On our datasets: WN18RR $\rho_s {=} {-}0.81$ ($\epsilon \leq 0.29$), FB15k-237 $\rho_s {=} {-}0.88$ ($\epsilon \leq 0.24$), YAGO $\rho_s {=} {-}0.68$ ($\epsilon \leq 0.37$). Observed novel-context AUROC: 0.40, 0.49, 0.40 (WN18RR, FB15k-237, YAGO)---all within these bounds. Values near or below 0.5 are consistent with near-random detection on novel contexts, confirming the impossibility bound.
+We heuristically estimate $\epsilon$ using the Spearman rank correlation $\rho_s$ between entity frequency and learned variance, which quantifies the tightness of the variance-frequency coupling (A1). Concretely, we use the approximation $|\text{AUROC} - 0.5| \lesssim C \sqrt{1 - \rho_s^2}$ with $C \leq 0.5$; this is a heuristic bound rather than a formal derivation (a rigorous proof connecting entity-level Spearman $\rho$ to triple-level AUROC is left to future work). On our datasets: WN18RR $\rho_s {=} {-}0.81$ ($\epsilon \lesssim 0.29$), FB15k-237 $\rho_s {=} {-}0.88$ ($\epsilon \lesssim 0.24$), YAGO $\rho_s {=} {-}0.68$ ($\epsilon \lesssim 0.37$). Observed novel-context AUROC: 0.40, 0.49, 0.40 (WN18RR, FB15k-237, YAGO)---all within these estimates. Values near or below 0.5 are consistent with near-random detection on novel contexts, confirming the impossibility bound.
 
 \subsection{Proof of Theorem~\ref{thm:complementarity} (Complementarity)}
 
@@ -542,6 +542,7 @@ ICEWS14~\citep{garcia2018learning} is a temporal KG containing 7,128 entities, 2
 Embedding dimension $d=100$, learning rate $10^{-3}$, averaged over 3 seeds.
 WN18RR, FB15k-237, and ICEWS14: batch size 1024, KL weight $\beta_{\text{KL}}=0.001$, 30 epochs.
 YAGO3-10: same canonical pipeline (batch size 1024, $\beta_{\text{KL}}=0.001$, 30 epochs).
+Additional training details: uncertainty margin loss weight $w_{\text{unc}}=0.1$, margin $m=0.3$, gradient clipping (norm 1.0), 1 negative sample per positive (uniform random tail replacement).
 We report mean$\pm$std over seeds; with $n{=}3$--5 seeds, bootstrap p-values are not reliable (minimum achievable $p{\approx}0.125$ for $n{=}3$) and are not reported.
 
 \paragraph{Scalability Analysis.}
@@ -672,7 +673,7 @@ CAGP & .976 & 1.000 & .987 \\
 \end{table}
 
 \paragraph{Discussion.}
-The identical CAGP and $U_{\text{str}}$ values arise because ICEWS18 temporal OOD is dominated by novel-context triples ($>$96\% have $U_{\text{str}} > 0$), leaving the emerging-entity slice (2,747 triples) with near-perfect coverage due to the recurrent event structure of geopolitical KGs. The semantic signal ($U_{\text{sem}}$) achieves 0.985 on this slice alone---but combining with coverage does not improve beyond what coverage already achieves. This is the ceiling effect discussed in the main text: CAGP's decomposition adds analytical clarity but not additional detection power on ICEWS18.
+The identical CAGP and $U_{\text{str}}$ values arise because ICEWS18 temporal OOD is dominated by novel-context triples ($>$96\% have $U_{\text{str}} > 0$), leaving the emerging-entity slice (2,747 triples) with near-perfect coverage due to the recurrent event structure of geopolitical KGs. Note: we conducted a leakage audit for ICEWS14 (Appendix~\ref{app:icews14_audit}) but not for ICEWS18; given the ceiling effect (CAGP~$=$~$U_{\text{str}}$ everywhere), leakage patterns on ICEWS18 do not affect the paper's claims. The semantic signal ($U_{\text{sem}}$) achieves 0.985 on this slice alone---but combining with coverage does not improve beyond what coverage already achieves. This is the ceiling effect discussed in the main text: CAGP's decomposition adds analytical clarity but not additional detection power on ICEWS18.
 
 \subsection{Uncertainty Margin Loss Ablation}
 \label{app:margin_ablation}
