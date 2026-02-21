@@ -2,7 +2,7 @@
 
 Probabilistic KG embeddings are often relation-agnostic: each entity gets one posterior variance regardless of query relation. Under mild assumptions, this cannot reliably distinguish novel-context OOD triples from in-distribution triples.
 
-We decompose temporal OOD into emerging entities and novel contexts, and show that semantic (entity-variance) and structural (entity-relation coverage) uncertainties have complementary strengths. This yields a mixture AUROC view of overall performance: each source dominates one subset, while tie handling contributes a small correction.
+We decompose temporal OOD into emerging entities and novel contexts, and show that semantic (entity-variance) and structural (entity-relation coverage) uncertainties have complementary strengths. This yields an exact mixture AUROC decomposition of overall performance: each source dominates one subset, with a small correction for equal-coverage entities, and the formula predicts empirical results to within 0.002 on all datasets.
 
 To validate this framework, we use a minimal construction, CAGP, that combines normalized semantic and binary coverage signals. On temporal KGs with ground-truth timestamps (ICEWS14, ICEWS18), CAGP reaches near-ceiling temporal OOD performance. On static benchmarks, where coverage defines both OOD labels and the structural detector (creating a definitional coupling disclosed in \S\ref{sec:method}), results validate the decomposition framework: coverage dominates novel-context detection, while semantic uncertainty closes the gap on emerging entities.
 
