@@ -15,7 +15,7 @@ AUROC (primary; AUPR in Appendix~\ref{app:aupr}). We also report calibration dia
 \paragraph{Reproducibility.}
 All datasets use a unified pipeline with 30 epochs, $\beta_{\text{KL}}{=}0.001$, $w_{\text{unc}}{=}0.1$, seeds $\{42, 123, 456\}$ (5 seeds for WN18RR; CAGP 5-seed std $= 0.005$, confirming stability). Per-seed breakdowns are in the supplementary material. Code and outputs will be released upon acceptance.
 \textbf{Training signal asymmetry:} Models with learned variance (GPOnly, CAGP, RelCondVar) receive an uncertainty margin loss ($w_{\text{unc}}{=}0.1$) encouraging higher uncertainty on negative samples; baselines without variance parameters (UKGE, Energy, CoverageOnly) receive only BCE loss. This reflects an architectural constraint, not a selective advantage: the margin loss is undefined for parameter-free uncertainty signals. See Appendix~\ref{app:margin_ablation} for an ablation on the effect of this loss.
-Although $\alpha$ is parameterized as a learnable logit, it empirically converges to $\alpha{\approx}0.5$ across all datasets and seeds, consistent with equal weighting being locally optimal under our training objective (Appendix~\ref{app:alpha_sensitivity}).
+Although $\alpha$ is parameterized as a learnable logit, the link prediction objective provides zero gradient to it (all training triples have $U_{\text{str}}{=}0$), so it remains at its initialization of 0.5 across all datasets and seeds (Appendix~\ref{app:alpha_sensitivity}).
 
 \subsection{Validating the Decomposition Framework}
 
