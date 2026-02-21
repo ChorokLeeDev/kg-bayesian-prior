@@ -17,7 +17,7 @@ The static benchmark results validate the decomposition's structural predictions
 CAGP uses fixed equal weighting ($\alpha{=}0.5$), which is near-optimal across all datasets (Appendix~\ref{app:alpha_sensitivity}). The robustness to $\alpha$ reflects the complementary nature of the signals; an adaptive mechanism for datasets with extreme OOD compositions remains future work.
 Reparameterization sampling is essential: without it, KL regularization collapses entity variances (see error analysis), a pitfall that likely affects other probabilistic KG embedding methods.
 Coverage is binary; the approach assumes transductive settings; assumption A4 is violated or borderline on all three benchmarks ($\Delta \geq 1.0$), so formal guarantees should be interpreted qualitatively.
-An oracle selective prediction analysis shows up to 43\% error reduction at 85\% coverage (Appendix~\ref{app:selective}); validating this with held-out threshold selection remains future work.
+An oracle selective prediction analysis (test-set threshold; see Appendix~\ref{app:selective}) shows up to 43\% error reduction at 85\% coverage; validating this with held-out threshold selection remains future work.
 
 \paragraph{Future directions.}
 (1)~\emph{GNN encoders.} We tested relation-conditioned bilinear scoring ($h^\top W_r t$ with basis decomposition; Appendix~\ref{app:bilinear}), which does not improve entity-level OOD detection. The open question is whether full message-passing architectures (R-GCN~\citep{schlichtkrull2018modeling}, CompGCN~\citep{vashishth2019composition}) produce relation-aware entity variance through neighborhood aggregation.

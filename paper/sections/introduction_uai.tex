@@ -25,7 +25,7 @@ We diagnose why probabilistic KG embeddings fail at temporal OOD detection and s
 
 \textbf{(3) Minimal realization validates the framework:} We construct CAGP, which combines semantic and structural signals, to test the decomposition. On ICEWS14/18 (ground-truth temporal splits, no circularity), CAGP reaches 0.99 AUROC, confirming the framework beyond static artifacts; coverage is the dominant signal, with semantic variance recovering residual emerging-entity errors (+2.5pp on ICEWS14). On simulated-OOD benchmarks (WN18RR, FB15k-237, YAGO3-10), CAGP reaches 0.79--0.91 AUROC on emerging entities (+8--12pp over coverage alone), while overall AUROC (0.90--0.97) matches the mixture formula; novel-context AUROC equals 1.0 by construction on these benchmarks (Remark~\ref{rem:circularity}).
 
-\textbf{(4) Variance collapse diagnosis:} We identify a subtle failure mode in variational KG embeddings: when the scoring function ignores variance parameters, KL regularization collapses all entity variances to a uniform value. Reparameterization sampling in the scoring function prevents this collapse, enabling meaningful semantic uncertainty. This diagnosis applies broadly to probabilistic KG embedding methods.
+\textbf{(4) Variance collapse diagnosis:} We identify a subtle failure mode in variational KG embeddings: when the scoring function ignores variance parameters, KL regularization collapses all entity variances to a uniform value. Reparameterization sampling in the scoring function prevents this collapse, enabling meaningful semantic uncertainty. This diagnosis applies to any variational KGE where the scoring function ignores learned variance parameters during training.
 
 \begin{figure*}[t]
 \centering
