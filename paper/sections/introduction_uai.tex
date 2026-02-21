@@ -9,7 +9,7 @@ But these variances are \emph{relation-agnostic}: entity $e$ receives a single v
 Consider $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ but never with $r_{11}$.
 The model assigns low variance (well-observed), yet queries $(?, r_{11}, e)$ involve genuinely uncertain predictions.
 
-This causes systematic failures (Figure~\ref{fig:main_results}): probabilistic methods achieve only 0.35--0.87 AUROC on temporal OOD, while our decomposition-based approach reaches 0.90--0.99. On the non-circular ground-truth benchmarks (ICEWS14 and ICEWS18, where OOD is defined by time rather than coverage), CAGP achieves 0.993 and 0.987 AUROC respectively.
+This causes systematic failures (Figure~\ref{fig:main_results}): probabilistic methods achieve only 0.34--0.87 AUROC on temporal OOD, while our decomposition-based approach reaches 0.90--0.99. On the non-circular ground-truth benchmarks (ICEWS14 and ICEWS18, where OOD is defined by time rather than coverage), CAGP achieves 0.993 and 0.987 AUROC respectively.
 
 \paragraph{Two OOD Types.}
 We identify two distinct scenarios:
