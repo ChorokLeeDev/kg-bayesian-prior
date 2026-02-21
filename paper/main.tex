@@ -183,7 +183,7 @@ $\text{AUROC}(U_{\text{comb}}) - \text{AUROC}(U_{\text{str}}) = \pi_e \cdot (A_{
 This is positive whenever $U_{\text{comb}}$ separates emerging entities better than $U_{\text{str}}$ alone (verified empirically: +8--12pp on all datasets, Table~\ref{tab:complementarity}).
 
 \paragraph{Robustness to Assumption Violations.}
-Table~\ref{tab:assumptions} quantifies violations (all values from the reparameterization-fixed model): (A1) Spearman $\rho$ ranges from $-0.68$ to $-0.88$; (A4) $\Delta$ exceeds 1.0 on all three datasets (FB15k-237: 1.10, WN18RR: 1.00, YAGO: 1.36). Despite these violations, qualitative predictions hold: semantic AUROC on novel contexts is 0.40--0.49 (predicted $\lesssim 0.5$), structural is 1.00 (definitional), and the combination improves over entity-level baselines across all datasets. The near-chance novel-context AUROC arises because properly trained variances remove accidental frequency correlation, making novel-context entities' variances indistinguishable from ID entities of similar frequency. The violations affect tightness, not direction; the theorem provides qualitative insights under idealized conditions.
+Table~\ref{tab:assumptions} quantifies violations (all values from the reparameterization-fixed model): (A1) Spearman $\rho$ ranges from $-0.68$ to $-0.88$; (A4) $\Delta$ exceeds 1.0 on all three datasets (FB15k-237: 1.10, WN18RR: 1.00, YAGO: 1.36). Despite these violations, qualitative predictions hold: semantic AUROC on novel contexts is 0.40--0.49 (predicted $\lesssim 0.5$), structural is 1.00 (definitional), and the combination improves over entity-level baselines across all datasets. The near-chance novel-context AUROC arises because properly trained variances remove accidental frequency correlation, making novel-context entities' variances indistinguishable from ID entities of similar frequency. Despite A4 being violated, the qualitative predictions align with observations; we conjecture the bound can be relaxed but leave this to future work.
 
 \subsection{Assumption Verification}
 \label{app:assumptions}
@@ -715,14 +715,14 @@ The margin loss has negligible effect on temporal OOD AUROC for both models ($\D
 Table & Dataset & Seeds & Source \\
 \midrule
 1 & WN18RR (CAGP) & 42, 123, 456 & \texttt{test\_cagp\_fix\_multiseed.py} \\
-1 & WN18RR (baselines$^b$) & 42, 123, 456 & \texttt{run\_wn18rr\_missing\_baselines.py} (dataset=wn18rr) \\
+1 & WN18RR (baselines$^b$) & 42, 123, 456 & \texttt{run\_wn18rr\_missing\_baselines.py} \\
 1 & FB15k-237 (CAGP) & 42, 123, 456 & \texttt{test\_cagp\_fix\_multiseed.py} \\
-1 & FB15k-237 (baselines$^b$) & 42, 123, 456 & \texttt{run\_wn18rr\_missing\_baselines.py} (dataset=fb15k237) \\
-1 & YAGO3-10$^c$ & 42, 123, 456 & \texttt{test\_cagp\_fix\_multiseed.py} + per-seed temporal JSONs \\
+1 & FB15k-237 (baselines$^b$) & 42, 123, 456 & \texttt{run\_wn18rr\_missing\_baselines.py} \\
+1 & YAGO3-10$^c$ & 42, 123, 456 & \texttt{test\_cagp\_fix\_multiseed.py} \\
 1 & ICEWS14 (ours$^a$) & 42, 123, 456 & \texttt{run\_icews14\_temporal.py} \\
 1 & ICEWS14 (baselines$^b$) & 42, 123, 456 & \texttt{run\_icews14\_missing\_baselines.py} \\
-1 & ICEWS18 (ours$^a$) & 42, 123, 456 & \texttt{run\_icews14\_temporal.py --dataset icews18} \\
-1 & ICEWS18 (baselines$^b$) & 42, 123, 456 & \texttt{run\_icews14\_temporal.py --dataset icews18} \\
+1 & ICEWS18 (ours$^a$) & 42, 123, 456 & \texttt{run\_icews14\_temporal.py} \\
+1 & ICEWS18 (baselines$^b$) & 42, 123, 456 & \texttt{run\_icews14\_temporal.py} \\
 \ref{tab:icews14_ablation} & ICEWS14 & 42, 123, 456 & \texttt{icews14\_ablation.py} \\
 \ref{tab:strict_split} & ICEWS14 & 42, 123, 456 & \texttt{icews14\_strict\_split.py} \\
 \midrule
@@ -733,6 +733,8 @@ Table & Dataset & Seeds & Source \\
 4 & All & (same as Table 1) & (same as Table 1) \\
 5 & FB15k-237 & 42 & \texttt{run\_focused\_experiments.py} \\
 \ref{tab:bilinear} & All & 42, 123, 456 & \texttt{run\_bilinear\_theorem1.py} \\
+Calibration & FB15k-237 & 42 & \texttt{run\_focused\_experiments.py} \\
+Selective pred. & FB15k-237 & 42 & \texttt{run\_focused\_experiments.py} \\
 \bottomrule
 \end{tabular}
 \vspace{2pt}
