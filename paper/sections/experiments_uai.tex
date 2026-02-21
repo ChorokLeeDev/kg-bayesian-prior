@@ -113,7 +113,7 @@ For ICEWS14/18, temporal OOD breaks static-coverage coupling.
 Method & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All \\
 \midrule
 \multicolumn{16}{l}{\textit{Single Signals}} \\
-$U_{\text{sem}}$ & .81 & .49 & .59 & .71 & .40 & .66 & .69 & .40 & .54 & .99 & .78 & .84 & .99 & .83 & .91 \\
+$U_{\text{sem}}$ & .81 & .49 & .59 & .71 & .40 & .66 & .69 & .40 & .54 & .98 & .78 & .84 & .99 & .83 & .91 \\
 $U_{\text{str}}$ & .78 & \textbf{1.0} & .94 & .83 & \textbf{1.0} & .86 & .67 & \textbf{1.0} & .84 & .98 & \textbf{1.0} & .99 & .98 & \textbf{1.0} & .99 \\
 \midrule
 \multicolumn{16}{l}{\textit{Decomposition (Ours)}} \\
@@ -137,7 +137,7 @@ The complementarity pattern is consistent across all three datasets: on YAGO3-10
 On standard OOD (random corruptions), CAGP achieves 0.66/0.82 on WN18RR/FB15k-237, competitive with the best single signal, confirming temporal gains do not trade off random-corruption detection. On WN18RR, CAGP is marginally below $U_{\text{sem}}$ (0.67) because random corruptions do not expose entity-relation novelty patterns. Full results and method comparison across OOD types are in Appendix~\ref{app:standard_ood_full}.
 
 \paragraph{Relation-conditioned ablation.}
-RelCondVar replaces entity-level variance with $\sigma^2(e,r){=}\text{MLP}([e;r])$ but does not consistently outperform explicit coverage: it achieves 0.980 on FB15k-237 (vs CAGP 0.967, +1.3pp) but matches $U_{\text{str}}$ on WN18RR/YAGO (6pp below CAGP). Without genuine novel-context training examples, no architecture reliably learns relation-specific variance patterns---this experimentally validates Theorem~\ref{thm:impossibility}. CAGP remains the default for its parameter-free formulation; practitioners on dense multi-relational KGs may prefer RelCondVar.
+RelCondVar replaces entity-level variance with $\sigma^2(e,r){=}\text{MLP}([e;r])$ but does not consistently outperform explicit coverage: it achieves 0.980 on FB15k-237 (vs CAGP 0.967, +1.3pp) but matches $U_{\text{str}}$ identically on WN18RR/YAGO (6pp below CAGP). On sparse-relation KGs (WN18RR: 11 relations, YAGO: 37), the MLP has insufficient relation diversity to learn meaningful relation-conditioned variance, so coverage fully dominates and the learned variance contributes zero lift. Without genuine novel-context training examples regardless of relation count, no architecture reliably learns relation-specific variance patterns---this experimentally validates Theorem~\ref{thm:impossibility}. CAGP remains the default for its parameter-free formulation; practitioners on dense multi-relational KGs may prefer RelCondVar.
 
 \paragraph{Error analysis.}
 \emph{Temporal OOD.} CAGP's semantic signal lifts WN18RR emerging-entity detection from $U_{\text{str}}$'s 0.83 to 0.91 (overall 0.92 vs 0.86). \emph{Variance collapse.} Omitting reparameterization sampling collapses all entity variances to a uniform value (AUROC drops from 0.92 to 0.72 on WN18RR, 0.90 to 0.68 on YAGO); the reparameterization trick~\citep{kingma2014autoencoding} prevents this. See Appendix~\ref{app:error_analysis} for detailed breakdown and standard OOD error analysis.
