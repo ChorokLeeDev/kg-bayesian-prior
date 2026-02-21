@@ -542,7 +542,7 @@ ICEWS14~\citep{garcia2018learning} is a temporal KG containing 7,128 entities, 2
 Embedding dimension $d=100$, learning rate $10^{-3}$, averaged over 3 seeds.
 WN18RR, FB15k-237, and ICEWS14: batch size 1024, KL weight $\beta_{\text{KL}}=0.001$, 30 epochs.
 YAGO3-10: same canonical pipeline (batch size 1024, $\beta_{\text{KL}}=0.001$, 30 epochs).
-Significance tests use seed-level bootstrap over per-seed AUROC values (10,000 iterations, $p < 0.01$).
+We report mean$\pm$std over seeds; with $n{=}3$--5 seeds, bootstrap p-values are not reliable (minimum achievable $p{\approx}0.125$ for $n{=}3$) and are not reported.
 
 \paragraph{Scalability Analysis.}
 \textbf{Memory complexity.} CAGP's coverage matrix $\mat{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ requires:
