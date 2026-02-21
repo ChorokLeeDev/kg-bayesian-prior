@@ -49,7 +49,7 @@ Under assumptions A1--A3 (see Appendix~\ref{app:proof} for full details\footnote
 \begin{equation}
     \text{AUROC}(U, \mathcal{D}_{\text{novel}}) \leq \frac{1}{2} + O(\epsilon)
 \end{equation}
-where $\epsilon$ measures the tightness of frequency matching between novel-context and ID entities (A3).
+where $\epsilon$ measures the tightness of frequency matching between novel-context and ID entities (A3). The proof implies AUROC $\approx 1/2$; observed values below $1/2$ (e.g., 0.40 in Table~\ref{tab:temporal_ood}) reflect the anti-predictive direction where high-frequency novel-context entities have \emph{lower} variance than the ID average.
 \end{theorem}
 
 \textbf{Proof sketch.} By A1, $\sigma^2_e$ is determined by $\text{freq}(e)$. By A3, for any novel-context triple $(h,r,t) \in \mathcal{D}_{\text{novel}}$, there exists an ID triple $(h',r',t')$ with $\text{freq}(h) \approx \text{freq}(h')$ and $\text{freq}(t) \approx \text{freq}(t')$. Therefore $U(h,r,t) = f(\sigma^2_h, \sigma^2_t) \approx f(\sigma^2_{h'}, \sigma^2_{t'}) = U(h',r',t')$, giving AUROC $\approx 1/2$. The deviation $\epsilon$ captures imperfect frequency matching. See Appendix for detailed proof. $\square$
