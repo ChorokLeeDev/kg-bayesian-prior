@@ -26,9 +26,7 @@ The novel-context category is defined via the same coverage indicator $c(e,r)$ u
 \subsection{Uncertainty Signals}
 
 \textbf{Semantic uncertainty} (entity embedding variance) from learned variance: $U_{\text{sem}}(h,r,t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)$ where $\bar{\sigma}^2_e$ is mean variance across dimensions.
-In practice, $U_{\text{sem}}$ is the mean diagonal variance of the entity embedding posterior:
-$U_{\text{sem}}(e) = \frac{1}{d}\sum_{j=1}^{d} \exp(\ell_{e,j})$,
-where $\ell_{e,j}$ are learned log-variance parameters. This is a standard relation-agnostic variational embedding, not a full Gaussian-process posterior; we evaluate it here because it is the common baseline used in temporal-OOD KG uncertainty work and is sufficient when combined with explicit coverage.
+In practice, $\bar{\sigma}^2_e = \frac{1}{d}\sum_{j=1}^{d} \exp(\ell_{e,j})$ is the mean diagonal variance of the entity embedding posterior, where $\ell_{e,j}$ are learned log-variance parameters. This is a standard relation-agnostic variational embedding, not a full Gaussian-process posterior; we evaluate it here because it is the common baseline used in temporal-OOD KG uncertainty work and is sufficient when combined with explicit coverage.
 
 \textbf{Structural uncertainty} (coverage indicator) from coverage: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0, 1, 2\}$.
 \textbf{Equivalent rule view:} $U_{\text{str}}$ is a deterministic coverage rule (no learned parameters): it is 0 iff both entity-relation pairs were observed in training, and 1 or 2 whenever at least one pair is unseen.
@@ -62,8 +60,8 @@ where $\epsilon$ measures the tightness of frequency matching between novel-cont
 \label{thm:complementarity}
 Under assumptions A1--A6 (sufficient conditions; see Appendix~\ref{app:proof} for precise statements and robustness analysis):
 \begin{enumerate}
-    \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\epsilon)$ on novel contexts, where $\epsilon$ measures frequency distribution overlap
-    \item[\textbf{(ii)}] Structural uncertainty achieves AUROC $< 1$ on emerging entities (imperfect separation)
+    \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\epsilon)$ on novel contexts, where $\epsilon$ measures frequency distribution overlap.
+    \item[\textbf{(ii)}] Structural uncertainty achieves AUROC $< 1$ on emerging entities (imperfect separation).
     \item[\textbf{(iii)}] Let the OOD set be a mixture of emerging entities (fraction $\pi_e$) and novel contexts ($\pi_n = 1 - \pi_e$). Under the AUROC pairwise-comparison convention used here, the decomposition is:
     \begin{equation}
         \text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + \pi_n \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}
@@ -92,7 +90,7 @@ Assumptions A1--A6 are idealized sufficient conditions that enable clean theoret
 Structural uncertainty achieves AUROC $= 1$ on novel contexts by construction: novel contexts have $c(e,r)=0$ (Definition~\ref{def:ood}), giving $U_{\text{str}} \geq 1$, while ID has $U_{\text{str}} = 0$ (A2). The substantive claims are the \emph{impossibility} of achieving this with entity-level methods (Theorem~\ref{thm:impossibility}) and the \emph{empirical prevalence} of novel contexts (11--25\% of test triples).
 \end{remark}
 
-\textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities---semantic uncertainty cannot distinguish them. Part (ii): Emerging entities are defined by low \emph{frequency}, but may still have \emph{coverage} for the specific query relation, making some indistinguishable from ID via coverage alone. Part (iii): Eq.~(\ref{eq:mixture_auroc}) follows from the Mann-Whitney U-statistic formulation of AUROC (AUROC $= P(U_{\text{OOD}} > U_{\text{ID}})$, decomposed by law of total probability and a fixed tie policy). Since $A_{\text{novel}}(U_{\text{str}}) = 1$ (Remark~\ref{rem:novel_perfect}) and $A_{\text{novel}}(U_{\text{comb}}) = 1$ for $\alpha < 1/(1{+}\Delta)$, the novel-context terms cancel in Eq.~(\ref{eq:synergy}) and the decomposition term is dominated by emerging entities. Eq.~(\ref{eq:synergy}) predicts empirical results to within 0.01 AUROC on all three datasets (Appendix~\ref{app:proof}). Full proof in Appendix~\ref{app:proof}.
+\textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities---semantic uncertainty cannot distinguish them. Part (ii): Emerging entities are defined by low \emph{frequency}, but may still have \emph{coverage} for the specific query relation, making some indistinguishable from ID via coverage alone. Part (iii): Eq.~(\ref{eq:mixture_auroc}) follows from the Mann-Whitney U-statistic formulation of AUROC (AUROC $= P(U_{\text{OOD}} > U_{\text{ID}})$, decomposed by law of total probability and a fixed tie policy). Since $A_{\text{novel}}(U_{\text{str}}) = 1$ (Remark~\ref{rem:novel_perfect}) and $A_{\text{novel}}(U_{\text{comb}}) = 1$ for $\alpha < 1/(1{+}\Delta)$, the novel-context terms cancel in Eq.~(\ref{eq:synergy}) and the decomposition term is dominated by emerging entities. Eq.~(\ref{eq:synergy}) predicts empirical results to within 0.002 AUROC on all three datasets (Appendix~\ref{app:mixture}). Full proof in Appendix~\ref{app:proof}.
 
 \subsection{CAGP}
 \label{sec:cagp}

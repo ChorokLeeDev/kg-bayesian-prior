@@ -197,10 +197,10 @@ Table~\ref{tab:assumptions} quantifies violations (all values from the reparamet
 \toprule
  & & FB15k-237 & WN18RR & YAGO \\
 \midrule
-(A1) & Spearman $\rho(\text{freq}, \sigma^2)$ & $-$0.88 & $-$0.81 & $-$0.68 \\
+(A1) & Spearman $\rho_s(\text{freq}, \sigma^2)$ & $-$0.88 & $-$0.81 & $-$0.68 \\
 (A2) & ID coverage rate & 1.00 & 1.00 & 1.00 \\
 (A4) & $\Delta$ (req: $<$1) & 1.10 & 1.00 & 1.36 \\
-(A5) & $\rho$ & 0.43 & 0.34 & 0.66 \\
+(A5) & $\rho$ (frac.\ covered emerging) & 0.43 & 0.34 & 0.66 \\
 (A6) & Sem. AUROC on emerging & 0.81 & 0.71 & 0.69 \\
 \midrule
 & Sem. on novel (pred: 0.5) & 0.49 & 0.40 & 0.40 \\
@@ -209,7 +209,7 @@ Table~\ref{tab:assumptions} quantifies violations (all values from the reparamet
 \end{tabular}
 \end{table}
 
-Assumptions (A1)--(A3) hold across datasets (with YAGO showing weaker A1 monotonicity at $\rho{=}{-}0.68$). (A4) is violated on all three datasets ($\Delta \geq 1.0$; FB15k-237: 1.10, WN18RR: 1.00, YAGO: 1.36), meaning the sufficient condition $\Delta < 1$ for perfect novel-context separation by $U_{\text{comb}}$ does not hold. Despite this, the qualitative predictions---semantic fails on novel contexts, structural fails on some emerging entities, and the combination helps---remain valid across all datasets. The assumptions are idealized sufficient conditions; the theorems provide directional insights whose predictions we validate empirically (Table~\ref{tab:temporal_ood}).
+Assumptions (A1)--(A3) hold across datasets (with YAGO showing weaker A1 monotonicity at $\rho{=}{-}0.68$). (A4) is violated or borderline on all three datasets ($\Delta \geq 1.0$; FB15k-237: 1.10, WN18RR: 1.00 (boundary), YAGO: 1.36), meaning the sufficient condition $\Delta < 1$ for perfect novel-context separation by $U_{\text{comb}}$ does not hold. Despite this, the qualitative predictions---semantic fails on novel contexts, structural fails on some emerging entities, and the combination helps---remain valid across all datasets. The assumptions are idealized sufficient conditions; the theorems provide directional insights whose predictions we validate empirically (Table~\ref{tab:temporal_ood}).
 
 \subsubsection{Empirical Verification of Assumption A3}
 \label{app:assumption_verification}

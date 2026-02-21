@@ -23,7 +23,7 @@ Uncertainty for a triple $(h, r, t)$ is typically the average entity variance:
     \label{eq:gp_uncertainty}
 \end{equation}
 where $\bar{\sigma}^2_e = \frac{1}{d}\sum_j \exp(\ell_{e,j})$ is the mean variance across dimensions.
-We denote this entity-level uncertainty $U_{\text{sem}}$ (semantic uncertainty) in our decomposition (Section~\ref{sec:method}).
+We denote this entity-level uncertainty $U_{\text{sem}}$ (semantic uncertainty) in our decomposition (\S\ref{sec:method}).
 This uncertainty is \emph{relation-agnostic}---it depends only on entity variances, not the query relation $r$. Intuitively, an entity observed in 1000 triples receives low variance even for relations it has never appeared with, since $\bar{\sigma}^2_e$ reflects overall observation count rather than per-relation experience.
 
 \paragraph{Naming convention.}
