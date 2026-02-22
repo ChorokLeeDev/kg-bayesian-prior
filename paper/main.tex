@@ -234,7 +234,7 @@ Since $\alpha$ only affects the uncertainty computation (not model training), we
 
 Representative results (3-seed mean): on WN18RR, $\alpha{=}0$ yields 0.859 (coverage only), $\alpha{=}0.5$ yields 0.924, and $\alpha{=}1$ yields 0.626 (semantic only). On FB15k-237: 0.935, 0.967, and 0.418. On YAGO3-10: 0.840, 0.899, and 0.440 (Figure~\ref{fig:alpha_sensitivity}). Performance is robust across $\alpha \in [0.05, 0.95]$, with degradation only at the two extremes. The plateau is remarkably flat: on FB15k-237, all $\alpha$ values from 0.05 to 0.90 achieve 0.968$\pm$0.000. This reflects the complementary nature of the signals---the combination is insensitive to the precise mixing weight because the two signals operate on non-overlapping OOD categories.
 
-On ICEWS14, coverage dominates ($>$96\% of temporal OOD has $U_{\text{str}} > 0$), so any $\alpha < 0.9$ achieves $>$0.99 AUROC.
+On ICEWS14, coverage dominates ($>$96\% of temporal OOD has $U_{\text{str}} > 0$), so any $\alpha < 0.9$ achieves $>$0.99 AUROC (not shown in Figure~\ref{fig:alpha_sensitivity}).
 
 \begin{figure}[ht]
 \centering
@@ -575,6 +575,9 @@ YAGO3-10: same canonical pipeline (batch size 1024, $\beta_{\text{KL}}=0.001$, 3
 Additional training details: uncertainty margin loss weight $w_{\text{unc}}=0.1$, margin $m=0.3$, gradient clipping (norm 1.0), 1 negative sample per positive (uniform random tail replacement).
 We report mean$\pm$std over seeds; with $n{=}3$--5 seeds, bootstrap p-values are not reliable (minimum achievable $p{\approx}0.125$ for $n{=}3$) and are not reported.
 
+\paragraph{Reparameterization sampling scope.}
+Reparameterization sampling (Contribution 4) is applied to the static benchmarks (WN18RR, FB15k-237, YAGO3-10) via the canonical experiment script. The ICEWS14 and ICEWS18 scripts use a variant where the CAGP scoring function evaluates at the mean embedding; because coverage dominates temporal OOD on these datasets (the semantic signal is effectively zeroed by normalization where $\bar{U}_{\text{str}}{=}0$), reparameterization does not materially affect the reported results.
+
 \paragraph{Scalability Analysis.}
 \textbf{Memory complexity.} CAGP's coverage matrix $\mat{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ requires:
 \begin{itemize}
@@ -664,12 +667,14 @@ Variant & Overall & Emerging & Novel Ctx \\
 \midrule
 CAGP (full) & \textbf{.993$\pm$.000} & \textbf{1.00$\pm$.00} & \textbf{1.00$\pm$.00} \\
 $\alpha{=}0$ (cov.\ only) & .993$\pm$.000 & .975$\pm$.000 & 1.00$\pm$.00 \\
-$\alpha{=}1$ (sem.\ only) & .500$\pm$.000 & 1.00$\pm$.00 & .500$\pm$.00 \\
+$\alpha{=}1$ (sem.\ only)$^\dagger$ & .500$\pm$.000 & 1.00$\pm$.00 & .500$\pm$.00 \\
 Shuffled coverage & .551$\pm$.016 & .593$\pm$.118 & .573$\pm$.019 \\
 Random coverage & .502$\pm$.004 & .809$\pm$.219 & .502$\pm$.004 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\noindent\scriptsize{$^\dagger$The $\alpha{=}1$ variant uses CAGP's normalization ($\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot \bar{U}_{\text{str}} / \bar{U}_{\text{sem}}$, computed on training data where $\bar{U}_{\text{str}}{=}0$), effectively zeroing the semantic signal. Overall=0.50 reflects this; the standalone $U_{\text{sem}}$ model achieves 0.84 (Table~\ref{tab:temporal_ood}). The Emerging=1.00 is a rank-ordering artifact at near-zero scale. This row demonstrates structural necessity, not semantic incapability.}
 
 \paragraph{Key findings.}
 (1)~Removing structural signal ($\alpha{=}1$, $U_{\text{sem}}$ only) drops overall AUROC from 0.99 to 0.50---semantic variance alone cannot detect temporal OOD.
