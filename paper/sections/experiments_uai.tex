@@ -91,7 +91,7 @@ We test whether relation-conditioned scoring (bilinear $h^\top W_r t$ with basis
 It does not: novel-context AUROC matches $U_{\text{sem}}$ across all three datasets (Appendix~\ref{app:bilinear}), confirming that relation-aware \emph{scoring} does not produce relation-aware \emph{uncertainty}.
 Adding coverage recovers performance to match standard CAGP, consistent with Theorem~\ref{thm:impossibility}.
 
-\subsection{Validating Complementarity (Theorem~\ref{thm:complementarity})}
+\subsection{Validating Complementarity (Proposition~\ref{prop:complementarity})}
 
 \begin{table}[t]
 \centering
@@ -99,7 +99,7 @@ Adding coverage recovers performance to match standard CAGP, consistent with The
 \label{tab:complementarity}
 
 Each signal is strongest on one category and weakest on the other.
-This supports Theorem~\ref{thm:complementarity}; CAGP combines both.
+This supports Proposition~\ref{prop:complementarity}; CAGP combines both.
 For ICEWS14/18, temporal OOD breaks static-coverage coupling.
 \vspace{-1.5ex}
 
@@ -123,7 +123,7 @@ RelCondVar & .93 & \textbf{1.0} & .98 & .83 & \textbf{1.0} & .86 & .67 & \textbf
 \multicolumn{16}{l}{\scriptsize $^*$Ground-truth temporal splits; OOD defined by time, not coverage.}\\
 \end{tabular}}
 \end{table}
-\textbf{Theorem predictions vs.\ observations.} Table~\ref{tab:complementarity} checks each part of Theorem~\ref{thm:complementarity} on the reported settings:
+\textbf{Theorem predictions vs.\ observations.} Table~\ref{tab:complementarity} checks each part of Proposition~\ref{prop:complementarity} on the reported settings:
 \begin{itemize}
 \item \textbf{Part (i):} Semantic uncertainty achieves 0.49/0.40/0.40 on novel contexts on static benchmarks (FB15k-237/WN18RR/YAGO). Values below 0.5 on WN18RR and YAGO are expected: novel-context entities are high-frequency by definition, so their learned variances are \emph{lower} than many ID entities (which include rarer entities), making $U_{\text{sem}}$ anti-predictive---a directional consequence of A1. On ICEWS14 and ICEWS18, $U_{\text{sem}}$ achieves 0.78/0.83 on novel contexts---higher because temporal novel contexts are defined by time, not coverage, so they include additional frequency-correlated signal available to entity-level estimators.
 \item \textbf{Part (ii):} Structural uncertainty achieves 0.78/0.83/0.67/0.98 on emerging entities (imperfect $<1$ on static benchmarks, as predicted; near-perfect on ICEWS14/18 where most emerging entities also lack coverage).

@@ -61,8 +61,8 @@ where $\epsilon$ measures the tightness of frequency matching between novel-cont
 The theorem formalizes a precise logical structure: given that variance is frequency-determined (A1) and novel-context entities are frequency-matched to ID (A3), the inability to discriminate follows directly. The non-trivial empirical content is threefold. \textbf{First}, A3 holds in practice: $\geq$98\% of novel-context triples have frequency-matched ID counterparts across all benchmarks (Appendix~\ref{app:assumption_verification}), so the failure mode is not hypothetical. \textbf{Second}, the result rules out \emph{any} $f(\sigma^2_h, \sigma^2_t)$, including sophisticated learned combinations---no reparameterization of entity-level statistics can escape this limit. \textbf{Third}, the observed anti-predictive direction (AUROC $< 0.5$, e.g., 0.40 in Table~\ref{tab:temporal_ood}) is non-obvious: high-frequency novel-context entities accrue \emph{lower} variance than the ID average, causing entity-level uncertainty to rank them below ID triples. The held-out relation experiment (Appendix~\ref{app:held_out}) confirms structural necessity independently: coverage detects held-out-relation OOD (AUROC$=$1.00) while semantic uncertainty remains near-random (0.51), with OOD defined by a mechanism entirely unrelated to coverage. The theorem's value is as a formal no-go result: it makes precise an intuition that might otherwise remain vague, and its universality over all $f$ prevents researchers from pursuing increasingly complex entity-level combinations that are provably futile.
 \end{remark}
 
-\begin{theorem}[Complementarity of Uncertainty Signals]
-\label{thm:complementarity}
+\begin{proposition}[Complementarity of Uncertainty Signals]
+\label{prop:complementarity}
 Under assumptions A1--A6 (sufficient conditions; see Appendix~\ref{app:proof} for precise statements and robustness analysis):
 \begin{enumerate}
     \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\epsilon)$ on novel contexts, where $\epsilon$ measures frequency distribution overlap.
@@ -83,11 +83,11 @@ Under assumptions A1--A6 (sufficient conditions; see Appendix~\ref{app:proof} fo
     \end{equation}
     which is positive whenever semantic uncertainty separates emerging entities better than structural does (A6, verified empirically).
 \end{enumerate}
-\end{theorem}
+\end{proposition}
 
 \begin{remark}[Role of assumptions]
 \label{rem:assumptions}
-Assumptions A1--A6 are idealized sufficient conditions that enable clean theoretical statements. In practice, several are only approximately satisfied---notably A4, which is violated on all three benchmarks (Appendix~\ref{app:assumptions}). Nevertheless, the qualitative predictions of Theorem~\ref{thm:complementarity} (semantic fails on novel contexts, structural is imperfect on emerging entities, and the combination helps) hold across all datasets and seeds, suggesting the theorem captures the correct structural insight even when its formal conditions do not strictly hold.
+Assumptions A1--A6 are idealized sufficient conditions that enable clean theoretical statements. In practice, several are only approximately satisfied---notably A4, which is violated on all three benchmarks (Appendix~\ref{app:assumptions}). Nevertheless, the qualitative predictions of Proposition~\ref{prop:complementarity} (semantic fails on novel contexts, structural is imperfect on emerging entities, and the combination helps) hold across all datasets and seeds, suggesting the theorem captures the correct structural insight even when its formal conditions do not strictly hold.
 \end{remark}
 
 \begin{remark}[Structural detection of novel contexts]
@@ -100,7 +100,7 @@ Structural uncertainty achieves AUROC $= 1$ on novel contexts by construction: n
 \subsection{CAGP}
 \label{sec:cagp}
 
-Theorem~\ref{thm:complementarity} establishes that relation-specific uncertainty is necessary for detecting novel contexts. We propose CAGP, which explicitly combines semantic and structural uncertainty:
+Proposition~\ref{prop:complementarity} establishes that relation-specific uncertainty is necessary for detecting novel contexts. We propose CAGP, which explicitly combines semantic and structural uncertainty:
 
 \begin{equation}
     U_{\text{CAGP}}(h,r,t) = \alpha \cdot \tilde{U}_{\text{sem}}(h,r,t) + (1-\alpha) \cdot U_{\text{str}}(h,r,t)
@@ -132,7 +132,7 @@ We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from
 Structural uncertainty is: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0,1,2\}$.
 
 \paragraph{Design rationale.}
-The linear combination is intentionally simple---a single fixed scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}), its \emph{complementarity} with semantic uncertainty (Theorem~\ref{thm:complementarity}), and showing that even this minimal combination consistently outperforms either signal alone (\S\ref{sec:experiments}).
+The linear combination is intentionally simple---a single fixed scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}), its \emph{complementarity} with semantic uncertainty (Proposition~\ref{prop:complementarity}), and showing that even this minimal combination consistently outperforms either signal alone (\S\ref{sec:experiments}).
 
 \paragraph{Why explicit coverage?}
 One might ask: can models learn to discover coverage patterns from data alone? Our impossibility theorem (Theorem~\ref{thm:impossibility}) shows that standard link prediction objectives do not incentivize relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias. Note that coverage-based detection of novel contexts is perfect by construction (Remark~\ref{rem:circularity}); the empirical question is whether this category is prevalent enough to matter, which we validate in \S\ref{sec:experiments}.

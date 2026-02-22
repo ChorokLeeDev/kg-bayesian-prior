@@ -26,10 +26,10 @@
 \emergencystretch=3em
 
 % Theorem environments
-\newtheorem{proposition}{Proposition}
-\newtheorem{definition}{Definition}
 \newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}{Definition}
 \newtheorem{remark}{Remark}
 
 % Custom commands
@@ -161,7 +161,7 @@ The deviation from exactly 0.5 is $O(\epsilon)$, controlled by the tightness of 
 \paragraph{Instantiating $O(\epsilon)$.}
 We heuristically estimate $\epsilon$ using the Spearman rank correlation $\rho_s$ between entity frequency and learned variance, which quantifies the tightness of the variance-frequency coupling (A1). Concretely, we use the approximation $|\text{AUROC} - 0.5| \lesssim C \sqrt{1 - \rho_s^2}$ with $C \leq 0.5$; this is a heuristic bound rather than a formal derivation (a rigorous proof connecting entity-level Spearman $\rho$ to triple-level AUROC is left to future work). On our datasets: WN18RR $\rho_s {=} {-}0.81$ ($\epsilon \lesssim 0.29$), FB15k-237 $\rho_s {=} {-}0.88$ ($\epsilon \lesssim 0.24$), YAGO $\rho_s {=} {-}0.68$ ($\epsilon \lesssim 0.37$). Observed novel-context AUROC: 0.40, 0.49, 0.40 (WN18RR, FB15k-237, YAGO)---all within these estimates. Values near or below 0.5 are consistent with near-random detection on novel contexts, confirming the impossibility bound.
 
-\subsection{Proof of Theorem~\ref{thm:complementarity} (Complementarity)}
+\subsection{Proof of Proposition~\ref{prop:complementarity} (Complementarity, with A4 caveat)}
 
 \paragraph{Proof of Part (i).}
 By (A3), novel-context entities have frequency-matched ID counterparts. By (A1), matching frequencies imply matching variances. Thus $U_{\text{sem}}$ has identical distributions on novel contexts and ID, giving AUROC $= 0.5 + O(\epsilon)$.
@@ -246,14 +246,14 @@ On ICEWS14, coverage dominates ($>$96\% of temporal OOD has $U_{\text{str}} > 0$
 \paragraph{Recommendation.}
 We fix $\alpha{=}0.5$ as the default (Figure~\ref{fig:alpha_sensitivity}). No validation set tuning is required, making CAGP a zero-hyperparameter extension over the base embedding model.
 
-\subsection{Theorem~\ref{thm:complementarity}(iii) Validation: Mixture Decomposition}
+\subsection{Proposition~\ref{prop:complementarity}(iii) Validation: Mixture Decomposition}
 \label{app:mixture}
 
 We validate the mixture AUROC decomposition (Eq.~\ref{eq:mixture_auroc}) by comparing predicted and observed AUROC at varying emerging-to-novel ratios. No retraining is performed; we resample from per-triple uncertainties and verify that $\text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + (1{-}\pi_e) \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}$ holds to within 0.01 on all datasets across all resampled ratios (within 0.005 at the natural emerging/novel ratio; see discussion below).
 
 \begin{table}[ht]
 \centering
-\caption{Oracle combination gain over best single signal at varying emerging/(emerging+novel) ratios. The combination outperforms at all mixed proportions, validating Theorem~\ref{thm:complementarity}(iii).}
+\caption{Oracle combination gain over best single signal at varying emerging/(emerging+novel) ratios. The combination outperforms at all mixed proportions, validating Proposition~\ref{prop:complementarity}(iii).}
 \label{tab:mixture}
 \small
 \begin{tabular}{lccc|ccc}
@@ -339,7 +339,7 @@ We present an \emph{oracle analysis} of selective prediction (abstaining on high
 The abstention threshold is selected on the test set; this is \emph{not} a deployable protocol but an oracle evaluation that quantifies the potential of each uncertainty signal for selective prediction. In a deployment setting, a held-out calibration set or conformal prediction framework~\citep{zhu2025certainty} would be required to set the threshold while guaranteeing a target coverage rate.
 
 \paragraph{Methodology details.}
-For each test triple $(h,r,?)$, the base model ranks all candidate tail entities by score $s(h,r,t')$. The ``correct'' prediction is Hits@1: whether the ground-truth $t$ is ranked first. Each uncertainty method produces $U(h,r,t)$ for the ground-truth triple; we abstain from the 15\% of triples with highest $U$. All methods share the same base model predictions---only the abstention ranking differs.
+The 2,000-triple subset is drawn uniformly at random from the FB15k-237 test set (seed 42, fixed). For each test triple $(h,r,?)$, the trained DistMult base model ranks all candidate tail entities by score $s(h,r,t')$; the model is \emph{not} retrained for this analysis. The ``correct'' prediction is Hits@1: whether the ground-truth $t$ is ranked first among all $|\mathcal{E}|$ candidates. An ``error'' is defined as Hits@1 $= 0$. Each uncertainty method produces $U(h,r,t_{\text{gold}})$ for the ground-truth triple; we abstain from the 15\% of triples with highest $U$ and report Hits@1 on the remaining 85\%. Error reduction is $(\text{errors}_{\text{full}} - \text{errors}_{\text{abstained}}) / \text{errors}_{\text{full}}$. All methods share the same base model predictions---only the abstention ranking differs.
 
 \begin{table}[ht]
 \centering
@@ -422,7 +422,7 @@ Neither $U_{\text{sem}}$ nor the bilinear scorer achieves novel-context AUROC ab
 \label{app:discussion}
 
 \paragraph{Dataset-specific signal composition.}
-Table~\ref{tab:temporal_ood} reveals the optimal signal composition varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels. On YAGO3-10, structural uncertainty remains the stronger single-signal contributor ($U_{\text{str}}$ 0.84), while semantic uncertainty alone is moderate (0.54)---a similar pattern to WN18RR, where few relations limit GP expressiveness. CAGP improves over $U_{\text{str}}$ on all datasets by contributing semantic information on emerging entities: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO. The improvement is largest where single-signal emerging detection is weakest, consistent with the complementarity predicted by Theorem~\ref{thm:complementarity}. Note: without reparameterization sampling, entity variances collapse under KL regularization (see error analysis in \S\ref{sec:experiments}), reducing CAGP to a coverage-only detector. CAGP achieves 0.90--0.97 AUROC across static benchmarks and 0.993/0.987 on ICEWS14/18.
+Table~\ref{tab:temporal_ood} reveals the optimal signal composition varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels. On YAGO3-10, structural uncertainty remains the stronger single-signal contributor ($U_{\text{str}}$ 0.84), while semantic uncertainty alone is moderate (0.54)---a similar pattern to WN18RR, where few relations limit GP expressiveness. CAGP improves over $U_{\text{str}}$ on all datasets by contributing semantic information on emerging entities: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO. The improvement is largest where single-signal emerging detection is weakest, consistent with the complementarity predicted by Proposition~\ref{prop:complementarity}. Note: without reparameterization sampling, entity variances collapse under KL regularization (see error analysis in \S\ref{sec:experiments}), reducing CAGP to a coverage-only detector. CAGP achieves 0.90--0.97 AUROC across static benchmarks and 0.993/0.987 on ICEWS14/18.
 
 \paragraph{Per-dataset signal analysis.}
 On YAGO3-10, CAGP achieves 0.79 on emerging entities, improving over both $U_{\text{sem}}$ (0.69) and $U_{\text{str}}$ (0.67). Both signals are weaker on YAGO than FB15k-237: YAGO's variance-frequency correlation (Spearman $\rho{=}{-}0.68$) is weaker than FB15k-237 ($\rho{=}{-}0.88$), and YAGO's 37 relations produce an emerging-entity slice ($\pi_e{=}0.48$) where coverage gaps partially overlap with entity frequency. Despite this, CAGP's +12pp gain over $U_{\text{str}}$ on YAGO is the largest across all static benchmarks.
@@ -703,7 +703,27 @@ CAGP & .976 & 1.000 & .987 \\
 \end{table}
 
 \paragraph{Discussion.}
-The identical CAGP and $U_{\text{str}}$ values arise because ICEWS18 temporal OOD is dominated by novel-context triples ($>$96\% have $U_{\text{str}} > 0$), leaving the emerging-entity slice (2,747 triples) with near-perfect coverage due to the recurrent event structure of geopolitical KGs. Note: we conducted a leakage audit for ICEWS14 (Appendix~\ref{app:leakage}) but not for ICEWS18; given the ceiling effect (CAGP~$=$~$U_{\text{str}}$ everywhere), leakage patterns on ICEWS18 do not affect the paper's claims. The semantic signal ($U_{\text{sem}}$) achieves 0.985 on this slice alone---but combining with coverage does not improve beyond what coverage already achieves. This is the ceiling effect discussed in the main text: CAGP's decomposition adds analytical clarity but not additional detection power on ICEWS18.
+The identical CAGP and $U_{\text{str}}$ values arise because ICEWS18 temporal OOD is dominated by novel-context triples ($>$96\% have $U_{\text{str}} > 0$), leaving the emerging-entity slice (2,747 triples) with near-perfect coverage due to the recurrent event structure of geopolitical KGs. A leakage audit for ICEWS18 is provided in Appendix~\ref{app:leakage18}. The semantic signal ($U_{\text{sem}}$) achieves 0.985 on this slice alone---but combining with coverage does not improve beyond what coverage already achieves. This is the ceiling effect discussed in the main text: CAGP's decomposition adds analytical clarity but not additional detection power on ICEWS18.
+
+\subsection{ICEWS18 Leakage Audit}
+\label{app:leakage18}
+
+We conducted a leakage audit on ICEWS18 analogous to the ICEWS14 audit (Appendix~\ref{app:leakage}). ICEWS18 contains 23,033 entities, 256 relations, 373,018 training triples, and 49,545 test triples.
+
+\paragraph{Temporal split integrity.}
+Train timestamps span IDs 0--5736; test timestamps span 6480--7272, with no overlap and a gap of 744 timestamp units. The chronological split is clean.
+
+\paragraph{Inverse relation overlap.}
+62.8\% of test triples (31,132/49,545) have an inverse counterpart $(t, r', h)$ in training (any $r'$); 42.1\% share the exact same relation. As with ICEWS14, this reflects the reciprocal structure of geopolitical events and does not inflate coverage-based detection (structural signal tracks entity-\emph{relation} pairs, not entity pairs).
+
+\paragraph{Exact triple repetition.}
+42.1\% of test triples (20,865/49,545) exactly repeat a training $(h,r,t)$ at a later timestamp. These recurring events fall into the ID category by definition and, if anything, make the ID pool easier to classify by all methods.
+
+\paragraph{Novel-context integrity.}
+Zero novel-context test triples appear as exact duplicates in training (0/9,253 = 0.0\%). All novel-context triples are genuinely new entity-relation combinations, consistent with ICEWS18's temporal OOD structure.
+
+\paragraph{Impact on claims.}
+The ceiling effect (CAGP $=$ $U_{\text{str}} = 0.987$) is driven by ICEWS18's high novel-context prevalence (8,587 triples, 17.3\% of test), not by leakage: novel-context triples are leakage-free, and CAGP's advantage on emerging entities (2,747 triples) remains 0pp over $U_{\text{str}}$ alone due to near-perfect emerging coverage in this recurrent event KG.
 
 \subsection{Uncertainty Margin Loss Ablation}
 \label{app:margin_ablation}
