@@ -13,7 +13,7 @@ All methods share identical OOD splits, evaluation protocol, training hyperparam
 AUROC (primary; AUPR in Appendix~\ref{app:aupr}). We also report calibration diagnostics (ECE, Brier) and selective prediction in the appendix. Note that AUPR is identical for CAGP and $U_{\text{str}}$ across all datasets (Appendix~\ref{app:aupr}): in high-precision retrieval, coverage dominates and the semantic signal adds no lift---CAGP's advantage over $U_{\text{str}}$ is AUROC-specific (recall-weighted).
 
 \paragraph{Reproducibility.}
-All datasets use a unified pipeline with 30 epochs, $\beta_{\text{KL}}{=}0.001$, $w_{\text{unc}}{=}0.1$, seeds $\{42, 123, 456\}$ (5 seeds for WN18RR; CAGP 5-seed std $= 0.005$, confirming stability). Per-seed breakdowns are in the supplementary material. Code and outputs will be released upon acceptance.
+All datasets use a unified pipeline with 30 epochs, $\beta_{\text{KL}}{=}0.001$, $w_{\text{unc}}{=}0.1$, seeds $\{42, 123, 456\}$ (5 seeds for WN18RR; 10 seeds for FB15k-237; CAGP multi-seed stds: WN18RR 0.005, FB15k-237 overall 0.001/emerging 0.002, confirming stability). Per-seed breakdowns are in the supplementary material. Code and outputs will be released upon acceptance.
 \textbf{Training signal asymmetry:} Models with learned variance (GPOnly, CAGP, RelCondVar) receive an uncertainty margin loss ($w_{\text{unc}}{=}0.1$) encouraging higher uncertainty on negative samples; baselines without variance parameters (UKGE, Energy, CoverageOnly) receive only BCE loss. This reflects an architectural constraint, not a selective advantage: the margin loss is undefined for parameter-free uncertainty signals. See Appendix~\ref{app:margin_ablation} for an ablation on the effect of this loss.
 Although $\alpha$ is parameterized as a learnable logit, the link prediction objective provides zero gradient to it (all training triples have $U_{\text{str}}{=}0$), so it remains at its initialization of 0.5 across all datasets and seeds (Appendix~\ref{app:alpha_sensitivity}).
 
@@ -23,7 +23,7 @@ Table~\ref{tab:temporal_ood} presents results on temporal OOD across all main ev
 
 \begin{table}[t]
 \centering
-\caption{\textbf{Temporal OOD detection} ($\tau{=}25^{\text{th}}$ pctl, 3-seed mean$\pm$std; 5 seeds for WN18RR). GPOnly~$= U_{\text{sem}}$ (semantic uncertainty only).
+\caption{\textbf{Temporal OOD detection} ($\tau{=}25^{\text{th}}$ pctl, 3-seed mean$\pm$std; 5 seeds for WN18RR; 10 seeds for FB15k-237). GPOnly~$= U_{\text{sem}}$ (semantic uncertainty only).
 \label{tab:temporal_ood}}
 
 We report emerging-entity AUROC (Em.) and overall OOD AUROC (All), and note:
@@ -69,7 +69,7 @@ $U_{\text{str}}$ & .83 & .86\tiny{$\pm$.000} & .78 & .94\tiny{$\pm$.000}
 \midrule
 \multicolumn{11}{l}{\textit{Decomposition (Ours)}} \\
 CAGP       & \textbf{.91} & \textbf{.92}\tiny{$\pm$.005}
-           & \textbf{.89} & \textbf{.97}\tiny{$\pm$.000}
+           & \textbf{.89} & \textbf{.97}\tiny{$\pm$.001}
            & \textbf{.79} & \textbf{.90}\tiny{$\pm$.004}
            & \textbf{1.0} & \textbf{.99}\tiny{$\pm$.000}
            & \textbf{.98} & \textbf{.99}\tiny{$\pm$.000} \\

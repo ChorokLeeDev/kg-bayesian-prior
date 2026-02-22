@@ -809,7 +809,7 @@ $^c$Reported YAGO methods use 3 seeds; all baseline values in tables are from co
 
 \begin{table}[ht]
 \centering
-\caption{Per-seed CAGP temporal OOD AUROC (overall and emerging-entity). Coverage ($U_{\text{str}}$) is deterministic given the data split, so all seeds yield identical values. WN18RR and ICEWS14 use 5 seeds; FB15k-237 and YAGO3-10 use 3 seeds.}
+\caption{Per-seed CAGP temporal OOD AUROC (overall and emerging-entity). Coverage ($U_{\text{str}}$) is deterministic given the data split, so all seeds yield identical values. WN18RR and ICEWS14 use 5 seeds; FB15k-237 uses 10 seeds (5 shown; seeds 1234/2024/2025/2026/314 yield Overall$.966$--$.968$, Emerging$.889$--$.894$); YAGO3-10 uses 3 seeds.}
 \small
 \begin{tabular}{llccccc}
 \toprule
@@ -818,8 +818,8 @@ Dataset & Metric & Seed 42 & Seed 123 & Seed 456 & Seed 789 & Seed 1000 \\
 WN18RR & Overall & .926 & .917 & .926 & .918 & .928 \\
        & Emerging & .911 & .900 & .911 & .902 & .913 \\
 \midrule
-FB15k-237 & Overall & .966 & .967 & .967 & --- & --- \\
-          & Emerging & .888 & .889 & .890 & --- & --- \\
+FB15k-237 & Overall & .966 & .967 & .967 & .967 & .967 \\
+          & Emerging & .888 & .889 & .890 & .890 & .890 \\
 \midrule
 YAGO3-10 & Overall & .894 & .902 & .902 & --- & --- \\
          & Emerging & .779 & .796 & .797 & --- & --- \\
@@ -830,7 +830,7 @@ ICEWS14 & Overall & .993 & .993 & .993 & .993 & .993 \\
 \end{tabular}
 \end{table}
 
-Variance across seeds is small: WN18RR 5-seed std$=$0.005, FB15k-237 std$<$0.001, YAGO std$=$0.004, ICEWS14 std$=$0.000. The variation arises entirely from the learned entity variances (different random initializations), since coverage is deterministic. Novel-context AUROC is 1.000 for all seeds on all datasets (by construction; Remark~\ref{rem:circularity}).
+Variance across seeds is small: WN18RR 5-seed std$=$0.005, FB15k-237 10-seed std$=$0.001 (overall) / 0.002 (emerging), YAGO std$=$0.004, ICEWS14 std$=$0.000. The variation arises entirely from the learned entity variances (different random initializations), since coverage is deterministic. Novel-context AUROC is 1.000 for all seeds on all datasets (by construction; Remark~\ref{rem:circularity}).
 
 \subsection{Held-Out Relation Experiment: Non-Circular Static Validation}
 \label{app:held_out}
