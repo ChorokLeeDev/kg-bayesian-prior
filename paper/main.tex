@@ -569,14 +569,14 @@ ICEWS14~\citep{garcia2018learning} is a temporal KG containing 7,128 entities, 2
 \subsection{Training Configuration}
 \label{app:training_config}
 
-Embedding dimension $d=100$, learning rate $10^{-3}$, averaged over 3 seeds.
+Embedding dimension $d=100$, learning rate $10^{-3}$, averaged over 3--5 seeds (5 seeds for WN18RR; 3 seeds for FB15k-237, YAGO3-10, and ICEWS14).
 WN18RR, FB15k-237, and ICEWS14: batch size 1024, KL weight $\beta_{\text{KL}}=0.001$, 30 epochs.
 YAGO3-10: same canonical pipeline (batch size 1024, $\beta_{\text{KL}}=0.001$, 30 epochs).
 Additional training details: uncertainty margin loss weight $w_{\text{unc}}=0.1$, margin $m=0.3$, gradient clipping (norm 1.0), 1 negative sample per positive (uniform random tail replacement).
 We report mean$\pm$std over seeds; with $n{=}3$--5 seeds, bootstrap p-values are not reliable (minimum achievable $p{\approx}0.125$ for $n{=}3$) and are not reported.
 
 \paragraph{Reparameterization sampling scope.}
-Reparameterization sampling (Contribution 4) is applied to the static benchmarks (WN18RR, FB15k-237, YAGO3-10) via the canonical experiment script. The ICEWS14 and ICEWS18 scripts use a variant where the CAGP scoring function evaluates at the mean embedding; because coverage dominates temporal OOD on these datasets (the semantic signal is effectively zeroed by normalization where $\bar{U}_{\text{str}}{=}0$), reparameterization does not materially affect the reported results.
+Reparameterization sampling (Contribution 4) is applied to the static benchmarks (WN18RR, FB15k-237, YAGO3-10) via the canonical experiment script. The ICEWS14 and ICEWS18 scripts use a variant that evaluates at the mean embedding (no reparameterization). Reparameterization affects only the semantic component. Since $\bar{U}_{\text{str}}{=}0$ on training data, the normalization zeroes $\tilde{U}_{\text{sem}}$ at evaluation time, making coverage the sole active signal on ICEWS14/18. Consequently, omitting reparameterization does not materially affect the ICEWS results.
 
 \paragraph{Scalability Analysis.}
 \textbf{Memory complexity.} CAGP's coverage matrix $\mat{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ requires:
@@ -665,22 +665,22 @@ To confirm that CAGP's high AUROC on ICEWS14 is driven by the specific entity-re
 \toprule
 Variant & Overall & Emerging & Novel Ctx \\
 \midrule
-CAGP (full) & \textbf{.993$\pm$.000} & \textbf{1.00$\pm$.00} & \textbf{1.00$\pm$.00} \\
+CAGP (full) & \textbf{.993$\pm$.000} & .976$\pm$.000 & \textbf{1.00$\pm$.00} \\
 $\alpha{=}0$ (cov.\ only) & .993$\pm$.000 & .975$\pm$.000 & 1.00$\pm$.00 \\
-$\alpha{=}1$ (sem.\ only)$^\dagger$ & .500$\pm$.000 & 1.00$\pm$.00 & .500$\pm$.00 \\
+$\alpha{=}1$ (sem.\ only)$^\dagger$ & .500$\pm$.000 & .500$\pm$.00 & .500$\pm$.00 \\
 Shuffled coverage & .551$\pm$.016 & .593$\pm$.118 & .573$\pm$.019 \\
 Random coverage & .502$\pm$.004 & .809$\pm$.219 & .502$\pm$.004 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent\scriptsize{$^\dagger$The $\alpha{=}1$ variant uses CAGP's normalization ($\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot \bar{U}_{\text{str}} / \bar{U}_{\text{sem}}$, computed on training data where $\bar{U}_{\text{str}}{=}0$), effectively zeroing the semantic signal. Overall=0.50 reflects this; the standalone $U_{\text{sem}}$ model achieves 0.84 (Table~\ref{tab:temporal_ood}). The Emerging=1.00 is a rank-ordering artifact at near-zero scale. This row demonstrates structural necessity, not semantic incapability.}
+\noindent{\scriptsize $^\dagger$The $\alpha{=}1$ variant uses CAGP's normalization ($\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot \bar{U}_{\text{str}} / \bar{U}_{\text{sem}}$, computed on training data where $\bar{U}_{\text{str}}{=}0$), which effectively zeros the semantic signal. Because ICEWS14 evaluates at the mean embedding (no reparameterization), entity variances do not differentiate from initialization---all semantic uncertainties are near-identical---so the zero-scaling produces a constant score of zero on all triples, yielding AUROC$=$0.50 on all subsets. (The standalone $U_{\text{sem}}$ model, reported in Table~\ref{tab:temporal_ood} at 0.84 overall, uses test-time normalization with test statistics rather than the training-data calibration applied here.) This row demonstrates structural necessity, not semantic incapability.}
 
 \paragraph{Key findings.}
 (1)~Removing structural signal ($\alpha{=}1$, $U_{\text{sem}}$ only) drops overall AUROC from 0.99 to 0.50---semantic variance alone cannot detect temporal OOD.
 (2)~Shuffling coverage rows (preserving identical row/column sums and density) drops AUROC to 0.55, proving the model exploits \emph{specific} entity-relation associations, not aggregate statistics.
 (3)~Random binary coverage at matched density (1.7\%) yields 0.50, ruling out density-driven performance.
-(4)~Coverage alone ($\alpha{=}0$) matches full CAGP at 0.99 overall, indicating structural (coverage) signal is the primary driver on temporal OOD, while semantic uncertainty contributes complementary value on emerging-entity slices (0.975 vs 1.00).
+(4)~Coverage alone ($\alpha{=}0$) matches full CAGP at 0.99 overall and 0.975 vs 0.976 on emerging entities, indicating structural (coverage) signal is the primary driver on ICEWS14. The near-zero semantic lift is expected: without reparameterization, the semantic signal is zeroed by normalization, so CAGP effectively reduces to $U_{\text{str}}$ on this dataset. The +8--12pp semantic contribution arises on the static benchmarks (Table~\ref{tab:temporal_ood}) where reparameterization is active.
 
 \subsection{ICEWS18 Per-Subset Breakdown}
 \label{app:icews18_subsets}
