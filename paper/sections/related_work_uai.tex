@@ -11,7 +11,7 @@ Recent work has also addressed distribution shift for entity embeddings in the i
 
 \paragraph{OOD Detection.}
 MC Dropout~\citep{gal2016dropout}, Deep Ensembles~\citep{lakshminarayanan2017simple}, and Energy-based methods~\citep{liu2020energy} capture model uncertainty but not structural observation patterns.
-Simple Neural Gaussian Process (SNGP)~\citep{liu2020simple} estimates distance to training data; when applied using entity embeddings as inputs (as done here), it remains relation-agnostic.
+Spectral-normalized Neural Gaussian Process (SNGP)~\citep{liu2020simple} estimates distance to training data via a GP output layer; when applied using entity embeddings as inputs (as done here, producing per-entity uncertainty), it remains relation-agnostic.
 Classification-oriented evidential approaches (e.g., \citep{sensoy2018evidential}) are not directly comparable to KG-tail OOD detection in this setup; we therefore evaluate MC Dropout, Deep Ensembles, Energy, and SNGP as baselines.
 Graph Posterior Networks~\citep{stadler2021graph} propagate uncertainty via the graph structure but do not model relation-specific edge types, and target node classification rather than triple-level OOD detection.
 Classical feature-space methods (Mahalanobis distance~\citep{lee2018simple}, energy scores) assume continuous feature geometry; KGs' discrete combinatorial structure motivates our coverage-based alternative.
