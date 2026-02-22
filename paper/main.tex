@@ -576,7 +576,7 @@ Additional training details: uncertainty margin loss weight $w_{\text{unc}}=0.1$
 We report mean$\pm$std over seeds; with $n{=}3$--5 seeds, bootstrap p-values are not reliable (minimum achievable $p{\approx}0.125$ for $n{=}3$) and are not reported.
 
 \paragraph{Reparameterization sampling scope.}
-Reparameterization sampling (Contribution 4) is applied to the static benchmarks (WN18RR, FB15k-237, YAGO3-10) via the canonical experiment script. The ICEWS14 and ICEWS18 scripts use a variant that evaluates at the mean embedding (no reparameterization). Reparameterization affects only the semantic component. Since $\bar{U}_{\text{str}}{=}0$ on training data, the normalization zeroes $\tilde{U}_{\text{sem}}$ at evaluation time, making coverage the sole active signal on ICEWS14/18. Consequently, omitting reparameterization does not materially affect the ICEWS results.
+Reparameterization sampling (Contribution 4) is applied to \emph{all} datasets (WN18RR, FB15k-237, YAGO3-10, ICEWS14, ICEWS18) via the canonical experiment script (\texttt{run\_wn18rr\_temporal.py}), which uses the main CAGP model in \texttt{src/models/coverage\_augmented\_gpkge.py}. This produces the results reported in Table~\ref{tab:temporal_ood} and Appendix~\ref{app:per_seed}. The ICEWS14 component ablation (Appendix~\ref{app:icews14_ablation}) uses a separate self-contained ablation script with a no-reparam CAGP variant; because entity variances do not differentiate without reparameterization, the ablation's CAGP~(full) achieves Emerging$=$0.976 vs. the canonical CAGP's 1.000 (Table~\ref{tab:temporal_ood}). The ablation's primary purpose is demonstrating structural necessity (alpha$=$1 collapses to 0.50), not matching the canonical model's absolute performance.
 
 \paragraph{Scalability Analysis.}
 \textbf{Memory complexity.} CAGP's coverage matrix $\mat{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ requires:
@@ -654,7 +654,7 @@ $U_{\text{str}}$ & .993$\pm$.000 & .995$\pm$.000 \\
 \subsection{ICEWS14 Ablation: Structural Signal Necessity}
 \label{app:icews14_ablation}
 
-To confirm that CAGP's high AUROC on ICEWS14 is driven by the specific entity-relation structure rather than statistical artifacts, we evaluate five ablation variants (Table~\ref{tab:icews14_ablation}). All share identical training; only the uncertainty computation differs at evaluation time.
+To confirm that CAGP's high AUROC on ICEWS14 is driven by the specific entity-relation structure rather than statistical artifacts, we evaluate five ablation variants (Table~\ref{tab:icews14_ablation}). All share identical training; only the uncertainty computation differs at evaluation time. \textbf{Note:} This ablation uses a self-contained no-reparameterization CAGP variant (not the canonical CAGP from Table~\ref{tab:temporal_ood}); consequently, CAGP~(full) achieves Emerging$=$0.976 here vs.\ 1.000 in the canonical model (see Appendix~\ref{app:training_config} for discussion). The key conclusions---structural necessity and signal specificity---hold in both variants.
 
 \begin{table}[ht]
 \centering
@@ -680,7 +680,7 @@ Random coverage & .502$\pm$.004 & .809$\pm$.219 & .502$\pm$.004 \\
 (1)~Removing structural signal ($\alpha{=}1$, $U_{\text{sem}}$ only) drops overall AUROC from 0.99 to 0.50---semantic variance alone cannot detect temporal OOD.
 (2)~Shuffling coverage rows (preserving identical row/column sums and density) drops AUROC to 0.55, proving the model exploits \emph{specific} entity-relation associations, not aggregate statistics.
 (3)~Random binary coverage at matched density (1.7\%) yields 0.50, ruling out density-driven performance.
-(4)~Coverage alone ($\alpha{=}0$) matches full CAGP at 0.99 overall and 0.975 vs 0.976 on emerging entities, indicating structural (coverage) signal is the primary driver on ICEWS14. The near-zero semantic lift is expected: without reparameterization, the semantic signal is zeroed by normalization, so CAGP effectively reduces to $U_{\text{str}}$ on this dataset. The +8--12pp semantic contribution arises on the static benchmarks (Table~\ref{tab:temporal_ood}) where reparameterization is active.
+(4)~Coverage alone ($\alpha{=}0$) matches full CAGP at 0.99 overall and 0.975 vs 0.976 on emerging entities in this no-reparam variant. This confirms structural (coverage) signal is the primary driver. The canonical CAGP with reparameterization achieves Emerging$=$1.000 on ICEWS14 (Table~\ref{tab:temporal_ood}), contributing a genuine +2pp over $U_{\text{str}}$; this difference vanishes in the no-reparam variant because reparameterization is what provides meaningful variance differentiation for the tiebreaking role.
 
 \subsection{ICEWS18 Per-Subset Breakdown}
 \label{app:icews18_subsets}
