@@ -29,8 +29,8 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{corollary}[theorem]{Corollary}
-\newtheorem{definition}{Definition}
-\newtheorem{remark}{Remark}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
 
 % Custom commands
 \newcommand{\E}{\mathbb{E}}
@@ -358,7 +358,7 @@ CAGP & \textbf{78.4\%} & \textbf{42.7\%} \\
 \end{tabular}
 \end{table}
 
-Abstaining on 15\% highest-uncertainty queries reduces errors by 43\% (78.4\% accuracy vs 62.3\% baseline). CAGP's advantage over single signals (23.6\% for $U_{\text{sem}}$, 29.7\% for $U_{\text{str}}$) arises because the abstained set captures both poorly-constrained entities (semantic) and novel relational contexts (structural). The combination removes a more diverse set of likely-incorrect predictions than either signal alone.
+Abstaining on the 15\% highest-uncertainty queries \emph{using CAGP} reduces errors by 42.7\% (78.4\% accuracy vs.\ 62.3\% baseline). CAGP's advantage over single signals (23.6\% for $U_{\text{sem}}$, 29.7\% for $U_{\text{str}}$) arises because the abstained set captures both poorly-constrained entities (semantic) and novel relational contexts (structural). The combination removes a more diverse set of likely-incorrect predictions than either signal alone.
 
 \subsection{Architecture Generalization}
 \label{app:architectures}
@@ -714,7 +714,7 @@ We conducted a leakage audit on ICEWS18 analogous to the ICEWS14 audit (Appendix
 Train timestamps span IDs 0--5736; test timestamps span 6480--7272, with no overlap and a gap of 744 timestamp units. The chronological split is clean.
 
 \paragraph{Inverse relation overlap.}
-62.8\% of test triples (31,132/49,545) have an inverse counterpart $(t, r', h)$ in training (any $r'$); 42.1\% share the exact same relation. As with ICEWS14, this reflects the reciprocal structure of geopolitical events and does not inflate coverage-based detection (structural signal tracks entity-\emph{relation} pairs, not entity pairs).
+62.8\% of test triples (31,132/49,545) have an inverse counterpart $(t, r', h)$ in training (any $r'$); 42.1\% share the exact same relation (coincidentally the same rounded figure as the exact-repeat rate below, but a distinct subset). As with ICEWS14, this reflects the reciprocal structure of geopolitical events and does not inflate coverage-based detection (structural signal tracks entity-\emph{relation} pairs, not entity pairs).
 
 \paragraph{Exact triple repetition.}
 42.1\% of test triples (20,865/49,545) exactly repeat a training $(h,r,t)$ at a later timestamp. These recurring events fall into the ID category by definition and, if anything, make the ID pool easier to classify by all methods.
@@ -723,7 +723,7 @@ Train timestamps span IDs 0--5736; test timestamps span 6480--7272, with no over
 Zero novel-context test triples appear as exact duplicates in training (0/8,587 = 0.0\%). All novel-context triples are genuinely new entity-relation combinations, consistent with ICEWS18's temporal OOD structure.
 
 \paragraph{Impact on claims.}
-The ceiling effect (CAGP $=$ $U_{\text{str}} = 0.987$) is driven by ICEWS18's high novel-context prevalence (8,587 triples, 17.3\% of test), not by leakage: novel-context triples are leakage-free, and CAGP's advantage on emerging entities (2,747 triples) remains 0pp over $U_{\text{str}}$ alone due to near-perfect emerging coverage in this recurrent event KG.
+The ceiling effect (CAGP $= U_{\text{str}} = 0.987$) is driven by ICEWS18's high novel-context prevalence (8,587 triples, 17.3\% of test), not by leakage: novel-context triples are leakage-free, and CAGP's advantage on emerging entities (2,747 triples) remains 0~pp over $U_{\text{str}}$ alone due to near-perfect emerging coverage in this recurrent event KG.
 
 \subsection{Uncertainty Margin Loss Ablation}
 \label{app:margin_ablation}
@@ -844,7 +844,7 @@ Crucially, the OOD label is determined by the \emph{relation holdout}, not by co
 
 \begin{table}[ht]
 \centering
-\caption{Held-out relation experiment on FB15k-237 (3 seeds) and YAGO3-10 (1 seed). OOD defined by held-out relation set (independent of coverage). Coverage achieves AUROC$=$1.0 because test triples with held-out relations have zero coverage by construction---confirming structural necessity without circularity.}
+\caption{Held-out relation experiment on FB15k-237 (3 seeds) and YAGO3-10 (1 seed). OOD labels assigned by held-out relation set (independent of coverage); coverage still achieves AUROC$=$1.0 by the same mechanism as in Remark~\ref{rem:circularity}, confirming structural necessity under an independently defined OOD criterion.}
 \label{tab:held_out}
 \begin{tabular}{lcccc}
 \toprule
@@ -862,7 +862,7 @@ The independence claim is therefore about the OOD \emph{label} (determined by th
 The primary evidential value of this experiment is what it shows about \emph{GPOnly}: achieving only 0.51 on FB15k-237, confirming Theorem~\ref{thm:impossibility}---entities in held-out-relation triples are individually well-observed, so their variances are frequency-matched to ID entities, leaving the semantic signal near-random.
 On YAGO3-10, GPOnly achieves 0.77 at seed 42, consistent with YAGO's denser entity-relation structure providing partial separability; multi-seed results on YAGO are left to future work.
 
-The n\textsubscript{OOD} range of 3,295--5,129 across FB15k-237 seeds reflects heterogeneity in relation frequency (some held-out relations are much more frequent than others depending on the random split); the resulting GPOnly variance (${\pm}0.12$) reflects this split-driven heterogeneity rather than pure model variance.
+The $n_{\text{OOD}}$ range of 3{,}295--5{,}129 across FB15k-237 seeds reflects heterogeneity in relation frequency (some held-out relations are much more frequent than others depending on the random split); the resulting GPOnly variance (${\pm}0.12$) reflects this split-driven heterogeneity rather than pure model variance.
 
 Together, these results establish that structural necessity---coverage catching what semantic uncertainty misses---holds even when the OOD definition is independent of the coverage signal, and that GPOnly's near-random performance on novel relational contexts is robust across different holdout configurations.
 
