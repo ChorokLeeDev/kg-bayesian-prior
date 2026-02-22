@@ -3,7 +3,7 @@
 \subsection{Experimental Setup}
 
 \paragraph{Datasets.}
-We evaluate on three static benchmarks: \textbf{FB15k-237}~\citep{toutanova2015observed} (14,541 entities, 237 relations), \textbf{WN18RR}~\citep{dettmers2018convolutional} (40,943 entities, 11 relations), and \textbf{YAGO3-10}~\citep{mahdisoltani2015yago3} (123,182 entities, 37 relations), with \emph{simulated temporal OOD} splits based on entity frequency and co-occurrence (Appendix~\ref{app:ood_splits}). To validate beyond simulated protocols, we also evaluate on \textbf{ICEWS14} (7,128 entities, 230 relations) and \textbf{ICEWS18} (23,033 entities, 256 relations), temporal KGs with ground-truth timestamps where train/test splits are chronological---OOD categories emerge naturally from temporal evolution, reducing the definitional coupling between coverage and OOD labels (Remark~\ref{rem:circularity}).
+We evaluate on three static benchmarks: \textbf{FB15k-237}~\citep{toutanova2015observed} (14,541 entities, 237 relations), \textbf{WN18RR}~\citep{dettmers2018convolutional} (40,943 entities, 11 relations), and \textbf{YAGO3-10}~\citep{mahdisoltani2015yago3} (123,182 entities, 37 relations), with \emph{simulated temporal OOD} splits based on entity frequency and co-occurrence (Appendix~\ref{app:ood_splits}). To validate beyond simulated protocols, we also evaluate on \textbf{ICEWS14} (7,128 entities, 230 relations) and \textbf{ICEWS18} (23,033 entities, 256 relations), temporal KGs with ground-truth timestamps where train/test splits are chronological---OOD categories emerge naturally from temporal evolution, breaking the definitional coupling between coverage and OOD labels (Remark~\ref{rem:circularity}).
 
 \paragraph{Baselines.}
 Score-based (UKGE~\citep{chen2019embedding}, Energy~\citep{liu2020energy} adapted to KGE by using the negative link-prediction score as proxy energy), ensemble (MC Dropout~\citep{gal2016dropout}, Deep Ensembles~\citep{lakshminarayanan2017simple}), distance-aware (SNGP~\citep{liu2020simple}), and single signals ($U_{\text{sem}}$, $U_{\text{str}}$). We omit KG2E~\citep{he2015learning} as its per-relation covariances target link prediction, not OOD detection; its uncertainty $U = \text{KL}(\mathcal{N}(\mu_t{-}\mu_h,\,\Sigma_h{+}\Sigma_t) \| \mathcal{N}(\mu_r,\Sigma_r))$ uses fixed per-relation-type Gaussian parameters, not per entity-relation co-occurrence indicators; like UKGE and Energy, its preconditions do not formally satisfy Theorem~\ref{thm:impossibility} (the score depends on $\mu_r, \Sigma_r$), but novel-context failure is expected for the same structural reasons. All baselines are evaluated on all datasets. Note: standalone $U_{\text{sem}}$ (GPOnly) reports raw entity embedding variance $(h_{\text{var}} + t_{\text{var}})/2$ without any normalization; this differs from the CAGP-internal semantic component, which is rescaled by training-data statistics (see \S\ref{sec:method}).
@@ -69,13 +69,13 @@ $U_{\text{str}}$ & .83 & .86\tiny{$\pm$.000} & .78 & .94\tiny{$\pm$.000}
 \midrule
 \multicolumn{11}{l}{\textit{Decomposition (Ours)}} \\
 CAGP       & \textbf{.91} & \textbf{.92}\tiny{$\pm$.005}
-           & \textbf{.89} & \textbf{.97}\tiny{$\pm$.001}
+           & .89 & .97\tiny{$\pm$.001}
            & \textbf{.79} & \textbf{.90}\tiny{$\pm$.004}
            & \textbf{1.0} & \textbf{.99}\tiny{$\pm$.000}
            & \textbf{.98} & \textbf{.99}\tiny{$\pm$.000} \\
-RelCondVar & .83 & .86\tiny{$\pm$.000} & .93 & .98\tiny{$\pm$.000}
+RelCondVar & .83 & .86\tiny{$\pm$.000} & \textbf{.93} & \textbf{.98}\tiny{$\pm$.000}
            & .67 & .84\tiny{$\pm$.000} & .98 & .99\tiny{$\pm$.000}
-           & .98 & .99\tiny{$\pm$.000} \\
+           & \textbf{.98} & \textbf{.99}\tiny{$\pm$.000} \\
 \bottomrule
 \multicolumn{11}{l}{\scriptsize $^\ddagger$Simulated OOD: coverage defines both OOD labels and structural detector (Remark~\ref{rem:circularity}).}\\
 \multicolumn{11}{l}{\scriptsize $^*$Ground-truth timestamps; OOD by time, not coverage.}\\
@@ -117,8 +117,8 @@ $U_{\text{sem}}$ & .81 & .49 & .59 & .71 & .40 & .66 & .69 & .40 & .54 & .98 & .
 $U_{\text{str}}$ & .78 & \textbf{1.0} & .94 & .83 & \textbf{1.0} & .86 & .67 & \textbf{1.0} & .84 & .98 & \textbf{1.0} & .99 & .98 & \textbf{1.0} & .99 \\
 \midrule
 \multicolumn{16}{l}{\textit{Decomposition (Ours)}} \\
-CAGP & \textbf{.89} & \textbf{1.0} & \textbf{.97} & \textbf{.91} & \textbf{1.0} & \textbf{.92} & \textbf{.79} & \textbf{1.0} & \textbf{.90} & \textbf{1.0} & \textbf{1.0} & \textbf{.99} & \textbf{.98} & \textbf{1.0} & \textbf{.99} \\
-RelCondVar & .93 & \textbf{1.0} & .98 & .83 & \textbf{1.0} & .86 & .67 & \textbf{1.0} & .84 & .98 & \textbf{1.0} & .99 & .98 & \textbf{1.0} & .99 \\
+CAGP & .89 & \textbf{1.0} & .97 & \textbf{.91} & \textbf{1.0} & \textbf{.92} & \textbf{.79} & \textbf{1.0} & \textbf{.90} & \textbf{1.0} & \textbf{1.0} & \textbf{.99} & \textbf{.98} & \textbf{1.0} & \textbf{.99} \\
+RelCondVar & \textbf{.93} & \textbf{1.0} & \textbf{.98} & .83 & \textbf{1.0} & .86 & .67 & \textbf{1.0} & .84 & .98 & \textbf{1.0} & .99 & \textbf{.98} & \textbf{1.0} & \textbf{.99} \\
 \bottomrule
 \multicolumn{16}{l}{\scriptsize $^*$Ground-truth temporal splits; OOD defined by time, not coverage.}\\
 \end{tabular}}
@@ -145,6 +145,6 @@ RelCondVar replaces entity-level variance with $\sigma^2(e,r){=}\text{MLP}([e;r]
 \paragraph{Threats to validity.}
 \textbf{Static benchmarks validate structure, not independent detection.} Novel-context AUROC $= 1.0$ by construction (Remark~\ref{rem:circularity}), confirming the decomposition works as designed; these results are diagnostic validation, not performance claims.
 
-\textbf{ICEWS14/18 break this coupling.} CAGP achieves 0.99/0.987 AUROC on ground-truth chronological splits (Table~\ref{tab:temporal_ood}). A leakage audit (Appendix~\ref{app:leakage}) confirms temporal integrity; under a strict split (58.5\% removed), CAGP improves to 0.995. Ablations (Appendix~\ref{app:icews14_ablation}) confirm entity-relation structure drives detection: removing coverage drops AUROC to 0.50. ICEWS18 shows a ceiling effect: $U_{\text{str}}$ and CAGP are identical across all subsets (Appendix~\ref{app:icews18_subsets}); CAGP's advantage is concentrated where coverage is imperfect.
+\textbf{ICEWS14/18 break this coupling.} CAGP achieves 0.99/0.987 AUROC on ground-truth chronological splits (Table~\ref{tab:temporal_ood}). A leakage audit (Appendix~\ref{app:leakage}) confirms temporal integrity; under a strict split (58.5\% removed), CAGP improves to 0.995. Ablations (Appendix~\ref{app:icews14_ablation}) confirm entity-relation structure drives detection: removing coverage drops AUROC to 0.50. ICEWS18 shows a ceiling effect: $U_{\text{str}}$ and CAGP are identical across all subsets (Appendix~\ref{app:icews18_subsets}); coverage fully saturates detection and the semantic signal adds no lift on ICEWS18.
 
 See Appendix~\ref{app:alpha_sensitivity} (Figure~\ref{fig:alpha_sensitivity}) for $\alpha$ sensitivity analysis and Appendix~\ref{app:calibration} for calibration analysis.
