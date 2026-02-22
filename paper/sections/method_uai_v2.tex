@@ -129,7 +129,7 @@ We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from
     \end{cases}
 \end{equation}
 
-Structural uncertainty is: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0,1,2\}$.
+Structural uncertainty $U_{\text{str}}$ is as defined in the Uncertainty Signals paragraph above.
 
 \paragraph{Design rationale.}
 The linear combination is intentionally simple---a single fixed scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}), its \emph{complementarity} with semantic uncertainty (Proposition~\ref{prop:complementarity}), and showing that even this minimal combination consistently outperforms either signal alone (\S\ref{sec:experiments}).
