@@ -249,7 +249,7 @@ We fix $\alpha{=}0.5$ as the default (Figure~\ref{fig:alpha_sensitivity}). No va
 \subsection{Proposition~\ref{prop:complementarity}(iii) Validation: Mixture Decomposition}
 \label{app:mixture}
 
-We validate the mixture AUROC decomposition (Eq.~\ref{eq:mixture_auroc}) by comparing predicted and observed AUROC at varying emerging-to-novel ratios. No retraining is performed; we resample from per-triple uncertainties and verify that $\text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + (1{-}\pi_e) \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}$ holds to within 0.01 on all datasets across all resampled ratios (within 0.005 at the natural emerging/novel ratio; see discussion below).
+We validate the mixture AUROC decomposition (Eq.~\ref{eq:mixture_auroc}) by comparing predicted and observed AUROC at varying emerging-to-novel ratios. No retraining is performed; we resample from per-triple uncertainties and verify that $\text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + (1{-}\pi_e) \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}$ holds to within 0.01 on all static benchmarks (WN18RR, FB15k-237, YAGO3-10) across all resampled ratios (within 0.005 at the natural emerging/novel ratio; see discussion below). ICEWS datasets use subsampled ID sets (first 3{,}000 for per-category, first 5{,}000 for overall) due to dataset size; the decomposition identity is validated only on the static benchmarks where full evaluation sets are used.
 
 \begin{table}[ht]
 \centering
@@ -703,7 +703,8 @@ GPOnly ($U_{\text{sem}}$) & .985 & .828 & .908 \\
 $U_{\text{str}}$ & .976 & 1.000 & .987 \\
 CAGP & .976 & 1.000 & .987 \\
 \bottomrule
-\multicolumn{4}{l}{\scriptsize Std $< 0.001$ across all 3 seeds for all methods.}
+\multicolumn{4}{l}{\scriptsize Std $< 0.001$ across all 3 seeds for all methods.} \\
+\multicolumn{4}{p{0.45\textwidth}}{\scriptsize \emph{Note}: per-category AUROCs use first 3{,}000 ID triples; overall uses first 5{,}000 ID triples. These are different ID subsets, so the mixture identity $\text{All} = \pi_e \cdot \text{Em} + \pi_n \cdot \text{Nov}$ need not hold exactly for all methods. The identity holds for CAGP/$U_{\text{str}}$ (trivially, since Em$=$Nov$=$All) and is formally validated on static benchmarks (Appendix~\ref{app:mixture}).}
 \end{tabular}
 \end{table}
 
