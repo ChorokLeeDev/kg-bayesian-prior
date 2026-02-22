@@ -486,7 +486,7 @@ CAGP & \textbf{0.90} & \textbf{0.92} & \textbf{0.76} & \textbf{0.99} \\
 \subsection{Error Analysis}
 \label{app:error_analysis}
 
-We analyzed CAGP's failure modes on FB15k-237 standard OOD detection (random tail corruption, 20,000 ID + 20,000 OOD samples; seed 42). We report error characteristics at the equal-error-rate (EER) threshold, selected as the median uncertainty on this balanced evaluation set; FP=FN follows by construction at this operating point.
+We analyzed CAGP's failure modes on FB15k-237 standard OOD detection (random tail corruption, 20,000 ID + 20,000 OOD samples; seed 42). \textbf{Note:} the 20,000 ID samples are drawn from the \emph{training set} (not the test set), so the AUROC here (0.971) exceeds the test-set standard OOD AUROC (0.82; Table~\ref{tab:standard}): the model assigns near-zero uncertainty to its own training triples, yielding optimistic discrimination. The purpose of this analysis is to characterize \emph{which} entity/relation patterns drive errors (FP/FN), not to report held-out performance. We report error characteristics at the equal-error-rate (EER) threshold, selected as the median uncertainty on this balanced evaluation set; FP=FN follows by construction at this operating point.
 
 \begin{table}[ht]
 \centering
