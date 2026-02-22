@@ -6,7 +6,7 @@ Each triple $(h, r, t)$ asserts that relation $r$ holds between head entity $h$ 
 
 \paragraph{OOD Detection Task.}
 Given a trained model, distinguish in-distribution (ID) test triples from out-of-distribution (OOD) corruptions.
-The standard protocol~\citep{bordes2013translating} generates OOD triples by replacing the tail with a random entity: $(h, r, t) \to (h, r, t')$ where $t' \sim \text{Uniform}(\mathcal{E})$.
+Following \citet{bordes2013translating}, the standard protocol generates OOD triples by replacing the tail with a random entity: $(h, r, t) \to (h, r, t')$ where $t' \sim \text{Uniform}(\mathcal{E})$.
 However, this creates easily detectable corruptions (low model scores).
 We additionally evaluate on \emph{temporal OOD}---emerging entities and novel relational contexts---which are harder to detect (\S\ref{sec:experiments}).
 Performance is measured by AUROC.

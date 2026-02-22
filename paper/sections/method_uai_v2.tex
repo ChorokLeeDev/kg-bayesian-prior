@@ -49,12 +49,12 @@ Under assumptions A1--A3 (see Appendix~\ref{app:proof} for full details\footnote
 \begin{equation}
     \text{AUROC}(U, \mathcal{D}_{\text{novel}}) \leq \frac{1}{2} + O(\epsilon)
 \end{equation}
-where $\epsilon$ measures the tightness of frequency matching between novel-context and ID entities (A3). The proof implies AUROC $\approx 1/2$; observed values below $1/2$ (e.g., 0.40 in Table~\ref{tab:temporal_ood}) reflect the anti-predictive direction where high-frequency novel-context entities have \emph{lower} variance than the ID average.
+where $\epsilon$ measures the tightness of frequency matching between novel-context and ID entities (A3).
 \end{theorem}
 
 \textbf{Proof sketch.} By A1, $\sigma^2_e$ is determined by $\text{freq}(e)$. By A3, for any novel-context triple $(h,r,t) \in \mathcal{D}_{\text{novel}}$, there exists an ID triple $(h',r',t')$ with $\text{freq}(h) \approx \text{freq}(h')$ and $\text{freq}(t) \approx \text{freq}(t')$. Therefore $U(h,r,t) = f(\sigma^2_h, \sigma^2_t) \approx f(\sigma^2_{h'}, \sigma^2_{t'}) = U(h',r',t')$, giving AUROC $\approx 1/2$. The deviation $\epsilon$ captures imperfect frequency matching. See Appendix for detailed proof. $\square$
 
-\textbf{Implication.} This result directly applies to methods whose uncertainty takes the form $f(\sigma^2_h, \sigma^2_t)$, including GP-KGE. UKGE uses triple-level confidence scores rather than entity variance parameters and does not formally satisfy the theorem's preconditions; its near-random temporal-OOD performance is empirical (Table~\ref{tab:temporal_ood}), consistent with but not derived from the theorem. For ensemble approaches (MC Dropout, Deep Ensembles) and box embeddings, the theorem's formal conditions are not met; however, their empirical uncertainties are effectively entity-dominated---confirmed by the near-random novel-context AUROC in Table~\ref{tab:temporal_ood}.
+\textbf{Implication.} The bound implies near-random detection; observed values below $1/2$ (e.g., 0.40 in Table~\ref{tab:temporal_ood}) reflect the anti-predictive direction: high-frequency novel-context entities have \emph{lower} variance than the ID average, causing $U$ to rank them below ID triples. This result directly applies to methods whose uncertainty takes the form $f(\sigma^2_h, \sigma^2_t)$, including GP-KGE. UKGE uses triple-level confidence scores rather than entity variance parameters and does not formally satisfy the theorem's preconditions; its near-random temporal-OOD performance is empirical (Table~\ref{tab:temporal_ood}), consistent with but not derived from the theorem. For ensemble approaches (MC Dropout, Deep Ensembles) and box embeddings, the theorem's formal conditions are not met; however, their empirical uncertainties are effectively entity-dominated---confirmed by the near-random novel-context AUROC in Table~\ref{tab:temporal_ood}.
 
 \begin{remark}[Logical structure of Theorem~\ref{thm:impossibility}]
 \label{rem:theorem_structure}
@@ -128,8 +128,6 @@ We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from
         0 & \text{otherwise}
     \end{cases}
 \end{equation}
-
-Structural uncertainty $U_{\text{str}}$ is as defined in the Uncertainty Signals paragraph above.
 
 \paragraph{Design rationale.}
 The linear combination is intentionally simple---a single fixed scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}), its \emph{complementarity} with semantic uncertainty (Proposition~\ref{prop:complementarity}), and showing that even this minimal combination consistently outperforms either signal alone (\S\ref{sec:experiments}).

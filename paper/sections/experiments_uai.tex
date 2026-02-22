@@ -23,13 +23,7 @@ Table~\ref{tab:temporal_ood} presents results on temporal OOD across all main ev
 
 \begin{table}[t]
 \centering
-\caption{\textbf{Temporal OOD detection} ($\tau{=}25^{\text{th}}$ pctl, 3-seed mean$\pm$std; 5 seeds for WN18RR; 10 seeds for FB15k-237). GPOnly~$= U_{\text{sem}}$ (semantic uncertainty only).
-\label{tab:temporal_ood}}
-
-We report emerging-entity AUROC (Em.) and overall OOD AUROC (All), and note:
-\textbf{Em.} covers the non-trivial emerging-only component, while \textbf{All} averages all OOD triples.
-\textbf{Em.} and \textbf{All} are shown for WN18RR, FB15k-237, and YAGO (static splits) and ICEWS14/18 (ground-truth temporal splits). Em.\ std omitted for space; full per-seed results in Appendix~\ref{app:per_seed}.
-\vspace{-1.5ex}
+\caption{\textbf{Temporal OOD detection} ($\tau{=}25^{\text{th}}$ pctl, 3-seed mean$\pm$std; 5 seeds for WN18RR; 10 seeds for FB15k-237). GPOnly~$= U_{\text{sem}}$ (semantic uncertainty only). Em.\ = emerging-entity AUROC; All = overall OOD AUROC. Em.\ std omitted for space; per-seed results in Appendix~\ref{app:per_seed}.\label{tab:temporal_ood}}
 
 \resizebox{\linewidth}{!}{%
 \scriptsize
@@ -95,13 +89,7 @@ Adding coverage recovers performance to match standard CAGP, consistent with The
 
 \begin{table}[t]
 \centering
-\caption{\textbf{Stratified OOD detection by type} (multi-seed mean; 5 seeds for WN18RR, 3 for others).}
-\label{tab:complementarity}
-
-Each signal is strongest on one category and weakest on the other.
-This supports Proposition~\ref{prop:complementarity}; CAGP combines both.
-For ICEWS14/18, temporal OOD breaks static-coverage coupling.
-\vspace{-1.5ex}
+\caption{\textbf{Stratified OOD detection by type} (multi-seed mean; 5 seeds for WN18RR, 3 for others). Each signal is strongest on one category and weakest on the other, supporting Proposition~\ref{prop:complementarity}; CAGP combines both. For ICEWS14/18, temporal OOD breaks static-coverage coupling.\label{tab:complementarity}}
 
 \resizebox{\linewidth}{!}{%
 \scriptsize
