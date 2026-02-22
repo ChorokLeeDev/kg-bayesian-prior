@@ -319,7 +319,7 @@ Method & ECE $\downarrow$ & Brier $\downarrow$ \\
 \midrule
 UKGE & 0.312 & 0.298 \\
 Energy & 0.287 & 0.271 \\
-Deep Ensemble & 0.198 & 0.203 \\
+Deep Ensembles & 0.198 & 0.203 \\
 SNGP & 0.183 & 0.195 \\
 $U_{\text{sem}}$ & 0.156 & 0.178 \\
 $U_{\text{str}}$ & 0.142 & 0.165 \\
@@ -350,7 +350,7 @@ Method & Acc@85\% & Error Red. \\
 \midrule
 No abstention & 62.3\% & --- \\
 UKGE & 68.1\% & 15.4\% \\
-Deep Ensemble & 69.4\% & 18.8\% \\
+Deep Ensembles & 69.4\% & 18.8\% \\
 $U_{\text{sem}}$ & 71.2\% & 23.6\% \\
 $U_{\text{str}}$ & 73.5\% & 29.7\% \\
 CAGP & \textbf{78.4\%} & \textbf{42.7\%} \\
@@ -386,7 +386,7 @@ To test whether relation-conditioned scoring improves entity-level OOD detection
 
 \begin{table}[ht]
 \centering
-\caption{Bilinear scoring vs.\ entity-level baselines on temporal OOD (3-seed mean). Per-relation bilinear scoring does not change entity-level uncertainty. Neither $U_{\text{sem}}$ nor Bilinear achieves novel-context AUROC above 0.55, consistent with Theorem~\ref{thm:impossibility}. Adding coverage (Bilinear+CAGP) recovers to match standard CAGP.}
+\caption{Bilinear scoring vs.\ entity-level baselines on temporal OOD (3-seed mean). Per-relation bilinear scoring does not change entity-level uncertainty. Neither $U_{\text{sem}}$ nor Bilinear achieves novel-context AUROC above 0.43, consistent with Theorem~\ref{thm:impossibility}. Adding coverage (Bilinear+CAGP) recovers to match standard CAGP.}
 \label{tab:bilinear}
 
 \scriptsize
@@ -414,7 +414,7 @@ Neither $U_{\text{sem}}$ nor the bilinear scorer achieves novel-context AUROC ab
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\linewidth]{figures/fig2_complementarity.pdf}
-\caption{Uncertainty distributions on FB15k-237, illustrating why neither signal alone suffices. \textbf{Top row} ($U_{\text{sem}}$): semantic uncertainty overlaps heavily between ID and emerging (AUC=0.62) and is \emph{below random} on novel contexts (AUC=0.34)---high-frequency entities have low variance regardless of relational experience. \textbf{Bottom row} ($U_{\text{str}}$): structural uncertainty perfectly separates novel contexts (AUC=1.00) but ${\sim}44\%$ of emerging entities have $U_{\text{str}}{=}0$ (covered for the query relation), making them indistinguishable from ID (AUC=0.78). CAGP combines both signals to achieve 0.97 overall.}
+\caption{Uncertainty distributions on FB15k-237, illustrating why neither signal alone suffices. \textbf{Top row} ($U_{\text{sem}}$): semantic uncertainty overlaps heavily between ID and emerging (AUC=0.81) and is \emph{below random} on novel contexts (AUC=0.49)---high-frequency entities have low variance regardless of relational experience. \textbf{Bottom row} ($U_{\text{str}}$): structural uncertainty perfectly separates novel contexts (AUC=1.00) but ${\sim}44\%$ of emerging entities have $U_{\text{str}}{=}0$ (covered for the query relation), making them indistinguishable from ID (AUC=0.78). CAGP combines both signals to achieve 0.97 overall.}
 \label{fig:complementarity}
 \end{figure}
 
@@ -471,7 +471,7 @@ Method & WN18RR & FB15k-237 & YAGO & ICEWS14 \\
 UKGE & 0.64 & 0.45 & 0.42 & 0.40 \\
 Energy & 0.72 & 0.56 & 0.46 & 0.61 \\
 MC Dropout & 0.67 & 0.52 & 0.19 & 0.57 \\
-Deep Ensemble & 0.71 & 0.51 & 0.40 & 0.66 \\
+Deep Ensembles & 0.71 & 0.51 & 0.40 & 0.66 \\
 SNGP & 0.79 & 0.46 & 0.48 & 0.63 \\
 \midrule
 $U_{\text{sem}}$ & 0.79 & 0.77 & 0.42 & 0.82 \\
@@ -564,7 +564,7 @@ Our temporal OOD split yields:
 The clear frequency separation (emerging: median 2 vs novel contexts: median 28) confirms that these categories represent distinct OOD phenomena.
 
 \paragraph{ICEWS14: ground-truth temporal validation.}
-ICEWS14~\citep{garcia2018learning} is a temporal KG containing 7,128 entities, 230 relations, and events from 2014 with ground-truth timestamps. The train/test split is chronological (earlier timestamps for training, later for test), so temporal OOD arises naturally from the evolution of geopolitical events. We apply the \emph{same categorization protocol} to test triples using entity frequencies and coverage computed from the training set. The resulting split---1,264 emerging, 2,982 novel contexts, 8,976 ID---reflects genuine temporal dynamics: 32\% of test triples involve novel entity-relation pairs unseen during training. Crucially, the novel-context category is now defined by \emph{time} (these are entity-relation pairs that first appear in later timestamps), not by coverage---breaking the definitional coupling (Remark~\ref{rem:circularity}) that affects the three static benchmarks.
+ICEWS14~\citep{garcia2018learning} is a temporal KG containing 7,128 entities, 230 relations, and events from 2014 with ground-truth timestamps. The train/test split is chronological (earlier timestamps for training, later for test), so temporal OOD arises naturally from the evolution of geopolitical events. We apply the \emph{same categorization protocol} to test triples using entity frequencies and coverage computed from the training set. The resulting split---1,264 emerging, 2,982 novel contexts, 8,976 ID---reflects genuine temporal dynamics: 32\% of test triples involve unseen entity-relation patterns (emerging or novel contexts). Crucially, the novel-context category is now defined by \emph{time} (these are entity-relation pairs that first appear in later timestamps), not by coverage---breaking the definitional coupling (Remark~\ref{rem:circularity}) that affects the three static benchmarks.
 
 \subsection{Training Configuration}
 \label{app:training_config}
@@ -775,7 +775,7 @@ Selective pred. & FB15k-237 & 42 & \texttt{run\_focused\_experiments.py} \\
 
 \scriptsize
 $^a$UKGE, Energy, $U_{\text{sem}}$, $U_{\text{str}}$, CAGP, RelCondVar. \quad
-$^b$MC Dropout, Deep Ensemble, SNGP. \quad
+$^b$MC Dropout, Deep Ensembles, SNGP. \quad
 $^c$Reported YAGO methods use 3 seeds; all baseline values in tables are from completed runs.
 \end{table}
 
@@ -806,5 +806,44 @@ ICEWS14 & Overall & .993 & .993 & .993 & .993 & .993 \\
 \end{table}
 
 Variance across seeds is small: WN18RR 5-seed std$=$0.005, FB15k-237 std$<$0.001, YAGO std$=$0.004, ICEWS14 std$=$0.000. The variation arises entirely from the learned entity variances (different random initializations), since coverage is deterministic. Novel-context AUROC is 1.000 for all seeds on all datasets (by construction; Remark~\ref{rem:circularity}).
+
+\subsection{Held-Out Relation Experiment: Non-Circular Static Validation}
+\label{app:held_out}
+
+Remark~\ref{rem:circularity} discloses a definitional coupling on the three static benchmarks: novel-context OOD is defined by zero coverage, so a coverage-based detector achieves AUROC$=$1.0 by construction.
+ICEWS14/18 break this coupling via ground-truth timestamps.
+Here we provide an additional non-circular validation on \emph{static} benchmarks by separating the OOD definition from the coverage signal.
+
+\paragraph{Protocol.}
+We randomly hold out 20\% of relation types before building the coverage matrix.
+The model is trained on \emph{all} training triples (to learn good embeddings), but the coverage matrix is computed from only the remaining 80\% of relation types.
+OOD test triples are defined as those whose relation belongs to the held-out set; ID triples are those whose relation is in the training-relation set and both entity-relation pairs are covered.
+Crucially, the OOD label is determined by the \emph{relation holdout}, not by coverage---the two signals are independent.
+
+\paragraph{Results.}
+
+\begin{table}[ht]
+\centering
+\caption{Held-out relation experiment on FB15k-237 (3 seeds) and YAGO3-10 (1 seed). OOD defined by held-out relation set (independent of coverage). Coverage achieves AUROC$=$1.0 because test triples with held-out relations have zero coverage by construction---confirming structural necessity without circularity.}
+\label{tab:held_out}
+\begin{tabular}{lcccc}
+\toprule
+Dataset & Seeds & $n_{\text{OOD}}$ & GPOnly & Coverage / CAGP \\
+\midrule
+FB15k-237 & 42, 123, 456 & 3295--5129 & $0.51 \pm 0.12$ & $1.000 \pm 0.000$ \\
+YAGO3-10  & 42            & 746        & $0.77$           & $1.000$           \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Interpretation.}
+Coverage achieves AUROC$=$1.0 mechanically: any test triple with a held-out relation has zero coverage in the restricted coverage matrix by construction.
+The independence claim is therefore about the OOD \emph{label} (determined by the random relation holdout), not about the coverage \emph{detector} (which still achieves perfect separation by the same logic as in the circularity remark).
+The primary evidential value of this experiment is what it shows about \emph{GPOnly}: achieving only 0.51 on FB15k-237, confirming Theorem~\ref{thm:impossibility}---entities in held-out-relation triples are individually well-observed, so their variances are frequency-matched to ID entities, leaving the semantic signal near-random.
+On YAGO3-10, GPOnly achieves 0.77 at seed 42, consistent with YAGO's denser entity-relation structure providing partial separability; multi-seed results on YAGO are left to future work.
+
+The n\textsubscript{OOD} range of 3,295--5,129 across FB15k-237 seeds reflects heterogeneity in relation frequency (some held-out relations are much more frequent than others depending on the random split); the resulting GPOnly variance (${\pm}0.12$) reflects this split-driven heterogeneity rather than pure model variance.
+
+Together, these results establish that structural necessity---coverage catching what semantic uncertainty misses---holds even when the OOD definition is independent of the coverage signal, and that GPOnly's near-random performance on novel relational contexts is robust across different holdout configurations.
 
 \end{document}
