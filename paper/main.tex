@@ -849,14 +849,14 @@ Crucially, the OOD label is determined by the \emph{relation holdout}, not by co
 
 \begin{table}[ht]
 \centering
-\caption{Held-out relation experiment on FB15k-237 (3 seeds) and YAGO3-10 (1 seed). OOD labels assigned by held-out relation set (independent of coverage); coverage still achieves AUROC$=$1.0 by the same mechanism as in Remark~\ref{rem:circularity}, confirming structural necessity under an independently defined OOD criterion.}
+\caption{Held-out relation experiment on FB15k-237 and YAGO3-10 (3 seeds each). OOD labels assigned by held-out relation set (independent of coverage); coverage still achieves AUROC$=$1.0 by the same mechanism as in Remark~\ref{rem:circularity}, confirming structural necessity under an independently defined OOD criterion.}
 \label{tab:held_out}
 \begin{tabular}{lcccc}
 \toprule
 Dataset & Seeds & $n_{\text{OOD}}$ & GPOnly & Coverage / CAGP \\
 \midrule
 FB15k-237 & 42, 123, 456 & 3295--5129 & $0.51 \pm 0.12$ & $1.000 \pm 0.000$ \\
-YAGO3-10  & 42            & 746        & $0.77$           & $1.000$           \\
+YAGO3-10  & 42, 123, 456 & 485--1720  & $0.63 \pm 0.17$ & $1.000 \pm 0.000$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -865,7 +865,7 @@ YAGO3-10  & 42            & 746        & $0.77$           & $1.000$           \\
 Coverage achieves AUROC$=$1.0 mechanically: any test triple with a held-out relation has zero coverage in the restricted coverage matrix by construction.
 The independence claim is therefore about the OOD \emph{label} (determined by the random relation holdout), not about the coverage \emph{detector} (which still achieves perfect separation by the same logic as in the circularity remark).
 The primary evidential value of this experiment is what it shows about \emph{GPOnly}: achieving only 0.51 on FB15k-237, confirming Theorem~\ref{thm:impossibility}---entities in held-out-relation triples are individually well-observed, so their variances are frequency-matched to ID entities, leaving the semantic signal near-random.
-On YAGO3-10, GPOnly achieves 0.77 at seed 42, consistent with YAGO's denser entity-relation structure providing partial separability; multi-seed results on YAGO are left to future work.
+On YAGO3-10, GPOnly achieves $0.63 \pm 0.17$ across 3 seeds (range 0.44--0.77), consistent with YAGO's denser entity-relation structure providing partial separability; the high variance (${\pm}0.17$) reflects the same split-driven heterogeneity seen in FB15k-237.
 
 The $n_{\text{OOD}}$ range of 3{,}295--5{,}129 across FB15k-237 seeds reflects heterogeneity in relation frequency (some held-out relations are much more frequent than others depending on the random split); the resulting GPOnly variance (${\pm}0.12$) reflects this split-driven heterogeneity rather than pure model variance.
 
