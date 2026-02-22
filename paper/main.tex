@@ -720,7 +720,7 @@ Train timestamps span IDs 0--5736; test timestamps span 6480--7272, with no over
 42.1\% of test triples (20,865/49,545) exactly repeat a training $(h,r,t)$ at a later timestamp. These recurring events fall into the ID category by definition and, if anything, make the ID pool easier to classify by all methods.
 
 \paragraph{Novel-context integrity.}
-Zero novel-context test triples appear as exact duplicates in training (0/9,253 = 0.0\%). All novel-context triples are genuinely new entity-relation combinations, consistent with ICEWS18's temporal OOD structure.
+Zero novel-context test triples appear as exact duplicates in training (0/8,587 = 0.0\%). All novel-context triples are genuinely new entity-relation combinations, consistent with ICEWS18's temporal OOD structure.
 
 \paragraph{Impact on claims.}
 The ceiling effect (CAGP $=$ $U_{\text{str}} = 0.987$) is driven by ICEWS18's high novel-context prevalence (8,587 triples, 17.3\% of test), not by leakage: novel-context triples are leakage-free, and CAGP's advantage on emerging entities (2,747 triples) remains 0pp over $U_{\text{str}}$ alone due to near-perfect emerging coverage in this recurrent event KG.
