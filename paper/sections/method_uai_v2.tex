@@ -1,11 +1,8 @@
-% Method Section - UAI version (condensed for 8-page limit)
+% Method Section - NeurIPS version (condensed for 9-page limit)
 
 \subsection{Preliminaries}
 
-We define key quantities for analyzing KG uncertainty.
-
 \textbf{Frequency}: $\freq(e)$ counts triples containing entity $e$.
-
 \textbf{Coverage}: $c(e,r) \in \{0,1\}$ indicates whether $e$ appears with $r$ in training.
 
 \begin{definition}[OOD Partition]
@@ -15,125 +12,73 @@ Fix threshold $\tau > 0$. OOD queries partition into:
 \item \textbf{Emerging entities} $\mathcal{D}_{\text{emerge}}$: $\min(\freq(h), \freq(t)) \leq \tau$.
 \item \textbf{Novel contexts} $\mathcal{D}_{\text{novel}}$: $\min(\freq(h), \freq(t)) > \tau$ and ($c(h,r)=0$ or $c(t,r)=0$).
 \end{itemize}
-We set $\tau$ to the 25th percentile of entity frequencies (robust to outliers; see Appendix~\ref{app:implementation} for sensitivity analysis).
+We set $\tau$ to the 25th percentile of entity frequencies; results vary $<$0.02 AUROC across $\tau \in [5\text{th}, 30\text{th}]$ percentile (Appendix~\ref{app:implementation}).
 \end{definition}
 
-\begin{remark}[Relationship to structural detector]
-\label{rem:circularity}
-The novel-context category is defined via the same coverage indicator $c(e,r)$ used by our structural detector $U_{\text{str}}$. This means that structural uncertainty achieves perfect separation on novel contexts \emph{by construction} (Remark~\ref{rem:novel_perfect}). The empirical contribution is therefore not that coverage ``discovers'' novel contexts, but rather: (a) the impossibility result (Theorem~\ref{thm:impossibility}) showing that entity-level methods \emph{cannot} detect this category regardless of definition, and (b) the empirical finding that coverage-defined novel contexts constitute a substantial fraction ($\sim$10--25\%) of realistic test sets (WN18RR: 10.8\%, FB15k-237: 25.4\%, YAGO: 12.6\%), making their detection practically important. We discuss the implications and limitations of this definitional coupling in \S\ref{sec:experiments}.
-\end{remark}
+Novel-context detection by $U_{\text{str}}$ is perfect by construction since the same $c(e,r)$ defines both the OOD label and the detector. The contribution is the \emph{impossibility} of entity-level detection (Theorem~\ref{thm:impossibility}) and the \emph{prevalence} of novel contexts (11--25\% of test triples); see Appendix~\ref{rem:circularity}.
 
 \subsection{Uncertainty Signals}
 
-\textbf{Semantic uncertainty} (entity embedding variance) from learned variance: $U_{\text{sem}}(h,r,t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)$ where $\bar{\sigma}^2_e$ is mean variance across dimensions.
-In practice, $\bar{\sigma}^2_e = \frac{1}{d}\sum_{j=1}^{d} \exp(\ell_{e,j})$ is the mean diagonal variance of the entity embedding posterior, where $\ell_{e,j}$ are learned log-variance parameters. This is a standard relation-agnostic variational embedding, not a full Gaussian-process posterior; we evaluate it here because it is the common baseline used in temporal-OOD KG uncertainty work and is sufficient when combined with explicit coverage.
+\textbf{Semantic uncertainty} (entity embedding variance): $U_{\text{sem}}(h,r,t) = \frac{1}{2}(\bar{\sigma}^2_h + \bar{\sigma}^2_t)$ where $\bar{\sigma}^2_e = \frac{1}{d}\sum_{j=1}^{d} \exp(\ell_{e,j})$ is the mean diagonal variance of the entity embedding posterior. This is a standard relation-agnostic variational embedding.
 
-\textbf{Structural uncertainty} (coverage indicator) from coverage: $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0, 1, 2\}$.
-\textbf{Equivalent rule view:} $U_{\text{str}}$ is a deterministic coverage rule (no learned parameters): it is 0 iff both entity-relation pairs were observed in training, and 1 or 2 whenever at least one pair is unseen.
-
-$U_{\text{str}} \in \{0, 1, 2\}$ is discrete; $U_{\text{sem}}$ is continuous and rescaled to match (see \S\ref{sec:cagp}). Crucially, $U_{\text{sem}}$ is \emph{relation-agnostic}: it depends only on entity variances, not the query relation.
+\textbf{Structural uncertainty} (coverage): $U_{\text{str}}(h,r,t) = 2 - c(h,r) - c(t,r) \in \{0, 1, 2\}$, a deterministic rule with no learned parameters. Crucially, $U_{\text{sem}}$ is \emph{relation-agnostic}: it depends only on entity variances, not the query relation.
 
 \subsection{Theoretical Results}
 
-We first establish an impossibility result showing why relation-agnostic uncertainty fails, then characterize when different signals succeed.
-
 \begin{theorem}[Impossibility of Relation-Agnostic Detection]
 \label{thm:impossibility}
-Let $U: \mathcal{E} \times \mathcal{R} \times \mathcal{E} \to \mathbb{R}$ be an uncertainty estimator of the form:
-\begin{equation}
-    U(h,r,t) = f(\sigma^2_h, \sigma^2_t)
-\end{equation}
-where $\sigma^2_e$ depends only on entity $e$ (not relation $r$), and $f$ is any combining function.
-
-Under assumptions A1--A3 (see Appendix~\ref{app:proof} for full details\footnote{We empirically validate Assumption A3 in Appendix~\ref{app:assumption_verification}, finding $\geq$98\% of novel-context triples have frequency-matched ID counterparts on all three benchmarks.}), for any distribution $\mathcal{D}$ satisfying these assumptions with novel-context OOD subset $\mathcal{D}_{\text{novel}}$:
+Let $U(h,r,t) = f(\sigma^2_h, \sigma^2_t)$ where $\sigma^2_e$ depends only on entity $e$, and $f$ is any combining function. Under assumptions A1--A3 (Appendix~\ref{app:proof}\footnote{A1 validated: Spearman $\rho(\text{freq}, \sigma^2) \leq {-}0.68$ on all datasets (Table~\ref{tab:assumptions}). A3 validated: $\geq$98\% of novel-context triples have frequency-matched ID counterparts (Appendix~\ref{app:assumption_verification}).}):
 \begin{equation}
     \text{AUROC}(U, \mathcal{D}_{\text{novel}}) \leq \frac{1}{2} + O(\epsilon)
 \end{equation}
-where $\epsilon$ measures the tightness of frequency matching between novel-context and ID entities (A3).
+where $\epsilon$ measures frequency-matching tightness (A3).
 \end{theorem}
 
-\textbf{Proof sketch.} By A1, $\sigma^2_e$ is determined by $\text{freq}(e)$. By A3, for any novel-context triple $(h,r,t) \in \mathcal{D}_{\text{novel}}$, there exists an ID triple $(h',r',t')$ with $\text{freq}(h) \approx \text{freq}(h')$ and $\text{freq}(t) \approx \text{freq}(t')$. Therefore $U(h,r,t) = f(\sigma^2_h, \sigma^2_t) \approx f(\sigma^2_{h'}, \sigma^2_{t'}) = U(h',r',t')$, giving AUROC $\approx 1/2$. The deviation $\epsilon$ captures imperfect frequency matching. See Appendix for detailed proof. $\square$
+\textbf{Proof sketch.} By A1, $\sigma^2_e$ is determined by $\text{freq}(e)$. By A3, novel-context triples have frequency-matched ID counterparts, so $U(h,r,t) \approx U(h',r',t')$, giving AUROC $\approx 1/2$. Full proof in Appendix~\ref{app:proof}. $\square$
 
-\textbf{Implication.} The bound implies near-random detection; observed values below $1/2$ (e.g., 0.40 in Table~\ref{tab:temporal_ood}) reflect the anti-predictive direction: high-frequency novel-context entities have \emph{lower} variance than the ID average, causing $U$ to rank them below ID triples. This result directly applies to methods whose uncertainty takes the form $f(\sigma^2_h, \sigma^2_t)$, including GP-KGE. UKGE uses triple-level confidence scores rather than entity variance parameters and does not formally satisfy the theorem's preconditions; its near-random temporal-OOD performance is empirical (Table~\ref{tab:temporal_ood}), consistent with but not derived from the theorem. For ensemble approaches (MC Dropout, Deep Ensembles) and box embeddings, the theorem's formal conditions are not met; however, their empirical uncertainties are effectively entity-dominated---confirmed by the near-random novel-context AUROC in Table~\ref{tab:temporal_ood}.
-
-\begin{remark}[Logical structure of Theorem~\ref{thm:impossibility}]
-\label{rem:theorem_structure}
-The theorem formalizes a precise logical structure: given that variance is frequency-determined (A1) and novel-context entities are frequency-matched to ID (A3), the inability to discriminate follows directly. The non-trivial empirical content is threefold. \textbf{First}, A3 holds in practice: $\geq$98\% of novel-context triples have frequency-matched ID counterparts across all benchmarks (Appendix~\ref{app:assumption_verification}), so the failure mode is not hypothetical. \textbf{Second}, the result rules out \emph{any} $f(\sigma^2_h, \sigma^2_t)$, including sophisticated learned combinations---no reparameterization of entity-level statistics can escape this limit. \textbf{Third}, the observed anti-predictive direction (AUROC $< 0.5$, e.g., 0.40 in Table~\ref{tab:temporal_ood}) is non-obvious: high-frequency novel-context entities accrue \emph{lower} variance than the ID average, causing entity-level uncertainty to rank them below ID triples. The held-out relation experiment (Appendix~\ref{app:held_out}) confirms structural necessity independently: coverage detects held-out-relation OOD (AUROC$=$1.00) while semantic uncertainty remains near-random (0.51), with OOD defined by a mechanism entirely unrelated to coverage. The theorem's value is as a formal no-go result: it makes precise an intuition that might otherwise remain vague, and its universality over all $f$ prevents researchers from pursuing increasingly complex entity-level combinations that are provably futile.
-\end{remark}
+\emph{Scope and limitations.} The bound formally covers any $f(\sigma^2_h, \sigma^2_t)$, including all variational embedding methods that produce entity-level variances. Observed AUROC $< 1/2$ (e.g., 0.40 in Table~\ref{tab:complementarity}) reflects anti-prediction: high-frequency novel-context entities have \emph{lower} variance than the ID average. Ensemble methods (MC Dropout, Deep Ensembles) and energy scoring do \emph{not} formally satisfy A1---their uncertainty depends on the specific triple, not just entity statistics---so the theorem does not logically apply to them. However, their novel-context AUROC is empirically weak on all benchmarks (Table~\ref{tab:complementarity}), suggesting their uncertainties are entity-dominated in practice. We explicitly label this an \emph{impossibility result for the variance-based class} and an \emph{empirical observation for the broader class}; we do not claim formal impossibility beyond the theorem's stated scope. See Appendix~\ref{rem:theorem_structure}.
 
 \begin{proposition}[Complementarity of Uncertainty Signals]
 \label{prop:complementarity}
-Under assumptions A1--A6 (sufficient conditions; see Appendix~\ref{app:proof} for precise statements and robustness analysis):
-\begin{enumerate}
-    \item[\textbf{(i)}] Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\epsilon)$ on novel contexts, where $\epsilon$ measures frequency distribution overlap.
-    \item[\textbf{(ii)}] Structural uncertainty achieves AUROC $< 1$ on emerging entities (imperfect separation).
-    \item[\textbf{(iii)}] Let the OOD set be a mixture of emerging entities (fraction $\pi_e$) and novel contexts ($\pi_n = 1 - \pi_e$). Under the AUROC pairwise-comparison convention used here, the decomposition is:
-    \begin{equation}
-        \text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + \pi_n \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}
-        \label{eq:mixture_auroc}
-    \end{equation}
-    where $\delta_{\text{tie}}$ is the finite-sample tie correction (zero under a continuous-score convention). The leading-order gain of $U_{\text{comb}} = \alpha U_{\text{sem}} + (1{-}\alpha) U_{\text{str}}$ over $U_{\text{str}}$ is:
-    \begin{equation}
-    \begin{split}
-    \text{AUROC}(U_{\text{comb}})
-    -\text{AUROC}(U_{\text{str}}) \approx \pi_e \cdot \\
-    \left(A_{\text{emerge}}^{\text{comb}}-A_{\text{emerge}}^{\text{str}}\right)
-    \end{split}
-    \label{eq:synergy}
-    \end{equation}
-    which is positive whenever semantic uncertainty separates emerging entities better than structural does (A6, verified empirically). \emph{Note:} Eq.~\ref{eq:synergy} formally holds under A4 ($\Delta < 1$), which is violated on all tested benchmarks ($\Delta = 1.00$--$1.36$); the formula is verified empirically to within 0.002 on all static benchmarks (Appendix~\ref{app:mixture}).
-\end{enumerate}
+Under assumptions A1--A6 (Appendix~\ref{app:proof}):
+\textbf{(i)} Semantic uncertainty achieves AUROC $\approx \frac{1}{2} + O(\epsilon)$ on novel contexts.
+\textbf{(ii)} Structural uncertainty achieves AUROC $< 1$ on emerging entities.
+\textbf{(iii)} The gain of $U_{\text{comb}} = \alpha U_{\text{sem}} + (1{-}\alpha) U_{\text{str}}$ over $U_{\text{str}}$ is:
+\begin{equation}
+\text{AUROC}(U_{\text{comb}}) - \text{AUROC}(U_{\text{str}}) \approx \pi_e \cdot \left(A_{\text{emerge}}^{\text{comb}}-A_{\text{emerge}}^{\text{str}}\right)
+\label{eq:synergy}
+\end{equation}
+where $\pi_e$ is the emerging-entity fraction. This is positive whenever $U_{\text{sem}}$ separates emerging entities better than $U_{\text{str}}$ (A6). \emph{Caveat:} A4 ($\Delta < 1$) is a sufficient condition for the novel-context cancellation in Part~(iii). It is violated on all benchmarks ($\Delta \geq 1.0$; Table~\ref{tab:assumptions}). The proposition therefore serves as \emph{directional theory}: the qualitative predictions (semantic helps on emerging, structural helps on novel, combination outperforms either) hold on all datasets and all seeds without exception. Eq.~\ref{eq:synergy} matches observation within 0.002 (Appendix~\ref{app:mixture}). We present the proposition to explain \emph{why} the combination works; it does not provide worst-case guarantees.
 \end{proposition}
 
-\begin{remark}[Role of assumptions]
-\label{rem:assumptions}
-Assumptions A1--A6 are idealized sufficient conditions that enable clean theoretical statements. In practice, several are only approximately satisfied---notably A4, which is violated on all three benchmarks (Appendix~\ref{app:assumptions}). Nevertheless, the qualitative predictions of Proposition~\ref{prop:complementarity} (semantic fails on novel contexts, structural is imperfect on emerging entities, and the combination helps) hold across all datasets and seeds, suggesting the theorem captures the correct structural insight even when its formal conditions do not strictly hold.
-\end{remark}
-
-\begin{remark}[Structural detection of novel contexts]
-\label{rem:novel_perfect}
-Structural uncertainty achieves AUROC $= 1$ on novel contexts by construction: novel contexts have $c(e,r)=0$ (Definition~\ref{def:ood}), giving $U_{\text{str}} \geq 1$, while ID has $U_{\text{str}} = 0$ (A2). The substantive claims are the \emph{impossibility} of achieving this with entity-level methods (Theorem~\ref{thm:impossibility}) and the \emph{empirical prevalence} of novel contexts (11--25\% of test triples).
-\end{remark}
-
-\textbf{Proof sketch.} Part (i): Novel-context entities have high frequency (by definition), so their variance matches ID entities---semantic uncertainty cannot distinguish them. Part (ii): Emerging entities are defined by low \emph{frequency}, but may still have \emph{coverage} for the specific query relation, making some indistinguishable from ID via coverage alone. Part (iii): Eq.~(\ref{eq:mixture_auroc}) follows from the Mann-Whitney U-statistic formulation of AUROC (AUROC $= P(U_{\text{OOD}} > U_{\text{ID}})$, decomposed by law of total probability and a fixed tie policy). Since $A_{\text{novel}}(U_{\text{str}}) = 1$ (Remark~\ref{rem:novel_perfect}) and $A_{\text{novel}}(U_{\text{comb}}) = 1$ for sufficiently small $\alpha$ (see Appendix~\ref{app:proof} for the precise $\Delta$-dependent bound), the novel-context terms cancel in Eq.~(\ref{eq:synergy}) and the decomposition term is dominated by emerging entities. Eq.~(\ref{eq:synergy}) predicts empirical results to within 0.002 AUROC on all three datasets (Appendix~\ref{app:mixture}). Full proof in Appendix~\ref{app:proof}.
+\textbf{Proof sketch.} (i) follows from Theorem~\ref{thm:impossibility}. (ii) Emerging entities may have coverage for the query relation, making some indistinguishable from ID via coverage alone. (iii) Since structural AUROC on novel contexts $= 1$ by construction, the novel-context terms cancel and the gain is dominated by emerging entities. Full proof in Appendix~\ref{app:proof}.
 
 \subsection{CAGP}
 \label{sec:cagp}
 
-Proposition~\ref{prop:complementarity} establishes that relation-specific uncertainty is necessary for detecting novel contexts. We propose CAGP, which explicitly combines semantic and structural uncertainty:
-
+We propose CAGP, a minimal realization of the decomposition framework:
 \begin{equation}
     U_{\text{CAGP}}(h,r,t) = \alpha \cdot \tilde{U}_{\text{sem}}(h,r,t) + (1-\alpha) \cdot U_{\text{str}}(h,r,t)
     \label{eq:cagp}
 \end{equation}
+where $\tilde{U}_{\text{sem}}$ is normalized semantic uncertainty and $\alpha{=}0.5$ is a default mixing weight. We use 0.5 because it makes no prior assumption about signal importance; Appendix~\ref{app:alpha_sensitivity} shows AUROC varies $<$0.02 across $\alpha \in [0.05, 0.95]$, making the choice non-critical. Learning $\alpha$ from the link prediction objective is not possible (coverage is discrete and receives no gradient from $\mathcal{L}_{\text{BCE}}$; see Appendix~\ref{app:alpha_sensitivity}). The normalization $\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot (\bar{U}_{\text{str}} + \epsilon) / (\bar{U}_{\text{sem}} + \epsilon)$ makes semantic uncertainty a rank-preserving tiebreaker \emph{within} coverage strata, yielding +8--12pp emerging-entity gains over $U_{\text{str}}$ alone.
 
-where $\tilde{U}_{\text{sem}}$ is the normalized variational semantic uncertainty (entity embedding variance, rescaled to match the structural component's magnitude; details below), $U_{\text{str}}$ is the structural uncertainty (coverage), and $\alpha \in [0,1]$ is a mixing weight (set to $\alpha{=}0.5$; see sensitivity analysis in Appendix~\ref{app:alpha_sensitivity}).
-
-\paragraph{Implementation.}
-We fix $\alpha{=}0.5$ (equal weighting). While $\alpha$ could in principle be learned, the link prediction loss provides no gradient signal to the mixing weight because training triples have zero coverage uncertainty by construction---all observed entity-relation pairs are covered (Appendix~\ref{app:alpha_sensitivity}). Sensitivity analysis shows that AUROC is robust across $\alpha \in [0.05, 0.95]$, with 0.5 within 1pp of optimal on all datasets. Crucially, the scoring function uses \emph{reparameterization sampling}~\citep{kingma2014autoencoding}: during training, entity embeddings are sampled as $\mathbf{e} = \boldsymbol{\mu}_e + \boldsymbol{\sigma}_e \odot \boldsymbol{\epsilon}$, $\boldsymbol{\epsilon} \sim \mathcal{N}(0, I)$; at evaluation, we use the mean $\boldsymbol{\mu}_e$. This ensures the BCE (link prediction) loss provides gradients to the variance parameters, preventing KL-driven collapse (see error analysis in \S\ref{sec:experiments}). To ensure the combination reduces to a rank-preserving signal when coverage provides no information, we normalize: $\tilde{U}_{\text{sem}} = U_{\text{sem}} \cdot (\bar{U}_{\text{str}} + \epsilon) / (\bar{U}_{\text{sem}} + \epsilon)$, where $\bar{U}_{\text{str}}$ and $\bar{U}_{\text{sem}}$ are means over the training set and $\epsilon{=}10^{-8}$. Since all training triples have $U_{\text{str}}{=}0$, $\bar{U}_{\text{str}}{=}0$, and the scale factor $(\bar{U}_{\text{str}} + \epsilon) \approx 10^{-8}$ is negligible relative to $U_{\text{str}} \in \{1,2\}$ on test triples with coverage gaps. This makes $\tilde{U}_{\text{sem}}$ a rank-preserving tiebreaker \emph{within} coverage strata: when $U_{\text{str}}$ differs between two triples it dominates; when $U_{\text{str}}$ is tied (e.g., both 0 for ID and some covered emerging entities), the tiny but nonzero $\tilde{U}_{\text{sem}} \propto U_{\text{sem}}$ orders by entity variance. This tiebreaking within the $U_{\text{str}}{=}0$ stratum yields the +8--12pp emerging-entity gains over $U_{\text{str}}$ alone (see Appendix~\ref{app:training_config}).
-
-\paragraph{Training objective.}
-The training objective combines three terms:
+\paragraph{Training.}
+Entity embeddings use \emph{reparameterization sampling}~\citep{kingma2014autoencoding}: $\mathbf{e} = \boldsymbol{\mu}_e + \boldsymbol{\sigma}_e \odot \boldsymbol{\epsilon}$, $\boldsymbol{\epsilon} \sim \mathcal{N}(0, I)$, ensuring BCE loss provides variance gradients and preventing KL-driven collapse. The loss combines three terms:
 \begin{equation}
 \mathcal{L} = \mathcal{L}_{\text{BCE}} + \beta \cdot \mathcal{L}_{\text{KL}} + w_{\text{unc}} \cdot \mathcal{L}_{\text{margin}}
 \label{eq:loss}
 \end{equation}
-where $\mathcal{L}_{\text{BCE}}$ is binary cross-entropy with negative sampling, $\mathcal{L}_{\text{KL}} = -\frac{1}{2}\sum_{e}(1 + \log\sigma^2_e - \mu^2_e - \sigma^2_e)$ regularizes the variational posterior, and $\mathcal{L}_{\text{margin}} = \max(0, m - (U_{\text{CAGP}}^{\text{ood}} - U_{\text{CAGP}}^{\text{id}}))$ encourages higher uncertainty for OOD triples (margin $m{=}0.3$, $\beta{=}0.001$, $w_{\text{unc}}{=}0.1$).
+with $\beta{=}0.001$, $w_{\text{unc}}{=}0.1$, margin $m{=}0.3$. Ablation confirms $\mathcal{L}_{\text{margin}}$ contributes $<$0.4pp (\S\ref{sec:experiments}).
 
 \paragraph{Coverage matrix.}
 We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from training data:
-\begin{equation}
-    c(e,r) = \begin{cases}
-        1 & \exists (h,r',t) \in \mathcal{T}_{\text{train}}\!: (e{=}h \lor e{=}t) \land r'{=}r \\
-        0 & \text{otherwise}
-    \end{cases}
-\end{equation}
+$c(e,r) = 1$ iff $\exists (h,r',t) \in \mathcal{T}_{\text{train}}: (e{=}h \lor e{=}t) \land r'{=}r$.
+Precomputation is a single pass over training triples ($O(|\mathcal{T}|)$); inference requires two hash lookups per triple ($O(1)$, $<$2\% overhead; Appendix~\ref{app:implementation}).
 
 \paragraph{Design rationale.}
-The linear combination is intentionally simple---a single fixed scalar $\alpha$. CAGP is not a novel architecture; it is a minimal realization of the decomposition framework. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}), its \emph{complementarity} with semantic uncertainty (Proposition~\ref{prop:complementarity}), and showing that even this minimal combination consistently outperforms either signal alone (\S\ref{sec:experiments}).
+CAGP is intentionally simple---a fixed scalar combination. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}) and its \emph{complementarity} with semantic uncertainty (Proposition~\ref{prop:complementarity}), not architectural novelty.
 
-\paragraph{Why explicit coverage?}
-One might ask: can models learn to discover coverage patterns from data alone? Our impossibility theorem (Theorem~\ref{thm:impossibility}) shows that standard link prediction objectives do not incentivize relation-specific uncertainty differentiation. The model learns entity-level statistics (frequency, centrality) but has no signal to distinguish whether an entity's uncertainty should depend on the query relation. Explicit coverage tracking provides this missing inductive bias. Note that coverage-based detection of novel contexts is perfect by construction (Remark~\ref{rem:circularity}); the empirical question is whether this category is prevalent enough to matter, which we validate in \S\ref{sec:experiments}.
-
-\paragraph{RelCondVar ablation.}
-As an ablation, we also evaluate \textbf{RelCondVar}, which replaces entity-level variance with a learned relation-conditioned variance $\sigma^2(e,r) = \text{MLP}([\mathbf{e}; \mathbf{r}])$ while retaining coverage ($\alpha{=}0.5$, fixed). We evaluate it as a training-signal control: when implemented with variance-aware scoring, it learns, but its best observed behavior does not consistently improve over explicit structural coverage and is not used as the headline method.
+\paragraph{Alternative realization: RelCondVar.}
+\label{sec:relcondvar}
+The decomposition framework admits richer realizations. We also evaluate \emph{relation-conditioned variance} (RelCondVar): we train per-relation variance parameters $\sigma^2(e, r)$ alongside entity embeddings, where $\sigma^2(e,r)$ is optimized only on training triples containing entity $e$ with relation $r$. When entity $e$ has never appeared with $r$ (zero coverage), $\sigma^2(e,r)$ remains at its initialization (high uncertainty), naturally recovering the coverage signal in a continuous form. On dense-relation KGs (FB15k-237, 237 relations), RelCondVar outperforms CAGP (+1pp overall, +4pp emerging); on sparse-relation KGs (WN18RR with 11 relations, YAGO with 37), insufficient per-relation training data prevents learning meaningful conditioned variances, and RelCondVar reduces to $U_{\text{str}}$. This pattern validates the decomposition framework while revealing a scalability axis: more relations $\Rightarrow$ more signal for learned structural uncertainty. \emph{When to use which:} RelCondVar is preferable on dense-relation KGs ($\geq$100 relations) where per-relation variance can be learned reliably; CAGP is preferable on sparse-relation KGs and as a universal default requiring zero hyperparameter tuning. The shared contribution is the decomposition framework itself---both realizations confirm that structural uncertainty is necessary.
