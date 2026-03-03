@@ -1,0 +1,215 @@
+================================================================================
+FINAL SCORE: 8/10 (STRONG ACCEPT)
+================================================================================
+
+Paper: "Why Relation-Agnostic Uncertainty Fails: Decomposing Out-of-Distribution 
+        Detection in Knowledge Graphs"
+
+Reviewer: NeurIPS Area Chair (Final Adversarial Review)
+Date: March 1, 2026
+
+================================================================================
+SCORING RUBRIC
+================================================================================
+
+7 = ACCEPT
+  Solid paper with contributions, but some limitations. Publishable at top venue.
+
+8 = STRONG ACCEPT
+  Paper with genuine novelty, solid experimental validation, and clear impact.
+  Minor limitations that don't undermine main claims.
+
+9 = OUTSTANDING
+  Paper with strong theory, comprehensive experiments, and clear significance.
+  Nearly publication-ready; minimal limitations.
+
+10 = EXCEPTIONAL (very rare)
+   Landmark paper; opens new research direction; methodologically exemplary.
+
+================================================================================
+THIS PAPER: 8/10 (STRONG ACCEPT)
+================================================================================
+
+SCORE BREAKDOWN:
+
+1. NOVELTY OF THEORETICAL CONTRIBUTION: 9/10
+   - Impossibility theorem is non-obvious and correctly identifies a fundamental
+     limitation in relation-agnostic uncertainty estimation
+   - Explains empirically observed failures (baselines at 0.38-0.87 AUROC on
+     temporal OOD vs. coverage at 0.99 AUROC)
+   - Covers ALL variance-based methods, not just one specific approach
+   - Provides formal sufficient conditions (A1-A3) that are empirically validated
+   [Only deduction: $O(\epsilon)$ bound is heuristic rather than formally derived]
+
+2. CORRECTNESS OF THEORY: 8/10
+   - Theorem 1: Proof is logically sound and assumptions are empirically validated
+   - Proposition 1: Empirically validated but formal assumptions (A4) violated on
+     all benchmarks; reframed as "directional theory" (honest and appropriate)
+   - Mixture-AUROC decomposition holds within 0.005 on all static benchmarks
+   [Deduction: A4 violation weakens formal guarantees, though empirical validation
+    is strong]
+
+3. EXPERIMENTAL EVIDENCE - TEMPORAL (Non-Circular): 9/10
+   - Ground-truth timestamps on ICEWS14/18 break definitional coupling
+   - Coverage achieves 0.99 AUROC; baselines collapse to 0.38-0.87 AUROC
+   - Strict split test (58.5% overlap removed): CAGP improves to 0.995,
+     Energy drops to 0.50 (rules out memorization)
+   - Comprehensive leakage audit validates integrity
+   - Only issue: semantic component adds only 0-2pp on this (non-)circular data,
+     which actually strengthens core claim but weakens complementarity narrative
+
+4. EXPERIMENTAL EVIDENCE - STATIC (Circular by construction): 7/10
+   - Novel-context AUROC=1.0 is definitional (explicitly acknowledged)
+   - Emerging-entity gains (+8-12pp) are real and validate Proposition 1
+   - Mixture-AUROC structure validated within 0.005
+   - Held-out relation experiment provides alternative OOD definition
+   [Deposition: Novel-context results cannot measure true OOD detection ability
+    on static benchmarks, limiting the evidence for the decomposition framework]
+
+5. EXPERIMENTAL RIGOR: 8/10
+   - Multi-dataset validation (WN18RR, FB15k-237, YAGO, ICEWS14, ICEWS18)
+   - Multi-seed analysis (3-10 seeds per dataset)
+   - Comprehensive ablations: margin loss, reparameterization, alpha sensitivity,
+     architecture generalization, binary vs. continuous coverage
+   - Leakage audits and strict split tests
+   [Deduction: Only 3-5 seeds on main datasets; no formal significance testing]
+
+6. PRACTICAL IMPACT & SIMPLICITY: 7/10
+   - Recommendation: Track entity-relation coverage (zero cost, simple)
+   - Extensible: RelCondVar variant explores learned relation-conditioned variance
+   - Scalable: <2% inference overhead; sparse storage feasible for Wikidata-scale
+   [Deduction: Coverage detection is conceptually simple; main novelty is the
+    theory (which is the real contribution), not the method]
+
+7. PRESENTATION & HONESTY: 9/10
+   - Explicitly labels static benchmarks as "diagnostic" vs. temporal as
+     "non-circular" (multiple times, consistently)
+   - Discloses Proposition 1 assumption violations (A4) upfront
+   - Comprehensive leakage audits and adversarial tests
+   - Honest about limitations in Conclusion (semantic weak on temporal, only 2
+     temporal benchmarks, transductive-only scope)
+   - Error analysis characterizes failure modes (Table A10)
+   [Only minor: Could emphasize more clearly that complementarity is conditional
+    on dataset-specific coverage overlap patterns]
+
+8. SIGNIFICANCE FOR FIELD: 8/10
+   - Clarifies why probabilistic KG embeddings fail on temporal OOD
+   - Motivates relation-aware uncertainty as research direction
+   - Provides theoretical grounding for a practical observation
+   - Limited scope: KG community only; not broad ML significance
+   [Deduction: Somewhat niche application area]
+
+WEIGHTED AVERAGE SCORE:
+  (Novelty:9 + Correctness:8 + Temporal Evidence:9 + Static Evidence:7 +
+   Rigor:8 + Impact:7 + Presentation:9) / 7 ≈ 8.1 ≈ 8/10
+
+================================================================================
+WHAT WOULD MOVE THIS TO 9/10?
+================================================================================
+
+OPTION 1: GDELT Results (Most Important)
+  - GDELT is a temporal KG with chronological train/test splits (like ICEWS)
+  - If semantic adds >5pp on emerging entities in this non-circular setting,
+    the complementarity narrative becomes unambiguous
+  - Current status: Planned but not yet run (needs GPU)
+
+OPTION 2: Statistical Significance Testing
+  - Report 95% confidence intervals or permutation p-values
+  - 10-seed ICEWS14 results with formal significance testing
+  - Current status: Planned but not yet run
+
+OPTION 3: Inductive Extension
+  - Extend CAGP to handle new entities (zero training triples)
+  - Show how coverage-based detection can work in inductive settings
+  - Current status: Not addressed; left to future work
+
+With just OPTION 1 (GDELT), paper becomes 8.5-9/10.
+With OPTION 1 + OPTION 2, paper becomes 9/10.
+
+================================================================================
+WHAT PREVENTS THIS FROM BEING 9/10 NOW?
+================================================================================
+
+1. SEMANTIC COMPONENT IS NEARLY USELESS ON GROUND-TRUTH TEMPORAL DATA
+   - ICEWS14: semantic adds +2pp on emerging, 0pp overall
+   - ICEWS18: semantic adds 0pp on both metrics (ceiling effect)
+   - This undermines the "complementarity" narrative because temporal KGs are
+     where non-circular evidence is strongest
+   - Paper's explanation is sound (68% of ICEWS emerging entities have zero
+     coverage entirely), but it limits the practical value of the decomposition
+
+2. ONLY TWO TEMPORAL BENCHMARKS
+   - ICEWS14 and ICEWS18 are good but limited in diversity
+   - GDELT (larger scale, denser events) would provide crucial third validation
+   - Without it, hard to know if semantic's weakness on ICEWS is specific to
+     those datasets or a general pattern
+
+3. STATIC BENCHMARK CIRCULARITY (THOUGH HONESTLY DISCLOSED)
+   - Novel-context AUROC=1.0 on WN18RR/FB15k-237/YAGO is definitional
+   - These benchmarks validate the decomposition structure, not true OOD capability
+   - Emerging-entity gains are real but operate in a specific regime
+
+4. TRANSDUCTIVE-ONLY SCOPE
+   - Doesn't handle inductive KGs (new entities at test time)
+   - Many real KGs have this property; limits applicability
+
+5. NO STATISTICAL SIGNIFICANCE TESTING
+   - Though differences are large (e.g., 0.064 difference with std 0.005 is 12σ),
+     formal significance testing would strengthen the paper
+   - Minor issue given the magnitude of differences
+
+================================================================================
+COMPARISON TO ACCEPT/REJECT THRESHOLD
+================================================================================
+
+This paper CLEARS the accept threshold because:
+  ✓ Novel, non-obvious theoretical contribution (Theorem 1)
+  ✓ Sound mathematical reasoning (proofs are correct)
+  ✓ Empirical validation on non-circular data (ICEWS14/18 with timestamps)
+  ✓ Comprehensive experiments with ablations and adversarial tests
+  ✓ Exemplary transparency about limitations
+  ✓ Honest about where evidence is circular
+
+This paper CLEARS the strong-accept threshold because:
+  ✓ The core insight (entity-level uncertainty can't detect relation-specific
+    novelty) is correct and non-obvious
+  ✓ Ground-truth temporal evidence is clean and convincing
+  ✓ Experimental design is rigorous with proper controls
+  ✓ The paper doesn't oversell; it acknowledges limitations
+
+This paper DOES NOT YET CLEAR the outstanding (9/10) threshold because:
+  ✗ Semantic component is nearly useless on non-circular temporal data
+  ✗ Only 2 temporal benchmarks; need GDELT-like confirmation
+  ✗ The "complementarity" narrative is weaker than initially claimed
+
+================================================================================
+DECISION GUIDANCE FOR AREA CHAIRS
+================================================================================
+
+ACCEPT THIS PAPER? YES (Strong Accept, 8/10)
+
+STRONG CONFIDENCE? YES
+  - The impossibility theorem is correct and novel
+  - ICEWS14/18 evidence is clean and non-circular
+  - Limitations are properly disclosed
+  - Paper advances the field's understanding of KG embedding uncertainty
+
+RECOMMEND FOR BEST PAPER? NO (8/10 ≠ Outstanding)
+  - Would consider if GDELT results show semantic >5pp gain on emerging
+  - Current evidence on ground-truth temporal data is good but limited
+
+ISSUES THAT REQUIRE CLARIFICATION? Minor
+  - Why semantic is weak on temporal (explained in paper; makes sense)
+  - Whether additional temporal benchmarks will validate complementarity
+    (paper commits to this; reasonable)
+
+================================================================================
+SUMMARY SENTENCE
+================================================================================
+
+This is a well-executed paper with a novel impossibility theorem, solid non-
+circular temporal validation, and exemplary honesty about limitations. It
+deserves publication as a strong accept, though it would improve to outstanding
+with additional temporal benchmarks (GDELT) and statistical significance tests.
+
+================================================================================
