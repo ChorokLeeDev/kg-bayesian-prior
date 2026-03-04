@@ -3,13 +3,13 @@
 \subsection{Experimental Setup}
 
 \paragraph{Datasets.}
-Three static benchmarks with \emph{simulated temporal OOD} splits: \textbf{FB15k-237} (14.5K entities, 237 relations), \textbf{WN18RR} (40.9K, 11), \textbf{YAGO3-10} (123K, 37). Two temporal KGs with ground-truth timestamps: \textbf{ICEWS14} (7.1K, 230) and \textbf{ICEWS18} (23K, 256), where OOD categories emerge from chronological splits---breaking the definitional coupling between coverage and OOD labels.
+Two static benchmarks with \emph{simulated temporal OOD} splits: \textbf{FB15k-237} (14.5K entities, 237 relations) and \textbf{WN18RR} (40.9K, 11). Two temporal KGs with ground-truth timestamps: \textbf{ICEWS14} (7.1K, 230) and \textbf{ICEWS18} (23K, 256), where OOD categories emerge from chronological splits---breaking the definitional coupling between coverage and OOD labels.
 
 \paragraph{Baselines.}
 UKGE~\citep{chen2019embedding}, Energy~\citep{liu2020energy}, MC Dropout~\citep{gal2016dropout}, Deep Ensembles~\citep{lakshminarayanan2017simple}, SNGP~\citep{liu2020simple}, and single signals ($U_{\text{sem}}$, $U_{\text{str}}$). All share identical splits, hyperparameters (dim$=$100, lr$=10^{-3}$, 30 epochs), and evaluation protocol. Standalone $U_{\text{sem}}$ (GPOnly) reports raw entity variance; the CAGP-internal semantic component is rescaled (\S\ref{sec:method}).
 
 \paragraph{Metrics and reproducibility.}
-AUROC (primary; AUPR in Appendix~\ref{app:aupr}). Base seeds $\{42, 123, 456\}$; extended to 5 seeds for WN18RR and ICEWS14, 10 for FB15k-237 (Appendix~\ref{app:per_seed}). Per-seed breakdowns show standard deviations $\leq 0.005$ across all datasets; the coverage signal is deterministic (zero seed variance), and learned variances contribute $<$0.01 AUROC variation. Models with learned variance receive $\mathcal{L}_{\text{margin}}$ ($w_{\text{unc}}{=}0.1$); ablation in \S\ref{sec:ablations} confirms that $\mathcal{L}_{\text{margin}}$ contributes $<$0.4pp. We use DistMult as the base scorer for simplicity; Appendix~\ref{app:architectures} confirms OOD detection is architecture-insensitive (0.959--0.963 AUROC across DistMult, TransE, ComplEx), consistent with our theoretical prediction that detection depends on coverage structure, not scoring function. Base DistMult achieves MRR/Hits@10 of 0.21/0.34 (FB15k-237) and 0.27/0.42 (WN18RR), comparable to reported DistMult baselines~\citep{trouillon2016complex}. We do not compare Mahalanobis distance (the OOD signal is relational, not geometric), conformal prediction (targets prediction-set guarantees, not detection), or evidential methods (targets classification, not KG triple scoring).
+AUROC (primary; AUPR in Appendix~\ref{app:aupr}). WN18RR and ICEWS18 use 5 seeds; FB15k-237 and ICEWS14 use 10 seeds (Appendix~\ref{app:per_seed}). Per-seed breakdowns show standard deviations $\leq 0.005$ across all datasets; the coverage signal is deterministic (zero seed variance), and learned variances contribute $<$0.01 AUROC variation. \emph{Statistical significance}: On FB15k-237 (10 seeds), CAGP vs.\ $U_{\text{str}}$ yields a paired t-test $p < 0.001$ (mean diff = 0.032, 95\% CI: [0.029, 0.035]); on ICEWS14, the difference is not significant ($p = 0.18$) due to the ceiling effect. We report 95\% bootstrap CIs for key comparisons in Appendix~\ref{app:significance}. Models with learned variance receive $\mathcal{L}_{\text{margin}}$ ($w_{\text{unc}}{=}0.1$); ablation in \S\ref{sec:ablations} confirms that $\mathcal{L}_{\text{margin}}$ contributes $<$0.1pp. We use DistMult as the base scorer for simplicity; Appendix~\ref{app:architectures} confirms OOD detection is architecture-insensitive (0.959--0.963 AUROC across DistMult, TransE, ComplEx), consistent with our theoretical prediction that detection depends on coverage structure, not scoring function. Base DistMult achieves MRR/Hits@10 of 0.21/0.34 (FB15k-237) and 0.27/0.42 (WN18RR), comparable to reported DistMult baselines~\citep{trouillon2016complex}. We do not compare Mahalanobis distance (the OOD signal is relational, not geometric), conformal prediction (targets prediction-set guarantees, not detection), or evidential methods (targets classification, not KG triple scoring).
 
 \subsection{Main Results}
 
@@ -20,67 +20,67 @@ AUROC (primary; AUPR in Appendix~\ref{app:aupr}). Base seeds $\{42, 123, 456\}$;
 \resizebox{\linewidth}{!}{%
 \scriptsize
 \setlength{\tabcolsep}{2pt}
-\begin{tabular}{l cc cc cc cc cc}
+\begin{tabular}{l cc cc cc cc}
 \toprule
  & \multicolumn{2}{c}{WN18RR$^\ddagger$} & \multicolumn{2}{c}{FB15k-237$^\ddagger$}
- & \multicolumn{2}{c}{YAGO$^\ddagger$} & \multicolumn{2}{c}{\textbf{ICEWS14}$^*$}
+ & \multicolumn{2}{c}{\textbf{ICEWS14}$^*$}
  & \multicolumn{2}{c}{\textbf{ICEWS18}$^*$} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
-Method & Em. & All & Em. & All & Em. & All & Em. & All & Em. & All \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+Method & Em. & All & Em. & All & Em. & All & Em. & All \\
 \midrule
-\multicolumn{11}{l}{\textit{Baselines}} \\
-UKGE       & .48  & .48\tiny{$\pm$.03} & .39 & .40\tiny{$\pm$.01}
-           & .80  & .70\tiny{$\pm$.02} & .41 & .38\tiny{$\pm$.01}
+\multicolumn{9}{l}{\textit{Baselines}} \\
+UKGE       & .49  & .49\tiny{$\pm$.01} & .50 & .50\tiny{$\pm$.01}
+           & .41 & .38\tiny{$\pm$.01}
            & .81 & .78\tiny{$\pm$.01} \\
-Energy     & .58  & .58\tiny{$\pm${\textless}.01} & .51 & .51\tiny{$\pm$.01}
-           & .83  & .72\tiny{$\pm$.01} & .59 & .59\tiny{$\pm$.01}
+Energy     & .60  & .60\tiny{$\pm$.02} & .51 & .51\tiny{$\pm$.01}
+           & .60 & .59\tiny{$\pm$.01}
            & .92 & .87\tiny{$\pm${\textless}.01} \\
-MC Drop.   & .52  & .52\tiny{$\pm$.06} & .67 & .63\tiny{$\pm${\textless}.01}
-           & .23  & .35\tiny{$\pm${\textless}.01} & .66 & .73\tiny{$\pm$.01}
+MC Drop.   & .46  & .46\tiny{$\pm$.07} & .62 & .62\tiny{$\pm$.01}
+           & .66 & .73\tiny{$\pm$.01}
            & .27 & .34\tiny{$\pm$.01} \\
-Deep Ens.  & .57  & .58\tiny{$\pm$.03} & .65 & .61\tiny{$\pm${\textless}.01}
-           & .49  & .61\tiny{$\pm$.01} & .74 & .80\tiny{$\pm${\textless}.01}
+Deep Ens.  & .53  & .53\tiny{$\pm$.01} & .63 & .63\tiny{$\pm$.01}
+           & .74 & .80\tiny{$\pm${\textless}.01}
            & .82 & .80\tiny{$\pm$.01} \\
-SNGP       & .62  & .58\tiny{$\pm${\textless}.01} & .62 & .46\tiny{$\pm${\textless}.01}
-           & .70  & .54\tiny{$\pm${\textless}.01} & .85 & .74\tiny{$\pm${\textless}.01}
+SNGP       & .49  & .49\tiny{$\pm$.01} & .50 & .50\tiny{$\pm$.01}
+           & .85 & .74\tiny{$\pm${\textless}.01}
            & .85 & .76\tiny{$\pm${\textless}.01} \\
 \midrule
-\multicolumn{11}{l}{\textit{Single Signals}} \\
-$U_{\text{sem}}$ & .71 & .66\tiny{$\pm${\textless}.01} & .81 & .59\tiny{$\pm${\textless}.01}
-                  & .69 & .54\tiny{$\pm${\textless}.01} & .98 & .84\tiny{$\pm${\textless}.01}
+\multicolumn{9}{l}{\textit{Single Signals}} \\
+$U_{\text{sem}}$ & .71 & .62\tiny{$\pm${\textless}.01} & .81 & .42\tiny{$\pm${\textless}.01}
+                  & .90 & .78\tiny{$\pm${\textless}.01}
                   & .99 & .91\tiny{$\pm${\textless}.01} \\
 $U_{\text{str}}$ & .83 & .86\tiny{$\pm${\textless}.01} & .78 & .94\tiny{$\pm${\textless}.01}
-                  & .67 & .84\tiny{$\pm${\textless}.01} & .98 & .99\tiny{$\pm${\textless}.01}
+                  & .98 & .99\tiny{$\pm${\textless}.01}
                   & .98 & .99\tiny{$\pm${\textless}.01} \\
 \midrule
-\multicolumn{11}{l}{\textit{Decomposition (Ours)}} \\
-CAGP       & \textbf{.91} & \textbf{.92}\tiny{$\pm$.005}
-           & .89 & .97\tiny{$\pm$.001}
-           & \textbf{.79} & \textbf{.90}\tiny{$\pm$.004}
-           & \textbf{1.0} & \textbf{.99}\tiny{$\pm${\textless}.01}
+\multicolumn{9}{l}{\textit{Decomposition (Ours)}} \\
+CAGP       & \textbf{.91} & \textbf{.92}\tiny{$\pm$.001}
+           & .89 & \textbf{.97}\tiny{$\pm$.001}
+           & \textbf{.99} & \textbf{1.0}\tiny{$\pm${\textless}.01}
            & \textbf{.98} & \textbf{.99}\tiny{$\pm${\textless}.01} \\
 RelCondVar & .83 & .86\tiny{$\pm${\textless}.01} & \textbf{.93} & \textbf{.98}\tiny{$\pm${\textless}.01}
-           & .67 & .84\tiny{$\pm${\textless}.01} & .98 & .99\tiny{$\pm${\textless}.01}
+           & .98 & .99\tiny{$\pm${\textless}.01}
            & \textbf{.98} & \textbf{.99}\tiny{$\pm${\textless}.01} \\
 \bottomrule
-\multicolumn{11}{l}{\scriptsize $^\ddagger$Simulated OOD: novel-context detection is perfect by construction (\S\ref{sec:method}).}\\
-\multicolumn{11}{l}{\scriptsize $^*$Ground-truth timestamps; OOD by time, not coverage.}\\
+\multicolumn{9}{l}{\scriptsize $^\ddagger$Simulated OOD: novel-context detection is perfect by construction (\S\ref{sec:method}).}\\
+\multicolumn{9}{l}{\scriptsize $^*$Ground-truth timestamps; OOD by time, not coverage.}\\
+\multicolumn{9}{l}{\scriptsize Baseline Em.\ on static benchmarks is approximate (novel-context fraction $\leq$25\%); see Table~\ref{tab:complementarity} for exact stratification.}\\
 \end{tabular}}
 \end{table}
 
 \textbf{Key findings} (Table~\ref{tab:temporal_ood}).
 
-\emph{Non-circular evidence (ICEWS14/18).} On temporal KGs with ground-truth timestamps, coverage dominates: $U_{\text{str}}$ achieves 0.99 AUROC on both ICEWS benchmarks, and CAGP matches this. The semantic component adds +2pp on emerging entities for ICEWS14 (1.00 vs 0.98); on ICEWS18, CAGP performs identically to $U_{\text{str}}$ across all OOD categories due to a ceiling effect. These results confirm that \emph{structural uncertainty is the primary missing ingredient}---the gap between baselines (0.38--0.87) and coverage (0.99) is the core finding.
+\emph{Non-circular evidence (ICEWS14/18).} On temporal KGs with ground-truth timestamps, coverage dominates: $U_{\text{str}}$ achieves 0.99 AUROC on both ICEWS benchmarks, and CAGP matches or exceeds this. On ICEWS14 (10 seeds), CAGP reaches 1.00 overall AUROC with 0.99 on emerging entities---a +1pp gain over $U_{\text{str}}$ alone. On ICEWS18, CAGP performs identically to $U_{\text{str}}$ across all OOD categories due to a ceiling effect. These results confirm that \emph{structural uncertainty is the primary missing ingredient}---the gap between baselines (0.38--0.87) and coverage (0.99) is the core finding.
 
-\emph{Diagnostic evidence (static benchmarks).} On simulated OOD splits, semantic variance adds +8--12pp on emerging entities over coverage alone. The mixture-AUROC decomposition (Eq.~\ref{eq:mixture_auroc}) serves as a \emph{consistency check}: predicted and observed AUROC match within 0.005 (Appendix~\ref{app:mixture}), confirming gains arise from the predicted mechanism (emerging-entity separation) rather than artifacts. Novel-context AUROC$=$1.0 by construction (Remark~\ref{rem:circularity}); these results test the decomposition's \emph{internal structure}, not independent detection capability.
+\emph{Diagnostic evidence (static benchmarks).} On simulated OOD splits, semantic variance adds +8--11pp on emerging entities over coverage alone (WN18RR: 0.91 vs 0.83; FB15k-237: 0.89 vs 0.78). The mixture-AUROC decomposition (Eq.~\ref{eq:mixture_auroc}) serves as a \emph{consistency check}: predicted and observed AUROC match within 0.005 (Appendix~\ref{app:mixture}), confirming gains arise from the predicted mechanism (emerging-entity separation) rather than artifacts. Novel-context AUROC$=$1.0 by construction (Remark~\ref{rem:circularity}); these results test the decomposition's \emph{internal structure}, not independent detection capability.
 
-\emph{RelCondVar.} Outperforms CAGP on FB15k-237 (+1pp overall, +4pp emerging) but reduces to $U_{\text{str}}$ on sparse-relation KGs (WN18RR/YAGO), where insufficient relation diversity prevents learning meaningful conditioned variance (\S\ref{sec:relcondvar}).
+\emph{RelCondVar.} Outperforms CAGP on FB15k-237 (+1pp overall, +4pp emerging) but reduces to $U_{\text{str}}$ on sparse-relation KGs (WN18RR), where insufficient relation diversity prevents learning meaningful conditioned variance (\S\ref{sec:relcondvar}).
 
-\emph{Why does semantic help on static but not temporal?} On ICEWS14/18, nearly all emerging entities have zero coverage for the test relation (68\% of ICEWS14 emerging entities are entirely absent from training; Appendix~\ref{app:leakage}), so $U_{\text{str}}$ already captures them---leaving no room for semantic tiebreaking. On static benchmarks, 34--66\% of emerging entities \emph{do} have coverage for the query relation ($\rho$ in Table~\ref{tab:assumptions}), creating ties that semantic uncertainty breaks. The Proposition~\ref{prop:complementarity}(iii) formula predicts exactly this: the gain is $\pi_e \cdot (A_{\text{emerge}}^{\text{comb}} - A_{\text{emerge}}^{\text{str}})$, which is positive only when emerging entities have non-trivial coverage overlap ($\rho > 0$).
+\emph{Why does semantic help on static but not temporal?} On ICEWS14/18, nearly all emerging entities have zero coverage for the test relation (68\% of ICEWS14 emerging entities are entirely absent from training; Appendix~\ref{app:leakage}), so $U_{\text{str}}$ already captures them---leaving no room for semantic tiebreaking. On static benchmarks (WN18RR, FB15k-237), 34--66\% of emerging entities \emph{do} have coverage for the query relation ($\rho$ in Table~\ref{tab:assumptions}), creating ties that semantic uncertainty breaks. The Proposition~\ref{prop:complementarity}(iii) formula predicts exactly this: the gain is $\pi_e \cdot (A_{\text{emerge}}^{\text{comb}} - A_{\text{emerge}}^{\text{str}})$, which is positive only when emerging entities have non-trivial coverage overlap ($\rho > 0$).
 
 \subsection{Validating Complementarity}
 
-Table~\ref{tab:complementarity} confirms each part of Proposition~\ref{prop:complementarity}: $U_{\text{sem}}$ achieves near-random AUROC on novel contexts (0.40--0.49 on static benchmarks; anti-predictive due to high-frequency novel-context entities having lower variance than the in-distribution average). $U_{\text{str}}$ is imperfect on emerging entities (0.67--0.83 on static; near-perfect on ICEWS where most emerging entities lack coverage). The combination helps: CAGP's gain comes entirely from emerging entities (+8--12pp over $U_{\text{str}}$), matching the mixture decomposition to within 0.005 (Appendix~\ref{app:mixture}):
+Table~\ref{tab:complementarity} confirms each part of Proposition~\ref{prop:complementarity}: $U_{\text{sem}}$ achieves near-random AUROC on novel contexts (0.40--0.49 on static benchmarks; anti-predictive due to high-frequency novel-context entities having lower variance than the in-distribution average). $U_{\text{str}}$ is imperfect on emerging entities (0.78--0.83 on static; near-perfect on ICEWS where most emerging entities lack coverage). The combination helps: CAGP's gain comes entirely from emerging entities (+8--11pp over $U_{\text{str}}$), matching the mixture decomposition to within 0.005 (Appendix~\ref{app:mixture}):
 \begin{equation}
 \text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + \pi_n \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}
 \label{eq:mixture_auroc}
@@ -88,64 +88,63 @@ Table~\ref{tab:complementarity} confirms each part of Proposition~\ref{prop:comp
 
 \begin{table}[t]
 \centering
-\caption{\textbf{Stratified OOD detection by type} (multi-seed mean). Each signal is strongest on one category and weakest on the other; CAGP combines both.\label{tab:complementarity}}
+\caption{\textbf{Stratified OOD detection by type} (multi-seed mean; same seeds as Table~\ref{tab:temporal_ood}). Each signal is strongest on one category and weakest on the other; CAGP combines both.\label{tab:complementarity}}
 \resizebox{\linewidth}{!}{%
 \scriptsize
 \setlength{\tabcolsep}{2pt}
-\begin{tabular}{lccc ccc ccc ccc ccc}
+\begin{tabular}{lccc ccc ccc ccc}
 \toprule
- & \multicolumn{3}{c}{FB15k-237} & \multicolumn{3}{c}{WN18RR} & \multicolumn{3}{c}{YAGO} & \multicolumn{3}{c}{\textbf{ICEWS14}$^*$} & \multicolumn{3}{c}{\textbf{ICEWS18}$^*$} \\
-\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-13} \cmidrule(lr){14-16}
-Method & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All \\
+ & \multicolumn{3}{c}{WN18RR} & \multicolumn{3}{c}{FB15k-237} & \multicolumn{3}{c}{\textbf{ICEWS14}$^*$} & \multicolumn{3}{c}{\textbf{ICEWS18}$^*$} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-13}
+Method & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All \\
 \midrule
-$U_{\text{sem}}$ & .81 & .49 & .59 & .71 & .40 & .66 & .69 & .40 & .54 & .98 & .78 & .84 & .99 & .83 & .91 \\
-$U_{\text{str}}$ & .78 & \textbf{1.0} & .94 & .83 & \textbf{1.0} & .86 & .67 & \textbf{1.0} & .84 & .98 & \textbf{1.0} & .99 & .98 & \textbf{1.0} & .99 \\
+$U_{\text{sem}}$ & .71 & .40 & .62 & .81 & .49 & .42 & .90 & .73 & .78 & .99 & .83 & .91 \\
+$U_{\text{str}}$ & .83 & \textbf{1.0} & .86 & .78 & \textbf{1.0} & .94 & .98 & \textbf{1.0} & .99 & .98 & \textbf{1.0} & .99 \\
 \midrule
-CAGP & .89 & \textbf{1.0} & .97 & \textbf{.91} & \textbf{1.0} & \textbf{.92} & \textbf{.79} & \textbf{1.0} & \textbf{.90} & \textbf{1.0} & \textbf{1.0} & \textbf{.99} & \textbf{.98} & \textbf{1.0} & \textbf{.99} \\
-RelCondVar & \textbf{.93} & \textbf{1.0} & \textbf{.98} & .83 & \textbf{1.0} & .86 & .67 & \textbf{1.0} & .84 & .98 & \textbf{1.0} & .99 & \textbf{.98} & \textbf{1.0} & \textbf{.99} \\
+CAGP & \textbf{.91} & \textbf{1.0} & \textbf{.92} & .89 & \textbf{1.0} & .97 & \textbf{.99} & \textbf{1.0} & \textbf{1.0} & \textbf{.98} & \textbf{1.0} & \textbf{.99} \\
+RelCondVar & .83 & \textbf{1.0} & .86 & \textbf{.93} & \textbf{1.0} & \textbf{.98} & .98 & \textbf{1.0} & .99 & \textbf{.98} & \textbf{1.0} & \textbf{.99} \\
 \bottomrule
-\multicolumn{16}{l}{\scriptsize $^*$Ground-truth temporal splits.}\\
+\multicolumn{13}{l}{\scriptsize $^*$Ground-truth temporal splits.}\\
 \end{tabular}}
 \end{table}
 
 \subsection{Adversarial Evaluation: ICEWS14 Strict Split}
 \label{sec:strict_split}
 
-Inverse relations (\emph{visited} in train, \emph{was\_visited\_by} in test) can inflate temporal OOD performance. We construct a \emph{strict split} removing all inverse-relation overlap (58.5\% of test triples removed).
+Inverse relations (\emph{visited} in train, \emph{was\_visited\_by} in test) can inflate temporal OOD performance. We construct a \emph{strict split} removing all inverse-relation overlap (41.2\% of test triples removed).
 
 \begin{table}[t]
 \centering
-\caption{\textbf{ICEWS14 strict split} (5-seed mean$\pm$std). Removing 58.5\% inverse-relation overlap causes score-based baselines to collapse to chance; coverage-based methods are unaffected. MC Dropout, Deep Ensembles, and SNGP show similar collapse patterns (Appendix~\ref{app:leakage}).\label{tab:strict_split}}
+\caption{\textbf{ICEWS14 strict split} (10-seed mean$\pm$std). Removing 41.2\% inverse-relation overlap causes score-based baselines to collapse to chance; coverage-based methods are unaffected. MC Dropout, Deep Ensembles, and SNGP show similar collapse patterns (Appendix~\ref{app:leakage}).\label{tab:strict_split}}
 \small
 \begin{tabular}{lcc}
 \toprule
 Method & Original & Strict Split \\
 \midrule
-Energy & .54$\pm$.007 & .50$\pm$.016 \\
-UKGE & .45$\pm$.008 & .48$\pm$.016 \\
-$U_{\text{sem}}$ & .82$\pm$.004 & .79$\pm$.008 \\
-$U_{\text{str}}$ & .99$\pm$.001 & .99$\pm$.001 \\
-CAGP & .99$\pm$.001 & \textbf{.99$\pm$.002} \\
+Energy & .59$\pm$.007 & .50$\pm$.007 \\
+$U_{\text{sem}}$ & .78$\pm${\textless}.001 & .69$\pm$.001 \\
+$U_{\text{str}}$ & .99$\pm${\textless}.001 & \textbf{1.0}$\pm${\textless}.001 \\
+CAGP & 1.0$\pm${\textless}.001 & \textbf{1.0}$\pm${\textless}.001 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Energy collapses to chance (0.54$\to$0.50); $U_{\text{sem}}$ degrades (0.82$\to$0.79), confirming that relation-agnostic variance provides no reliable signal for temporal OOD even on temporal data---consistent with Theorem~\ref{thm:impossibility}. CAGP and $U_{\text{str}}$ maintain 0.99 AUROC under both protocols: the structural component drives detection regardless of inverse-relation overlap.
+Energy collapses to chance (0.59$\to$0.50); $U_{\text{sem}}$ degrades substantially (0.78$\to$0.69), confirming that relation-agnostic variance provides no reliable signal for temporal OOD even on temporal data---consistent with Theorem~\ref{thm:impossibility}. CAGP and $U_{\text{str}}$ maintain 1.00 AUROC under both protocols: the structural component drives detection regardless of inverse-relation overlap.
 
 \subsection{Ablation Studies}
 \label{sec:ablations}
 
 \paragraph{Margin loss.}
-Removing $\mathcal{L}_{\text{margin}}$ ($w_{\text{unc}}{=}0$) causes $<$0.4pp degradation on WN18RR (0.669$\to$0.666), confirming CAGP's gains derive from the coverage-semantic decomposition, not the auxiliary training objective.
+Removing $\mathcal{L}_{\text{margin}}$ ($w_{\text{unc}}{=}0$) causes $<$0.1pp change on WN18RR and FB15k-237 (seed 42; Appendix~\ref{app:margin_ablation}), confirming CAGP's gains derive from the coverage-semantic decomposition, not the auxiliary training objective.
 
 \paragraph{Baseline + coverage.}
-Post-hoc coverage augmentation ($0.5 \cdot U_{\text{baseline}} + 0.5 \cdot U_{\text{str}}$) converges to coverage-only performance without matching CAGP: Energy+Cov$=$0.845, MC~Dropout+Cov$=$0.859, CoverageOnly$=$0.859, vs.\ CAGP$=$0.92 on WN18RR. The +6pp gap arises because baseline variances lack meaningful frequency-differentiation without reparameterization sampling (cf.\ variance collapse ablation below): their uncertainty contributes noise rather than signal within coverage strata. CAGP's reparameterization-trained variances produce a rank-preserving tiebreaker that separates emerging entities \emph{within} the $U_{\text{str}}{=}0$ stratum (where 34--66\% of emerging entities fall; Table~\ref{tab:assumptions}).
+Post-hoc coverage augmentation ($0.5 \cdot U_{\text{baseline}} + 0.5 \cdot U_{\text{str}}$) does not match CAGP: on WN18RR, Energy+Cov$=$0.53, MC~Dropout+Cov$=$0.81, CoverageOnly$=$0.86, vs.\ CAGP$=$0.92. On FB15k-237, MC~Dropout+Cov$=$0.92 vs.\ CAGP$=$0.97. The gap arises because baseline variances lack meaningful frequency-differentiation without reparameterization sampling (cf.\ variance collapse ablation below): their uncertainty contributes noise rather than signal within coverage strata. CAGP's reparameterization-trained variances produce a rank-preserving tiebreaker that separates emerging entities \emph{within} the $U_{\text{str}}{=}0$ stratum (where 34--66\% of emerging entities fall; Table~\ref{tab:assumptions}).
 
 \paragraph{Variance collapse.}
-Omitting reparameterization sampling collapses entity variances (AUROC: 0.92$\to$0.72 on WN18RR, 0.90$\to$0.68 on YAGO). The reparameterization trick is essential.
+Omitting reparameterization sampling collapses entity variances (AUROC: 0.92$\to$0.72 on WN18RR). Without reparameterization, the KL term drives all variances toward the prior, destroying the semantic signal. The reparameterization trick is essential.
 
 \paragraph{Threats to validity.}
-Static novel-context AUROC$=$1.0 by construction; these are diagnostic, not performance claims. ICEWS14 strict split breaks this coupling. ICEWS18 shows a ceiling: $U_{\text{str}}=$ CAGP across all subsets. Additional temporal benchmarks (e.g., GDELT) are needed to further validate complementarity.
+Static novel-context AUROC$=$1.0 by construction; these are diagnostic, not performance claims. ICEWS14 strict split breaks this coupling. ICEWS18 shows a ceiling: $U_{\text{str}}=$ CAGP across all subsets. Additional temporal benchmarks would further validate complementarity on diverse KG structures.
 
 \paragraph{Standard OOD.}
 On standard random-corruption OOD (Appendix~\ref{app:standard_ood_full}), CAGP ties the best single signal (0.82 on FB15k-237) and is marginally below $U_{\text{sem}}$ on WN18RR (0.66 vs 0.67): coverage provides no information when corruptions sample entities that already have the query relation in training. CAGP is designed for temporal OOD; standard OOD is a complementary setting where entity-level methods are sufficient.
