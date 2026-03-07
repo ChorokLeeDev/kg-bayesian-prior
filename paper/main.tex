@@ -154,7 +154,7 @@ The deviation from exactly 0.5 is $O(\epsilon)$, controlled by the tightness of 
 \paragraph{Empirical calibration of $O(\epsilon)$.}
 We heuristically estimate $\epsilon$ using the Spearman rank correlation $\rho_s$ between entity frequency and learned variance, which quantifies the tightness of the variance-frequency coupling (A1). Concretely, we use the approximation $|\text{AUROC} - 0.5| \lesssim C \sqrt{1 - \rho_s^2}$ with $C \leq 0.5$; this is a heuristic bound rather than a formal derivation (a rigorous proof connecting entity-level Spearman $\rho$ to triple-level AUROC is left to future work). On our datasets: WN18RR $\rho_s {=} {-}0.81$ ($\epsilon \lesssim 0.29$), FB15k-237 $\rho_s {=} {-}0.88$ ($\epsilon \lesssim 0.24$), YAGO $\rho_s {=} {-}0.68$ ($\epsilon \lesssim 0.37$). Observed novel-context AUROC: 0.40, 0.49, 0.40 (WN18RR, FB15k-237, YAGO)---all within these estimates. Values near or below 0.5 are consistent with near-random detection on novel contexts, confirming the impossibility bound.
 
-\subsection{Proof of Proposition~\ref{prop:complementarity} (Complementarity, with A4 caveat)}
+\subsection{Proof of Empirical Regularity~1 (Complementarity, with A4 caveat)}
 
 \paragraph{Proof of Part (i).}
 By (A3), novel-context entities have frequency-matched ID counterparts. By (A1), matching frequencies imply matching variances. Thus $U_{\text{sem}}$ has identical distributions on novel contexts and ID, giving AUROC $= 0.5 + O(\epsilon)$.
@@ -217,7 +217,7 @@ This near-perfect matching validates Theorem~\ref{thm:impossibility}: since nove
 
 \begin{remark}[Relationship to structural detector]
 \label{rem:circularity}
-The novel-context category is defined via the same coverage indicator $c(e,r)$ used by $U_{\text{str}}$. This means structural uncertainty achieves perfect separation on novel contexts \emph{by construction}. The empirical contribution is therefore not that coverage ``discovers'' novel contexts, but rather: (a) the impossibility result (Theorem~\ref{thm:impossibility}) showing entity-level methods \emph{cannot} detect this category, and (b) novel contexts constitute 10--25\% of realistic test sets (WN18RR: 10.8\%, FB15k-237: 25.4\%, YAGO: 12.6\%), making their detection practically important.
+The novel-context category is defined via the same coverage indicator $c(e,r)$ used by $U_{\text{str}}$. This means structural uncertainty achieves perfect separation on novel contexts \emph{tautologically by design}---not through empirical discovery. The empirical contribution is therefore not that coverage ``discovers'' novel contexts, but rather: (a) the impossibility result (Theorem~\ref{thm:impossibility}) showing entity-level methods \emph{cannot} detect this category, and (b) novel contexts constitute 10--25\% of realistic test sets (WN18RR: 10.8\%, FB15k-237: 25.4\%, YAGO: 12.6\%), making their detection practically important.
 \end{remark}
 
 \begin{remark}[Logical structure of Theorem~\ref{thm:impossibility}]
@@ -280,14 +280,14 @@ On ICEWS14, coverage dominates ($>$96\% of temporal OOD has $U_{\text{str}} > 0$
 \paragraph{Recommendation.}
 We fix $\alpha{=}0.5$ as the default (Figure~\ref{fig:alpha_sensitivity}). No validation set tuning is required, making CAGP a zero-hyperparameter extension over the base embedding model.
 
-\subsection{Proposition~\ref{prop:complementarity}(iii) Validation: Mixture Decomposition}
+\subsection{Empirical Regularity~1(iii) Validation: Mixture Decomposition}
 \label{app:mixture}
 
 We validate the mixture AUROC decomposition (Eq.~\ref{eq:mixture_auroc}) by comparing predicted and observed AUROC at varying emerging-to-novel ratios. No retraining is performed; we resample from per-triple uncertainties and verify that $\text{AUROC}(U) = \pi_e \cdot A_{\text{emerge}}(U) + (1{-}\pi_e) \cdot A_{\text{novel}}(U) + \delta_{\text{tie}}$ holds to within 0.01 on all static benchmarks (WN18RR, FB15k-237, YAGO3-10) across all resampled ratios (within 0.005 at the natural emerging/novel ratio; see discussion below). ICEWS datasets use subsampled ID sets (first 3{,}000 for per-category, first 5{,}000 for overall) due to dataset size; the decomposition identity is validated only on the static benchmarks where full evaluation sets are used.
 
 \begin{table}[ht]
 \centering
-\caption{Oracle combination gain over best single signal at varying emerging/(emerging+novel) ratios. The combination outperforms at all mixed proportions, validating Proposition~\ref{prop:complementarity}(iii).}
+\caption{Oracle combination gain over best single signal at varying emerging/(emerging+novel) ratios. The combination outperforms at all mixed proportions, validating Empirical Regularity~1(iii).}
 \label{tab:mixture}
 \small
 \begin{tabular}{lccc|ccc}
@@ -456,7 +456,7 @@ Neither $U_{\text{sem}}$ nor the bilinear scorer achieves novel-context AUROC ab
 \label{app:discussion}
 
 \paragraph{Dataset-specific signal composition.}
-Table~\ref{tab:temporal_ood} reveals the optimal signal composition varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels. On YAGO3-10, structural uncertainty remains the stronger single-signal contributor ($U_{\text{str}}$ 0.84), while semantic uncertainty alone is moderate (0.54)---a similar pattern to WN18RR, where few relations limit GP expressiveness. CAGP improves over $U_{\text{str}}$ on all datasets by contributing semantic information on emerging entities: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO. The improvement is largest where single-signal emerging detection is weakest, consistent with the complementarity predicted by Proposition~\ref{prop:complementarity}. Note: without reparameterization sampling, entity variances collapse under KL regularization (see error analysis in \S\ref{sec:experiments}), reducing CAGP to a coverage-only detector. CAGP achieves 0.90--0.97 AUROC across the three static benchmarks (WN18RR 0.92, FB15k-237 0.97, YAGO 0.90) and 0.993/0.987 on ICEWS14/18.
+Table~\ref{tab:temporal_ood} reveals the optimal signal composition varies by dataset. FB15k-237 is dominated by novel contexts (25.4\% of test set), where structural uncertainty excels. On YAGO3-10, structural uncertainty remains the stronger single-signal contributor ($U_{\text{str}}$ 0.84), while semantic uncertainty alone is moderate (0.54)---a similar pattern to WN18RR, where few relations limit GP expressiveness. CAGP improves over $U_{\text{str}}$ on all datasets by contributing semantic information on emerging entities: +8pp on WN18RR, +11pp on FB15k-237, +12pp on YAGO. The improvement is largest where single-signal emerging detection is weakest, consistent with Empirical Regularity~1. Note: without reparameterization sampling, entity variances collapse under KL regularization (see error analysis in \S\ref{sec:experiments}), reducing CAGP to a coverage-only detector. CAGP achieves 0.90--0.97 AUROC across the three static benchmarks (WN18RR 0.92, FB15k-237 0.97, YAGO 0.90) and 0.993/0.987 on ICEWS14/18.
 
 \paragraph{Per-dataset signal analysis.}
 On YAGO3-10, CAGP achieves 0.79 on emerging entities, improving over both $U_{\text{sem}}$ (0.69) and $U_{\text{str}}$ (0.67). Both signals are weaker on YAGO than FB15k-237: YAGO's variance-frequency correlation (Spearman $\rho{=}{-}0.68$) is weaker than FB15k-237 ($\rho{=}{-}0.88$), and YAGO's 37 relations produce an emerging-entity slice ($\pi_e{=}0.48$) where coverage gaps partially overlap with entity frequency. Despite this, CAGP's +12pp gain over $U_{\text{str}}$ on YAGO is the largest across all static benchmarks.
