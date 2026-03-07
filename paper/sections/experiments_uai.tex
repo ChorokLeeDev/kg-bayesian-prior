@@ -83,11 +83,11 @@ RelCondVar & .83 & .86\tiny{$\pm${\textless}.01} & \textbf{.93} & \textbf{.98}\t
 \subsection{Validating Complementarity}
 
 \paragraph{Systematic overconfidence on zero-evidence queries.}
-Table~\ref{tab:confident_wrong} reveals that existing methods are not merely failing to detect novel contexts---they are \emph{most confident} on them. Among Energy's top-100 most confident predictions on FB15k-237, 83\% have zero training evidence (vs.\ 32\% baseline). This anti-correlation between confidence and evidence is the core failure mode our impossibility theorem explains.
+Table~\ref{tab:confident_wrong} reveals that score-based methods are not merely failing to detect novel contexts---they are \emph{most confident} on them. Among Energy's top-100 most confident predictions on FB15k-237, 83\% have zero training evidence (vs.\ 32\% baseline). This is not a frequency confound: Energy selects \emph{low}-frequency entities (0.09$\times$ the average), yet these predictions are concentrated on zero-evidence queries. The anti-correlation between confidence and evidence is the core failure mode our impossibility theorem explains.
 
 \begin{table}[t]
 \centering
-\caption{\textbf{Confident-wrong analysis}: Fraction of top-K most confident predictions with zero training evidence. All methods are systematically overconfident on novel contexts.\label{tab:confident_wrong}}
+\caption{\textbf{Confident-wrong analysis}: Fraction of top-K most confident predictions with zero training evidence. Score-based methods are systematically overconfident on novel contexts.\label{tab:confident_wrong}}
 \small
 \begin{tabular}{lccc}
 \toprule
@@ -96,7 +96,6 @@ Method & Top-100 & Top-500 & Top-1000 \\
 \multicolumn{4}{l}{\textit{FB15k-237} (baseline: 32\%)} \\
 Energy & \textbf{83\%} & 58\% & 53\% \\
 UKGE & 69\% & 61\% & 57\% \\
-$U_{\text{sem}}$ & 83\% & 83\% & 83\% \\
 \midrule
 \multicolumn{4}{l}{\textit{ICEWS14} (baseline: 32\%)} \\
 Energy & 73\% & 63\% & 53\% \\
