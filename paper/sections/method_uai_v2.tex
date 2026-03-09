@@ -15,7 +15,7 @@ Fix threshold $\tau > 0$. OOD queries partition into:
 We set $\tau$ to the 25th percentile of entity frequencies; results vary $<$0.02 AUROC across $\tau \in [5\text{th}, 30\text{th}]$ percentile (Appendix~\ref{app:implementation}).
 \end{definition}
 
-Novel-context detection by $U_{\text{str}}$ is perfect by construction since the same $c(e,r)$ defines both the OOD label and the detector. \textbf{To be clear: the contribution is not that coverage detects zero-coverage (which is trivial). The contribution is proving that all embedding-based methods are blind to this} (Theorem~\ref{thm:impossibility}), \textbf{demonstrating this empirically via the 83\% confident-wrong finding} (Table~\ref{tab:confident_wrong}), and establishing that 11--25\% of test queries fall into this blind spot; see Remark~\ref{rem:circularity}.
+Novel-context detection by $U_{\text{str}}$ is perfect by construction since the same $c(e,r)$ defines both the OOD label and the detector. \textbf{To be clear: the contribution is not that coverage detects zero-coverage (which is trivial). The contribution is proving that all embedding-based methods are blind to this} (Theorem~\ref{thm:impossibility}), \textbf{demonstrating this empirically via the 78\% confident-wrong finding} (Table~\ref{tab:confident_wrong}), and establishing that 11--25\% of test queries fall into this blind spot; see Remark~\ref{rem:circularity}.
 
 \subsection{Uncertainty Signals}
 
@@ -25,7 +25,7 @@ Novel-context detection by $U_{\text{str}}$ is perfect by construction since the
 
 \subsection{Theoretical Results}
 
-The following theorems formalize why existing methods fail. The results are not surprising---relation-agnostic methods obviously cannot detect relation-specific novelty---but the formalization serves two purposes: (1) it identifies the precise conditions (A1--A3) under which failure occurs, enabling empirical verification, and (2) it explains why the 83\% confident-wrong finding is not a bug but an architectural inevitability.
+The following theorems formalize why existing methods fail. The results are not surprising---relation-agnostic methods obviously cannot detect relation-specific novelty---but the formalization serves two purposes: (1) it identifies the precise conditions (A1--A3) under which failure occurs, enabling empirical verification, and (2) it explains why the 78\% confident-wrong finding is not a bug but an architectural inevitability.
 
 \begin{theorem}[Limitation of Relation-Agnostic Detection]
 \label{thm:impossibility}
@@ -38,7 +38,7 @@ where $\epsilon$ measures frequency-matching tightness (A3).
 
 \textbf{Proof sketch.} By A1, $\sigma^2_e$ is determined by $\text{freq}(e)$. By A3, novel-context triples have frequency-matched ID counterparts, so $U(h,r,t) \approx U(h',r',t')$, giving AUROC $\approx 1/2$. Full proof in Appendix~\ref{app:proof}. $\square$
 
-\textbf{Remark.} Theorem~\ref{thm:impossibility} formalizes an intuition that may seem obvious in hindsight: relation-agnostic uncertainty cannot detect relation-specific novelty. Yet this ``obvious'' limitation has not prevented widespread deployment of relation-agnostic methods without coverage tracking. The theorem's value is diagnostic: it identifies \emph{which} queries will fail (those satisfying A1--A3) and predicts \emph{how badly} (AUROC $\approx 0.5$). The 83\% confident-wrong finding (Table~\ref{tab:confident_wrong}) and 11--25\% prevalence validate these predictions empirically.
+\textbf{Remark.} Theorem~\ref{thm:impossibility} formalizes an intuition that may seem obvious in hindsight: relation-agnostic uncertainty cannot detect relation-specific novelty. Yet this ``obvious'' limitation has not prevented widespread deployment of relation-agnostic methods without coverage tracking. The theorem's value is diagnostic: it identifies \emph{which} queries will fail (those satisfying A1--A3) and predicts \emph{how badly} (AUROC $\approx 0.5$). The 78\% confident-wrong finding (Table~\ref{tab:confident_wrong}) and 11--25\% prevalence validate these predictions empirically.
 
 \begin{definition}[Relation-Agnostic Embedding]
 \label{def:relation_agnostic}
@@ -90,7 +90,7 @@ FB15k-237 & 237 & Heterogeneous & 4\% & 0.46 (fails) \\
 
 \textbf{The ratio heuristic fails}: YAGO3-10 has the lowest ratio (2.9) yet fails (0.47 AUROC). We tested embedding dimension ablation: WN18RR improves monotonically (0.62 at dim=10 to 0.84 at dim=200), while YAGO3-10 fails at all dimensions (0.46 even at dim=400). \textbf{Capacity is necessary but not sufficient.}
 
-\textbf{Topology is the key}: WN18RR's hierarchical structure (WordNet taxonomy) creates low-entropy coverage patterns that neighbors can proxy. YAGO3-10's independent relations (geographic, demographic, temporal) have high coverage entropy unrecoverable from neighbors. Formally: GNNs escape the limitation only when coverage entropy $H(\mathbf{c}_e)$ is bounded by neighborhood information capacity $I(\mathcal{N}(e); \mathbf{c}_e)$ (Appendix~\ref{app:gnn_topology}).
+\textbf{Topology is the key}: WN18RR's hierarchical structure (WordNet taxonomy) creates low-entropy coverage patterns that neighbors can proxy. YAGO3-10's independent relations (geographic, demographic, temporal) have high coverage entropy unrecoverable from neighbors. Formally: GNNs escape the limitation only when coverage entropy $H(\mathbf{c}_e)$ is bounded by neighborhood information capacity $I(\mathcal{N}(e); \mathbf{c}_e)$ (Appendix~\ref{app:gnn_topology}). \textbf{Quantitative validation}: We measured coverage correlation (whether neighbors predict an entity's relation coverage). WN18RR achieves 0.46 correlation, while FB15k-237 achieves only 0.08 and YAGO3-10 achieves 0.29---explaining why GNN-based OOD detection works on WN18RR but fails on heterogeneous KGs.
 
 \textbf{Why the limitation framing remains appropriate.} The 0.79 AUROC on WN18RR does not contradict Theorem~\ref{thm:embedding_impossibility}---it illustrates its \emph{sufficient} condition. GNNs escape the relation-agnostic limitation \emph{only} when graph topology encodes coverage, which occurs in hierarchical KGs with few relations (WN18RR: 11 relations, WordNet taxonomy). For heterogeneous KGs with many independent relation types---FB15k-237 (237 relations), YAGO3-10 (37 relations), and real-world biomedical/industrial KGs---the limitation holds (AUROC $\leq$ 0.50). WN18RR is the exception, not the rule: most production KGs are heterogeneous, making explicit coverage tracking necessary in practice.
 

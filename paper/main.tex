@@ -287,7 +287,7 @@ The novel-context category is defined via the same coverage indicator $c(e,r)$ u
 \textbf{To be clear: the contribution is not that coverage detects zero-coverage (which is trivial). The contributions are:}
 \begin{enumerate}
 \item[(a)] \textbf{The impossibility theorem}: proving that \emph{all} embedding-based methods---variational, ensemble, energy, or otherwise---are fundamentally blind to novel contexts (Theorem~\ref{thm:impossibility}).
-\item[(b)] \textbf{The 83\% confident-wrong finding}: demonstrating that existing methods do not merely fail to detect zero-evidence queries---they assign \emph{highest confidence} to them (Table~\ref{tab:confident_wrong}). This is an empirical discovery about Energy/UKGE behavior, not a tautology about coverage.
+\item[(b)] \textbf{The 78\% confident-wrong finding}: demonstrating that existing methods do not merely fail to detect zero-evidence queries---they assign \emph{highest confidence} to them (Table~\ref{tab:confident_wrong}). This is an empirical discovery about Energy/UKGE behavior, not a tautology about coverage.
 \item[(c)] \textbf{Prevalence}: novel contexts constitute 11--25\% of realistic test sets (WN18RR: 10.8\%, FB15k-237: 25.4\%, YAGO: 12.6\%), making the blind spot practically critical.
 \end{enumerate}
 The circularity objection conflates the trivial fix (coverage tracking) with the non-trivial diagnosis (why all learned methods fail). We expose the problem; the solution's simplicity is a feature, not a limitation.
