@@ -171,24 +171,27 @@ The deviation from exactly 0.5 is $O(\epsilon)$, controlled by the tightness of 
 
 \paragraph{Empirical verification of Definition~\ref{def:relation_agnostic}.}
 \label{app:def_verification}
-We empirically test whether standard KG embeddings satisfy the relation-agnostic condition $I(\phi(e); c(e,r) \mid \freq(e)) = 0$. On FB15k-237, we train a DistMult model and then train a classifier to predict $c(e,r)$ from entity embeddings.
+We empirically test whether standard KG embeddings satisfy the relation-agnostic condition $I(\phi(e); c(e,r) \mid \freq(e)) = 0$. We train DistMult models on FB15k-237 and WN18RR, then train classifiers to predict $c(e,r)$ from entity embeddings.
 
 \textbf{Test design.} If embeddings encode relation-specific coverage information, a classifier trained on relations $\mathcal{R}_{\text{train}}$ should generalize to held-out relations $\mathcal{R}_{\text{test}}$. We use 80\% of relations for training and evaluate on the remaining 20\%.
 
 \textbf{Results.}
 \begin{center}
 \small
-\begin{tabular}{lcc}
+\begin{tabular}{llcc}
 \toprule
-Predictor & AUC (seen relations) & AUC (held-out relations) \\
+Dataset & Predictor & AUC (seen rels) & AUC (held-out rels) \\
 \midrule
-Frequency only & 0.72 & 0.71 \\
-Embedding + Frequency & 0.98 & 0.70 \\
+\multirow{2}{*}{FB15k-237} & Frequency only & 0.72 & 0.71 \\
+& Embedding + Freq & 0.98 & 0.70 \\
+\midrule
+\multirow{2}{*}{WN18RR} & Frequency only & 0.59 & 0.51 \\
+& Embedding + Freq & 0.59 & 0.43 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\textbf{Interpretation.} On seen relations, embeddings achieve 0.98 AUC---but this reflects entity-specific memorization, not transferable relation knowledge. On held-out relations, $\Delta\text{AUC} = 0.70 - 0.71 = -0.01$: embeddings provide \emph{zero additional predictive power} beyond frequency. This confirms Definition~\ref{def:relation_agnostic}: $\phi(e)$ does not encode which relations $e$ has seen in a generalizable way.
+\textbf{Interpretation.} On seen relations, embeddings achieve high AUC (0.98 on FB15k-237)---but this reflects entity-specific memorization, not transferable relation knowledge. On held-out relations, $\Delta\text{AUC} = -0.01$ (FB15k-237) and $\Delta\text{AUC} = -0.08$ (WN18RR): embeddings provide \emph{zero or negative} predictive power beyond frequency. On WN18RR, embeddings actually \emph{hurt} generalization. This confirms Definition~\ref{def:relation_agnostic}: $\phi(e)$ does not encode which relations $e$ has seen in a generalizable way.
 
 \paragraph{Can training make embeddings coverage-aware?}
 \label{app:coverage_training}
