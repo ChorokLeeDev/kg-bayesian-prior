@@ -47,7 +47,7 @@ An embedding function $\phi: \mathcal{E} \to \mathbb{R}^d$ is \emph{relation-agn
 I(\phi(e); c(e,r) \mid \freq(e)) = 0 \quad \forall r \in \mathcal{R}
 \label{eq:ra_condition}
 \end{equation}
-where $I(\cdot;\cdot\mid\cdot)$ denotes conditional mutual information. Equivalently: knowing $\phi(e)$ provides no information about whether $e$ has been observed with relation $r$, beyond what entity frequency already reveals.
+where $I(\cdot;\cdot\mid\cdot)$ denotes conditional mutual information. This is a \textbf{sufficient condition} for OOD detection failure: if \eqref{eq:ra_condition} holds, Theorem~\ref{thm:embedding_impossibility} guarantees AUROC $\leq 1/2$. In practice, embeddings may partially violate \eqref{eq:ra_condition} yet still exhibit the failure mode due to assumption A3 (frequency matching).
 \end{definition}
 
 \begin{theorem}[Embedding-Based Limitation]
