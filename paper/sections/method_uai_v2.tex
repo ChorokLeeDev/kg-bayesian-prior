@@ -36,18 +36,37 @@ where $\epsilon$ measures frequency-matching tightness (A3).
 
 \textbf{Proof sketch.} By A1, $\sigma^2_e$ is determined by $\text{freq}(e)$. By A3, novel-context triples have frequency-matched ID counterparts, so $U(h,r,t) \approx U(h',r',t')$, giving AUROC $\approx 1/2$. Full proof in Appendix~\ref{app:proof}. $\square$
 
-\begin{remark}[Embedding-Based Extension]
-\label{rem:embedding}
-Let $\phi(e)$ be a learned entity embedding. We say $\phi$ is \emph{relation-agnostic} if $\phi(e)$ does not encode which relations $e$ has been observed with---i.e., $\phi(e)$ is approximately invariant to adding or removing $(e, r, ?)$ triples for specific relations $r$. Under this assumption, any uncertainty estimator $U(h,r,t) = F(\phi(h), \phi(r), \phi(t))$ should achieve AUROC $\approx 1/2$ on novel relational contexts, extending Theorem~\ref{thm:impossibility}. This is an informal argument rather than a formal derivation: we observe empirically that standard KG embeddings satisfy relation-agnosticity, but do not prove this property holds in general.
-\end{remark}
+\begin{definition}[Relation-Agnostic Embedding]
+\label{def:relation_agnostic}
+An embedding function $\phi: \mathcal{E} \to \mathbb{R}^d$ is \emph{relation-agnostic} if the learned representation $\phi(e)$ satisfies:
+\begin{equation}
+I(\phi(e); c(e,r) \mid \freq(e)) = 0 \quad \forall r \in \mathcal{R}
+\label{eq:ra_condition}
+\end{equation}
+where $I(\cdot;\cdot\mid\cdot)$ denotes conditional mutual information. Equivalently: knowing $\phi(e)$ provides no information about whether $e$ has been observed with relation $r$, beyond what entity frequency already reveals.
+\end{definition}
 
-\textbf{Why this covers all standard methods.} KG embeddings are trained via $\min \sum_{(h,r,t)} \mathcal{L}(\text{score}(h,r,t))$. This pushes $\phi(e)$ to a position in embedding space that scores observed triples correctly, but imposes no constraint requiring $\phi(e)$ to encode \emph{which} relations $e$ has seen. The embedding is a continuous vector capturing semantic similarity, not a discrete checklist of observed relations. Consequently:
+\begin{theorem}[Embedding-Based Impossibility]
+\label{thm:embedding_impossibility}
+Let $\phi: \mathcal{E} \to \mathbb{R}^d$ be a relation-agnostic embedding (Definition~\ref{def:relation_agnostic}), and let $\psi: \mathcal{R} \to \mathbb{R}^k$ be any relation embedding. For any uncertainty estimator $U(h,r,t) = F(\phi(h), \psi(r), \phi(t))$ where $F$ is measurable:
+\begin{equation}
+\text{AUROC}(U, \mathcal{D}_{\text{novel}}) \leq \frac{1}{2} + O(\epsilon)
+\end{equation}
+under assumptions A1 and A3 (Appendix~\ref{app:proof}), where $\epsilon$ measures frequency-matching tightness.
+\end{theorem}
+
+\textbf{Proof sketch.}
+By Definition~\ref{def:relation_agnostic}, $\phi(e)$ is conditionally independent of $c(e,r)$ given $\freq(e)$. Thus any function $F(\phi(h), \psi(r), \phi(t))$ can distinguish novel contexts from ID only via frequency differences. By A3, novel-context triples have frequency-matched ID counterparts. Since $U$ is a deterministic function of $(\phi(h), \psi(r), \phi(t))$ and $\phi$ contains no coverage information beyond frequency, we have $U(h,r,t) \approx U(h',r',t')$ for frequency-matched pairs, giving AUROC $\approx 1/2$. Full proof in Appendix~\ref{app:embedding_proof}. $\square$
+
+\textbf{Why standard KG embeddings satisfy Definition~\ref{def:relation_agnostic}.}
+KG embeddings optimize $\min \sum_{(h,r,t)} \mathcal{L}(\text{score}(\phi(h), \psi(r), \phi(t)))$. The loss depends on the \emph{set} of observed triples, not on which specific relations each entity has seen. Since entities with identical frequency profiles receive identical gradient pressure (on average), their embeddings encode frequency patterns but not the combinatorial structure of relation coverage. Consequently:
 \textbf{(i)} Variance-based ($\sigma^2_e$): Entity variance reflects training frequency, not relation coverage.
 \textbf{(ii)} Deep Ensembles: Each model's $\phi_k(e)$ shares the same blind spot---none encode coverage.
 \textbf{(iii)} MC Dropout: Dropout adds noise to $\phi(e)$ but doesn't add coverage information.
-\textbf{(iv)} Energy: $E = -\log\sum\exp(f(\phi(h), \phi(r), \phi(t)))$ inherits the embedding's blindness.
+\textbf{(iv)} Energy: $E = -\log\sum\exp(f(\phi(h), \psi(r), \phi(t)))$ inherits the embedding's blindness.
 
-\textbf{GNN caveat.} GNN-based methods (GNNSafe) aggregate neighbor information: $\phi(e) = \text{AGG}(\{\phi(n) : n \in \mathcal{N}(e)\})$. Since $\mathcal{N}(e)$ is determined by training graph structure, this \emph{can} leak partial coverage information. On WN18RR (11 relations), GNNSafe achieves 0.79 AUROC on novel contexts---an exception where sparse relations cause neighbor structure to correlate with coverage. On FB15k-237 (237 relations), GNNSafe achieves 0.43 (anti-predictive), confirming the impossibility holds when neighbor aggregation cannot proxy for specific relation coverage.
+\textbf{GNN boundary condition.}
+Theorem~\ref{thm:embedding_impossibility} requires \eqref{eq:ra_condition} to hold. GNN architectures can violate this: $\phi(e) = \text{AGG}(\{\phi(n) : n \in \mathcal{N}(e)\})$ aggregates neighbor information, and $\mathcal{N}(e)$ is determined by training graph structure. On sparse-relation KGs where $|\mathcal{R}|$ is small, neighbor identity can proxy for relation coverage---violating \eqref{eq:ra_condition}. Empirically: GNNSafe achieves 0.79 AUROC on WN18RR (11 relations) but only 0.43 on FB15k-237 (237 relations). The sparse-relation exception occurs when $|\mathcal{R}| \ll \mathbb{E}[|\mathcal{N}(e)|]$, allowing neighbors to encode the small relation set. When $|\mathcal{R}|$ is large, combinatorial explosion prevents neighbor structure from proxying for specific relation coverage, and GNNs satisfy \eqref{eq:ra_condition} approximately.
 
 \paragraph{Empirical Regularity 1: Complementarity of Uncertainty Signals.}
 \label{reg:complementarity}

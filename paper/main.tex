@@ -151,6 +151,21 @@ The deviation from exactly 0.5 is $O(\epsilon)$, controlled by the tightness of 
 
 \textbf{Implication.} This impossibility result is structural: \emph{any} function $f$ of entity-level statistics fails. It applies to averages ($f = \text{mean}$), maxima ($f = \max$), learned combinations, etc. The only escape is to make $\sigma^2$ depend on the relation $r$, breaking the relation-agnostic assumption. $\square$
 
+\subsection{Proof of Theorem~\ref{thm:embedding_impossibility} (Embedding-Based Impossibility)}
+\label{app:embedding_proof}
+
+\textbf{Theorem statement.} Let $\phi: \mathcal{E} \to \mathbb{R}^d$ be a relation-agnostic embedding (Definition~\ref{def:relation_agnostic}), and let $\psi: \mathcal{R} \to \mathbb{R}^k$ be any relation embedding. For any uncertainty estimator $U(h,r,t) = F(\phi(h), \psi(r), \phi(t))$ where $F$ is measurable, $\text{AUROC}(U, \mathcal{D}_{\text{novel}}) \leq 1/2 + O(\epsilon)$ under A1 and A3.
+
+\textbf{Proof.} By Definition~\ref{def:relation_agnostic}, $I(\phi(e); c(e,r) \mid \freq(e)) = 0$, meaning $\phi(e)$ is conditionally independent of coverage given frequency. Thus any function $F(\phi(h), \psi(r), \phi(t))$ can only use frequency information to distinguish novel contexts from ID.
+
+\textbf{Step 1.} For novel context $(h,r,t)$ where $c(h,r) = 0$, the embedding $\phi(h)$ contains no information about whether $h$ has seen relation $r$ beyond what $\freq(h)$ reveals.
+
+\textbf{Step 2.} By A3, there exists ID triple $(h',r',t')$ with $|\freq(h) - \freq(h')| \leq \epsilon$. Since $\phi(h)$ depends only on frequency (not coverage), $\phi(h) \approx \phi(h')$ in the relevant statistical sense.
+
+\textbf{Step 3.} Therefore $U(h,r,t) = F(\phi(h), \psi(r), \phi(t)) \approx F(\phi(h'), \psi(r'), \phi(t')) = U(h',r',t')$, giving AUROC $\approx 1/2$.
+
+\textbf{Remark.} This extends Theorem~\ref{thm:impossibility} from variance-only functions $f(\sigma^2_h, \sigma^2_t)$ to arbitrary functions of relation-agnostic embeddings. $\square$
+
 \paragraph{Empirical calibration of $O(\epsilon)$.}
 We heuristically estimate $\epsilon$ using the Spearman rank correlation $\rho_s$ between entity frequency and learned variance, which quantifies the tightness of the variance-frequency coupling (A1). Concretely, we use the approximation $|\text{AUROC} - 0.5| \lesssim C \sqrt{1 - \rho_s^2}$ with $C \leq 0.5$; this is a heuristic bound rather than a formal derivation (a rigorous proof connecting entity-level Spearman $\rho$ to triple-level AUROC is left to future work). On our datasets: WN18RR $\rho_s {=} {-}0.81$ ($\epsilon \lesssim 0.29$), FB15k-237 $\rho_s {=} {-}0.88$ ($\epsilon \lesssim 0.24$), YAGO $\rho_s {=} {-}0.68$ ($\epsilon \lesssim 0.37$). Observed novel-context AUROC: 0.40, 0.49, 0.40 (WN18RR, FB15k-237, YAGO)---all within these estimates. Values near or below 0.5 are consistent with near-random detection on novel contexts, confirming the impossibility bound.
 
