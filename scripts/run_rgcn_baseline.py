@@ -31,12 +31,12 @@ import time
 from src.data.loaders import load_fb15k237
 
 # Configuration
-EPOCHS = 5  # Minimal for quick results
-SEEDS = [42]  # Single seed for quick validation
-DIM = 50  # Smaller dimension
-BATCH_SIZE = 4096  # Larger batches
-LR = 0.005  # Higher LR for faster convergence
-NUM_BASES = 5  # Fewer bases for faster training
+EPOCHS = 10  # Reasonable for validation
+SEEDS = [42, 123, 456]  # Three seeds for statistical validity
+DIM = 100  # Standard dimension
+BATCH_SIZE = 2048  # Larger batches
+LR = 0.002  # Higher LR for faster convergence
+NUM_BASES = 10  # Basis decomposition
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 OUTPUT_DIR = Path(__file__).parent.parent / "outputs"
