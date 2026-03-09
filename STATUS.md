@@ -12,7 +12,8 @@
 |-------|--------|-----------|--------------|-----|--------|
 | 1 | 7.0 | 7.0 | 7.0 | 7.0 | Accept |
 | 2 | 7.5 | 8.0 | 8.0 | 7.8 | Accept |
-| **3** | **8.5** | **8.5** | **8.0** | **8.3** | **Strong Accept** |
+| 3 | 8.5 | 8.5 | 8.0 | 8.3 | Strong Accept |
+| **4** | **8.0** | **9.0** | **8.0** | **8.3** | **Strong Accept** |
 
 ---
 
@@ -49,9 +50,23 @@
 ### In Progress
 | Experiment | Status | ETA | Notes |
 |------------|--------|-----|-------|
-| YAGO3-10 GNNSafe | 🔄 Running | ~15min | Validates γ=2.9 prediction |
+| R-GCN baseline | 🔄 Running | ~20min | Addresses skeptical reviewer concern |
+| Mahalanobis baseline | 🔄 Running | ~10min | Additional OOD baseline |
 
-### Pending (for Strong Accept)
+### Just Completed (This Session)
+| Task | Result |
+|------|--------|
+| Circularity counter | Strengthened in 4 files |
+| P-values | Added to experiments + Table 16 |
+
+### Skeptical Reviewer Round 4 (Score: 4/10)
+Key criticisms to address:
+1. ❌ Circularity (coverage detects zero-coverage) → Counter: 83% confident-wrong is NOT tautological
+2. ❌ Theorem A4 violated → Counter: Honest disclosure already in paper
+3. 🔄 R-GCN/CompGCN missing → **R-GCN experiment running**
+4. ✅ GNN analysis post-hoc → Added formal topology condition
+
+### Pending
 | Experiment | Priority | Estimated Impact |
 |------------|----------|------------------|
 | YAGO3-10 GNN validation | HIGH | Confirms γ heuristic |
