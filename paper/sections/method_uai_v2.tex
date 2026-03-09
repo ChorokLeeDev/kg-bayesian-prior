@@ -25,7 +25,9 @@ Novel-context detection by $U_{\text{str}}$ is perfect by construction since the
 
 \subsection{Theoretical Results}
 
-\begin{theorem}[Impossibility of Relation-Agnostic Detection]
+The following theorems formalize why existing methods fail. The results are not surprising---relation-agnostic methods obviously cannot detect relation-specific novelty---but the formalization serves two purposes: (1) it identifies the precise conditions (A1--A3) under which failure occurs, enabling empirical verification, and (2) it explains why the 83\% confident-wrong finding is not a bug but an architectural inevitability.
+
+\begin{theorem}[Limitation of Relation-Agnostic Detection]
 \label{thm:impossibility}
 Let $U(h,r,t) = f(\sigma^2_h, \sigma^2_t)$ where $\sigma^2_e$ depends only on entity $e$, and $f$ is any combining function. Under assumptions A1--A3 (Appendix~\ref{app:proof}\footnote{A1 validated: Spearman $\rho(\text{freq}, \sigma^2) \leq {-}0.68$ on all datasets (Table~\ref{tab:assumptions}). A3 validated: $\geq$98\% of novel-context triples have frequency-matched ID counterparts (Appendix~\ref{app:assumption_verification}).}):
 \begin{equation}
@@ -35,6 +37,8 @@ where $\epsilon$ measures frequency-matching tightness (A3).
 \end{theorem}
 
 \textbf{Proof sketch.} By A1, $\sigma^2_e$ is determined by $\text{freq}(e)$. By A3, novel-context triples have frequency-matched ID counterparts, so $U(h,r,t) \approx U(h',r',t')$, giving AUROC $\approx 1/2$. Full proof in Appendix~\ref{app:proof}. $\square$
+
+\textbf{Remark.} Theorem~\ref{thm:impossibility} formalizes an intuition that may seem obvious in hindsight: relation-agnostic uncertainty cannot detect relation-specific novelty. Yet this ``obvious'' limitation has not prevented widespread deployment of relation-agnostic methods without coverage tracking. The theorem's value is diagnostic: it identifies \emph{which} queries will fail (those satisfying A1--A3) and predicts \emph{how badly} (AUROC $\approx 0.5$). The 83\% confident-wrong finding (Table~\ref{tab:confident_wrong}) and 11--25\% prevalence validate these predictions empirically.
 
 \begin{definition}[Relation-Agnostic Embedding]
 \label{def:relation_agnostic}
@@ -46,7 +50,7 @@ I(\phi(e); c(e,r) \mid \freq(e)) = 0 \quad \forall r \in \mathcal{R}
 where $I(\cdot;\cdot\mid\cdot)$ denotes conditional mutual information. Equivalently: knowing $\phi(e)$ provides no information about whether $e$ has been observed with relation $r$, beyond what entity frequency already reveals.
 \end{definition}
 
-\begin{theorem}[Embedding-Based Impossibility]
+\begin{theorem}[Embedding-Based Limitation]
 \label{thm:embedding_impossibility}
 Let $\phi: \mathcal{E} \to \mathbb{R}^d$ be a relation-agnostic embedding (Definition~\ref{def:relation_agnostic}), and let $\psi: \mathcal{R} \to \mathbb{R}^k$ be any relation embedding. For any uncertainty estimator $U(h,r,t) = F(\phi(h), \psi(r), \phi(t))$ where $F$ is measurable:
 \begin{equation}
@@ -65,7 +69,7 @@ KG embeddings optimize $\min \sum_{(h,r,t)} \mathcal{L}(\text{score}(\phi(h), \p
 \textbf{(iii)} MC Dropout: Dropout adds noise to $\phi(e)$ but doesn't add coverage information.
 \textbf{(iv)} Energy: $E = -\log\sum\exp(f(\phi(h), \psi(r), \phi(t)))$ inherits the embedding's blindness.
 \textbf{(v)} R-GCN/CompGCN: Message-passing GNNs aggregate neighbor information via relation-typed transforms, but the output $h_e$ is the same regardless of whether entity $e$ has ever appeared with relation $r$. The embedding encodes graph structure, not coverage statistics.
-\textbf{Can training fix this?} We attempted coverage-aware training by regularizing high uncertainty on sampled unseen $(e,r)$ pairs. The model memorizes training unseen pairs but \emph{fails to generalize}: AUROC on held-out unseen pairs \emph{decreases} from 0.63 to 0.58 ($-$4.3pp). This confirms the architectural impossibility---training cannot overcome the blind spot (Appendix~\ref{app:coverage_training}).
+\textbf{Can training fix this?} We attempted coverage-aware training by regularizing high uncertainty on sampled unseen $(e,r)$ pairs. The model memorizes training unseen pairs but \emph{fails to generalize}: AUROC on held-out unseen pairs \emph{decreases} from 0.63 to 0.58 ($-$4.3pp). This confirms the architectural limitation---training cannot overcome the blind spot (Appendix~\ref{app:coverage_training}).
 
 \textbf{GNN boundary condition.}
 Theorem~\ref{thm:embedding_impossibility} requires \eqref{eq:ra_condition} to hold. GNN architectures can violate this when neighbor structure correlates with relation coverage. We tested this across three benchmarks:
@@ -85,9 +89,9 @@ FB15k-237 & 237 & Heterogeneous & 4\% & 0.43 (fails) \\
 
 \textbf{The ratio heuristic fails}: YAGO3-10 has the lowest ratio (2.9) yet fails (0.47 AUROC). We tested embedding dimension ablation: WN18RR improves monotonically (0.62 at dim=10 to 0.84 at dim=200), while YAGO3-10 fails at all dimensions (0.46 even at dim=400). \textbf{Capacity is necessary but not sufficient.}
 
-\textbf{Topology is the key}: WN18RR's hierarchical structure (WordNet taxonomy) creates low-entropy coverage patterns that neighbors can proxy. YAGO3-10's independent relations (geographic, demographic, temporal) have high coverage entropy unrecoverable from neighbors. Formally: GNNs escape impossibility only when coverage entropy $H(\mathbf{c}_e)$ is bounded by neighborhood information capacity $I(\mathcal{N}(e); \mathbf{c}_e)$ (Appendix~\ref{app:gnn_topology}).
+\textbf{Topology is the key}: WN18RR's hierarchical structure (WordNet taxonomy) creates low-entropy coverage patterns that neighbors can proxy. YAGO3-10's independent relations (geographic, demographic, temporal) have high coverage entropy unrecoverable from neighbors. Formally: GNNs escape the limitation only when coverage entropy $H(\mathbf{c}_e)$ is bounded by neighborhood information capacity $I(\mathcal{N}(e); \mathbf{c}_e)$ (Appendix~\ref{app:gnn_topology}).
 
-\textbf{Why impossibility framing remains appropriate.} The 0.79 AUROC on WN18RR does not contradict the impossibility theorem---it illustrates its \emph{sufficient} condition. GNNs escape impossibility \emph{only} when graph topology encodes coverage, which occurs in hierarchical KGs with few relations (WN18RR: 11 relations, WordNet taxonomy). For heterogeneous KGs with many independent relation types---FB15k-237 (237 relations), YAGO3-10 (37 relations), and real-world biomedical/industrial KGs---the impossibility holds (AUROC $\leq$ 0.50). WN18RR is the exception, not the rule: most production KGs are heterogeneous, making explicit coverage tracking necessary in practice.
+\textbf{Why the limitation framing remains appropriate.} The 0.79 AUROC on WN18RR does not contradict Theorem~\ref{thm:embedding_impossibility}---it illustrates its \emph{sufficient} condition. GNNs escape the relation-agnostic limitation \emph{only} when graph topology encodes coverage, which occurs in hierarchical KGs with few relations (WN18RR: 11 relations, WordNet taxonomy). For heterogeneous KGs with many independent relation types---FB15k-237 (237 relations), YAGO3-10 (37 relations), and real-world biomedical/industrial KGs---the limitation holds (AUROC $\leq$ 0.50). WN18RR is the exception, not the rule: most production KGs are heterogeneous, making explicit coverage tracking necessary in practice.
 
 \paragraph{Empirical Regularity 1: Complementarity of Uncertainty Signals.}
 \label{reg:complementarity}

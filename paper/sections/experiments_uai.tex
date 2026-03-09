@@ -233,18 +233,18 @@ A natural alternative to uncertainty scoring is to simply refuse predictions whe
 \paragraph{Standard OOD.}
 On standard random-corruption OOD (Appendix~\ref{app:standard_ood_full}), CAGP ties the best single signal (0.82 on FB15k-237) and is marginally below $U_{\text{sem}}$ on WN18RR (0.66 vs 0.67): coverage provides no information when corruptions sample entities that already have the query relation in training. CAGP is designed for temporal OOD; standard OOD is a complementary setting where entity-level methods are sufficient.
 
-\subsection{GDELT: High-$\rho$ Temporal Benchmark}
+\subsection{Limitation: GDELT Role-Shift (CAGP Fails)}
 \label{sec:gdelt}
 
-ICEWS14/18 have low coverage overlap ($\rho \approx 0$), making them ``solved cases'' where coverage alone suffices. To test whether semantic helps when coverage is insufficient, we evaluate on \textbf{GDELT}---a large-scale temporal KG (500K entities, 20 relations) with significantly higher $\rho$.
+\textbf{CAGP provides minimal benefit when coverage overlap is high.} We present GDELT role-shift as a \emph{negative result} that exposes the limits of our decomposition. ICEWS14/18 have low coverage overlap ($\rho \approx 0$), making them ``solved cases'' where coverage alone suffices. GDELT tests what happens when coverage \emph{cannot} separate OOD from ID.
 
-\textbf{Role-shift OOD.} We construct a role-shift split: entities appearing with relations \emph{atypical} for their historical profile (outside top 80\% by frequency). This yields 87,684 OOD triples with $\rho = 0.836$---the highest coverage overlap among all benchmarks. If semantic uncertainty helps when coverage is ambiguous, it should help here.
+\textbf{Role-shift OOD.} We construct a role-shift split on GDELT (500K entities, 20 relations): entities appearing with relations \emph{atypical} for their historical profile (outside top 80\% by frequency). This yields 87,684 OOD triples with $\rho = 0.836$---the highest coverage overlap among all benchmarks. 84\% of OOD triples have full coverage for the query relation.
 
-\textbf{Results (5 seeds, 30 epochs).} Table~\ref{tab:gdelt} summarizes the results. Semantic achieves \textbf{0.50 AUROC} (random), structural achieves 0.58, and CAGP achieves 0.57. Despite $\rho = 0.84$ (84\% of OOD triples have full coverage), semantic provides \emph{no signal}. This confirms Theorem~\ref{thm:impossibility}: entity-level variance reflects training frequency, not relation-specific uncertainty. Role-shift entities are high-frequency (well-observed), so they receive low variance---even though they are using atypical relations.
+\textbf{Results (5 seeds, 30 epochs).} Table~\ref{tab:gdelt} summarizes the results. \textbf{All methods fail}: semantic achieves \textbf{0.50 AUROC} (random), structural achieves 0.58, and CAGP achieves 0.57---no improvement over structural alone. This is a clear failure case for our approach.
 
 \begin{table}[h]
 \centering
-\caption{\textbf{GDELT role-shift OOD} ($\rho = 0.84$, 5 seeds). Semantic fails even at high coverage overlap, confirming the impossibility holds regardless of $\rho$.\label{tab:gdelt}}
+\caption{\textbf{GDELT role-shift OOD: A negative result} ($\rho = 0.84$, 5 seeds). When coverage overlap is high, neither signal works, and CAGP inherits this failure.\label{tab:gdelt}}
 \begin{tabular}{lcc}
 \toprule
 Method & Role-shift AUROC & Emerging AUROC \\
@@ -256,14 +256,21 @@ CAGP & 0.57 $\pm$ 0.01 & \textbf{0.97} $\pm$ 0.01 \\
 \end{tabular}
 \end{table}
 
-\textbf{Limitation.} CAGP's modest gain (+0pp over $U_{\text{str}}$) on GDELT role-shift confirms the decomposition's limits: when coverage fails to separate OOD from ID ($\rho = 0.84$), and semantic also fails (AUROC = 0.50), the combination cannot succeed. Role-shift OOD fundamentally requires \emph{relation-conditioned} uncertainty---detecting that an entity is using an atypical relation requires knowing which relations are typical for that entity. RelCondVar (\S\ref{sec:relcondvar_exp}) addresses this but requires auxiliary supervision.
+\textbf{Why does CAGP fail here?} Two factors combine to defeat our decomposition:
+\begin{enumerate}
+    \item \emph{Coverage cannot help.} With $\rho = 0.84$, 84\% of role-shift OOD triples have the entity-relation pair already observed in training. Structural uncertainty $U_{\text{str}} = 0$ for most OOD queries, so coverage provides almost no discriminative signal (0.58 AUROC).
+    \item \emph{Semantic cannot help either.} Role-shift entities are \emph{high-frequency}---they appear often in training, just with different relations. Entity-level variance $\sigma^2(e)$ reflects overall training frequency (Theorem~\ref{thm:impossibility}), not relation-specific evidence. High-frequency entities receive low variance regardless of which relation is queried, yielding random-chance detection (0.50 AUROC).
+\end{enumerate}
+The combination of two uninformative signals remains uninformative: CAGP achieves 0.57 AUROC, essentially matching coverage alone.
 
-\textbf{Implication.} The impossibility is not an artifact of low $\rho$. Even when coverage fails to separate OOD from ID ($\rho = 0.84$, structural AUROC = 0.58), semantic variance cannot fill the gap. Role-shift OOD requires \emph{relation-conditioned} uncertainty (\S\ref{sec:relcondvar_exp}), which our theory predicts and experiments confirm.
+\textbf{Theoretical interpretation.} Empirical Regularity~1 predicts AUROC gain only when: (a) coverage has discriminative power ($\rho < 1$), OR (b) semantic has discriminative power (emerging entities have higher variance than ID). On GDELT role-shift, \emph{neither condition holds}. This is not a failure of the theory---it is exactly what the theory predicts. Role-shift OOD fundamentally requires \emph{relation-conditioned} uncertainty: detecting that an entity is using an atypical relation requires knowing which relations are typical \emph{for that specific entity}. Neither entity-level variance nor entity-relation coverage can capture this. RelCondVar (\S\ref{sec:relcondvar_exp}) addresses this limitation but requires auxiliary supervision.
 
-\subsection{Escaping the Impossibility: Relation-Conditioned Variance}
+\textbf{When to expect CAGP to fail.} Our decomposition works when OOD status correlates with (1) missing entity-relation coverage, or (2) low entity frequency. Role-shift OOD violates both: entities are well-covered \emph{and} high-frequency. Any deployment facing role-shift OOD should not rely on CAGP or coverage tracking alone.
+
+\subsection{Escaping the Limitation: Relation-Conditioned Variance}
 \label{sec:relcondvar_exp}
 
-Theorem~\ref{thm:impossibility} applies to \emph{entity-level} uncertainty $\sigma^2(e)$ that ignores the query relation. A natural question: can we bypass the impossibility by conditioning on relation?
+Theorem~\ref{thm:impossibility} applies to \emph{entity-level} uncertainty $\sigma^2(e)$ that ignores the query relation. A natural question: can we bypass the limitation by conditioning on relation?
 
 \textbf{RelCondVar.} We learn $\sigma^2(e, r) = \text{MLP}([\mathbf{e}; \mathbf{r}])$ where $[\cdot;\cdot]$ denotes concatenation of entity and relation embeddings. For entity-relation pairs rarely seen in training, the variance remains high; for frequent pairs, it decreases. This is trained with an auxiliary objective encouraging variance to correlate with inverse $(e, r)$ co-occurrence frequency.
 
