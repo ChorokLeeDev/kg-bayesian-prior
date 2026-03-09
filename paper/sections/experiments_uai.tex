@@ -287,6 +287,23 @@ Overall & 1.7\% & Dominated by hub genes \\
 
 The low aggregate rate is driven by \emph{hub genes}---highly connected entities that appear with most relation types. But the \textbf{drug discovery-critical relations} (Disease-Gene) show 30--62\% novel-context rates, higher than any standard benchmark.
 
+\paragraph{OOD detection validation.}
+We train DistMult on Hetionet and evaluate OOD detection on novel-context queries (3 seeds):
+
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\toprule
+Method & Novel Context AUROC & Drug-Disease AUROC \\
+\midrule
+Energy & 0.503 $\pm$ 0.003 & \textbf{0.431} $\pm$ 0.042 \\
+Coverage & \textbf{1.000} $\pm$ 0.000 & \textbf{1.000} $\pm$ 0.000 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Energy achieves \textbf{exactly random} (0.503) overall and \textbf{anti-predictive} (0.431) on drug indication relations---meaning it assigns \emph{higher confidence} to zero-evidence queries. Coverage achieves perfect detection.
+
 \paragraph{Inductive split reveals 99\% OOD.}
 To simulate realistic drug repurposing (predicting for new diseases), we construct an inductive split: 80\% of diseases for training, 20\% held out.
 
