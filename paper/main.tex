@@ -94,6 +94,9 @@
 
 % Author contributions and acknowledgements will be added after the review period.
 
+\paragraph{Ethics statement.}
+This work presents a diagnostic analysis of existing methods and does not introduce new risks beyond those inherent to knowledge graph systems. The primary practical recommendation---tracking entity-relation coverage---improves system reliability by flagging predictions with no training evidence. All datasets used (WN18RR, FB15k-237, YAGO3-10, ICEWS14, ICEWS18, GDELT) are publicly available research benchmarks. We do not foresee negative societal impacts from this work; if anything, identifying when models are unreliable should improve trustworthiness of deployed KG systems.
+
 \paragraph{Reproducibility statement.}
 All experiments use publicly available datasets (WN18RR, FB15k-237, YAGO3-10, ICEWS14, ICEWS18). Complete source code, experiment scripts, and per-seed result logs are included in the supplementary material (Appendix~\ref{app:provenance}). Training configuration (Appendix~\ref{app:training_config}) specifies all hyperparameters; FB15k-237 and ICEWS14 use 10 seeds, WN18RR and ICEWS18 use 5 seeds, YAGO3-10 uses 3 seeds. The coverage matrix is deterministic given training data. Theorem assumptions are empirically verified (Appendix~\ref{app:assumptions}).
 
