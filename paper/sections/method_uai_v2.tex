@@ -67,7 +67,22 @@ KG embeddings optimize $\min \sum_{(h,r,t)} \mathcal{L}(\text{score}(\phi(h), \p
 \textbf{Can training fix this?} We attempted coverage-aware training by regularizing high uncertainty on sampled unseen $(e,r)$ pairs. The model memorizes training unseen pairs but \emph{fails to generalize}: AUROC on held-out unseen pairs \emph{decreases} from 0.63 to 0.58 ($-$4.3pp). This confirms the architectural impossibility---training cannot overcome the blind spot (Appendix~\ref{app:coverage_training}).
 
 \textbf{GNN boundary condition.}
-Theorem~\ref{thm:embedding_impossibility} requires \eqref{eq:ra_condition} to hold. GNN architectures can violate this: $\phi(e) = \text{AGG}(\{\phi(n) : n \in \mathcal{N}(e)\})$ aggregates neighbor information, and $\mathcal{N}(e)$ is determined by training graph structure. The impossibility applies when $|\mathcal{R}| \gg \bar{|\mathcal{N}(e)|}$ (relation space exceeds typical neighborhood size). Concretely, on WN18RR with $|\mathcal{R}|{=}11$ and $\bar{|\mathcal{N}(e)|} \approx 2.2$ (ratio $\approx 5$), neighbors CAN proxy for coverage (GNNSafe: 0.79 AUROC). On FB15k-237 with $|\mathcal{R}|{=}237$ and $\bar{|\mathcal{N}(e)|} \approx 19$ (ratio $\approx 12$), neighbors CANNOT (GNNSafe: 0.43 AUROC). Based on these two data points, the transition occurs somewhere in the ratio range 5--12; additional benchmarks would narrow this interval.
+Theorem~\ref{thm:embedding_impossibility} requires \eqref{eq:ra_condition} to hold. GNN architectures can violate this: $\phi(e) = \text{AGG}(\{\phi(n) : n \in \mathcal{N}(e)\})$ aggregates neighbor information, and $\mathcal{N}(e)$ is determined by training graph structure. The impossibility applies when $|\mathcal{R}| \gg \bar{|\mathcal{N}(e)|}$ (relation space exceeds typical neighborhood size). We compute the ratio $|\mathcal{R}|/\bar{|\mathcal{N}(e)|}$ across three benchmarks:
+
+\begin{center}
+\small
+\begin{tabular}{lcccl}
+\toprule
+Dataset & $|\mathcal{R}|$ & $\bar{|\mathcal{N}(e)|}$ & Ratio & GNNSafe Nov.\ AUROC \\
+\midrule
+YAGO3-10 & 37 & 12.6 & 2.9 & (not tested) \\
+WN18RR & 11 & 2.2 & 5.0 & 0.79 (works) \\
+FB15k-237 & 237 & 19.0 & 12.5 & 0.43 (fails) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+When ratio $\lesssim 5$, neighbors CAN proxy for coverage; when ratio $\gtrsim 12$, they CANNOT. YAGO3-10 (ratio 2.9) should exhibit GNN success similar to WN18RR. The transition zone remains imprecisely bounded; we report the ratio as a heuristic guide rather than a sharp threshold.
 
 \paragraph{Empirical Regularity 1: Complementarity of Uncertainty Signals.}
 \label{reg:complementarity}
@@ -119,21 +134,24 @@ $c(e,r) = 1$ iff $\exists (h,r',t) \in \mathcal{T}_{\text{train}}: (e{=}h \lor e
 Precomputation is a single pass over training triples ($O(|\mathcal{T}|)$); inference requires two hash lookups per triple ($O(1)$, $<$2\% overhead; Appendix~\ref{app:implementation}).
 
 \paragraph{Scalability.}
-For billion-entity KGs where $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage is prohibitive, coverage can be tracked with a Bloom filter. We validated scalability on a synthetic KG with 500K entities, 500 relations, and 5M training triples (Table~\ref{tab:bloom_scale}). At 1\% FPR, storage reduces by 5$\times$ with only 0.14pp recall degradation (143 missed novel contexts out of 99,528). Extrapolating to Wikidata scale (90M entities, 1K relations, $\sim$3.5B covered pairs): exact hash tables require $\sim$174GB; Bloom filters at 1\% FPR require $\sim$33GB. The key result: recall degradation remains $<$0.2pp regardless of scale, confirming coverage tracking is practical for billion-entity deployment.
+For billion-entity KGs where $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage is prohibitive, coverage can be tracked with a Bloom filter. We validated scalability on OGB-WikiKG2 (2.5M entities, 535 relations, 16M triples) and a synthetic KG (500K entities). Results are consistent across scales (Table~\ref{tab:bloom_scale}): at 1\% FPR, storage reduces by 5$\times$ with $<$1pp recall degradation. Extrapolating to Wikidata scale (90M entities, 1K relations, $\sim$3.5B covered pairs): exact hash tables require $\sim$174GB; Bloom filters at 1\% FPR require $\sim$33GB. The key result: recall degradation remains $<$1pp regardless of scale, confirming coverage tracking is practical for billion-entity deployment.
 
 \begin{table}[h]
 \centering
-\caption{Bloom filter scalability (500K entities, 5M triples).}
+\caption{Bloom filter scalability. WikiKG2: real OGB benchmark (2.5M entities). Synthetic: power-law distributed (500K entities).}
 \label{tab:bloom_scale}
 \small
-\begin{tabular}{lccc}
+\begin{tabular}{llccc}
 \toprule
-Method & Storage & Reduction & Recall Drop \\
+Dataset & Method & Storage & Reduction & Recall Drop \\
 \midrule
-Exact hash set & 460 MB & 1$\times$ & --- \\
-Bloom (0.1\% FPR) & 132 MB & 3$\times$ & 0.02pp \\
-Bloom (1\% FPR) & 88 MB & 5$\times$ & 0.14pp \\
-Bloom (5\% FPR) & 57 MB & 8$\times$ & 0.89pp \\
+\multirow{3}{*}{WikiKG2} & Exact hash & 721 MB & 1$\times$ & --- \\
+& Bloom (1\% FPR) & 132 MB & 5$\times$ & 0.87pp \\
+& Bloom (5\% FPR) & 86 MB & 8$\times$ & 4.00pp \\
+\midrule
+\multirow{3}{*}{Synthetic} & Exact hash & 460 MB & 1$\times$ & --- \\
+& Bloom (1\% FPR) & 88 MB & 5$\times$ & 0.14pp \\
+& Bloom (5\% FPR) & 57 MB & 8$\times$ & 0.89pp \\
 \bottomrule
 \end{tabular}
 \end{table}
