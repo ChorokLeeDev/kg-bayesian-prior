@@ -303,6 +303,7 @@ def main():
     # Split into quintiles
     quintile_size = n_test // 5
     quintile_names = ['Top 20%', '20-40%', '40-60%', '60-80%', 'Bottom 20%']
+    quintile_data = []
     print(f"\n{'Quintile':<15} | {'Zero-Ev %':>12} | {'vs Baseline':>15}")
     print(f"{'-'*15}-+-{'-'*12}-+-{'-'*15}")
 
@@ -311,7 +312,21 @@ def main():
         end_idx = (i + 1) * quintile_size if i < 4 else n_test
         quintile_ze = sorted_zero_evidence[start_idx:end_idx].mean() * 100
         ratio = quintile_ze / baseline_pct
+        quintile_data.append({'name': name, 'zero_evidence_pct': float(quintile_ze), 'ratio': float(ratio)})
         print(f"{name:<15} | {quintile_ze:>11.1f}% | {ratio:>14.2f}x")
+
+    # Check for U-shape pattern
+    middle_avg = np.mean([q['zero_evidence_pct'] for q in quintile_data[1:4]])
+    top_pct = quintile_data[0]['zero_evidence_pct']
+    bottom_pct = quintile_data[4]['zero_evidence_pct']
+
+    if top_pct > baseline_pct and bottom_pct > baseline_pct and middle_avg < baseline_pct:
+        print(f"\nU-SHAPE DETECTED:")
+        print(f"  Top 20%: {top_pct:.1f}% (elevated)")
+        print(f"  Middle 60%: {middle_avg:.1f}% (BELOW baseline)")
+        print(f"  Bottom 20%: {bottom_pct:.1f}% (elevated)")
+        print(f"\n  Energy pushes zero-evidence queries to BOTH extremes!")
+        print(f"  The middle (moderate confidence) has BELOW baseline zero-evidence.")
 
     # Verdict
     print(f"\n{'='*70}")
@@ -373,12 +388,15 @@ def main():
                       for i, k in enumerate(k_values)},
         'curve_bottom': {str(k): results_bottom[numeric_k_values[i]]
                          for i, k in enumerate(k_values)},
+        'quintiles': quintile_data,
         'asymptote_pct': float(asymptote_pct),
         'k_cross_50': int(k_cross_50) if len(cross_50_idx) > 0 else None,
         'k_cross_baseline': int(k_cross_baseline) if len(cross_baseline_idx) > 0 else None,
         'top_100_pct': float(top_100_pct),
         'bottom_100_pct': float(bottom_100_pct),
         'spread_pp': float(spread),
+        'middle_60_avg_pct': float(middle_avg),
+        'u_shape_detected': bool(top_pct > baseline_pct and bottom_pct > baseline_pct and middle_avg < baseline_pct),
         'verdict': verdict
     }
 
@@ -390,7 +408,7 @@ def main():
     # Create plot
     print("\nGenerating plot...")
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
 
     # LEFT: Top-K curve
     ax = axes[0]
@@ -409,14 +427,14 @@ def main():
     ax.set_xscale('log')
     ax.set_xlabel('K', fontsize=12)
     ax.set_ylabel('Zero-Evidence Fraction (%)', fontsize=12)
-    ax.set_title('Top-K Most Confident Predictions', fontsize=13)
-    ax.legend(loc='upper right', fontsize=10)
+    ax.set_title('(a) Top-K Most Confident', fontsize=13)
+    ax.legend(loc='upper right', fontsize=9)
     ax.grid(True, alpha=0.3)
     ax.set_ylim(0, 100)
     ax.set_xticks(k_plot)
     ax.set_xticklabels(['100', '500', '1K', '2K', '5K', '10K', 'ALL'])
 
-    # RIGHT: Comparison of Top vs Bottom
+    # MIDDLE: Comparison of Top vs Bottom
     ax = axes[1]
     pct_plot_bottom = [results_bottom[k]['zero_evidence_pct'] for k in k_plot]
 
@@ -427,19 +445,36 @@ def main():
     ax.set_xscale('log')
     ax.set_xlabel('K', fontsize=12)
     ax.set_ylabel('Zero-Evidence Fraction (%)', fontsize=12)
-    ax.set_title('Top-K vs Bottom-K: Anti-Correlation', fontsize=13)
-    ax.legend(loc='center right', fontsize=10)
+    ax.set_title('(b) Top-K vs Bottom-K', fontsize=13)
+    ax.legend(loc='center right', fontsize=9)
     ax.grid(True, alpha=0.3)
     ax.set_ylim(0, 100)
     ax.set_xticks(k_plot)
     ax.set_xticklabels(['100', '500', '1K', '2K', '5K', '10K', 'ALL'])
 
-    # Add spread annotation
-    ax.annotate(f'Spread: {spread:.0f}pp',
-                xy=(100, (top_100_pct + bottom_100_pct)/2),
-                xytext=(300, 50),
-                fontsize=11, fontweight='bold',
-                arrowprops=dict(arrowstyle='->', color='black'))
+    # RIGHT: Quintile bar chart showing U-shape
+    ax = axes[2]
+    quintile_pcts = [q['zero_evidence_pct'] for q in quintile_data]
+    x_pos = np.arange(5)
+    colors = ['red' if p > baseline_pct else 'green' for p in quintile_pcts]
+
+    bars = ax.bar(x_pos, quintile_pcts, color=colors, alpha=0.7, edgecolor='black')
+    ax.axhline(y=baseline_pct, color='gray', linestyle='--', linewidth=2, label=f'Baseline ({baseline_pct:.1f}%)')
+
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(['Top\n20%', '20-\n40%', '40-\n60%', '60-\n80%', 'Bot\n20%'], fontsize=10)
+    ax.set_xlabel('Confidence Quintile', fontsize=12)
+    ax.set_ylabel('Zero-Evidence Fraction (%)', fontsize=12)
+    ax.set_title('(c) U-Shape: Both Tails Elevated', fontsize=13)
+    ax.legend(loc='upper right', fontsize=9)
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_ylim(0, max(quintile_pcts) * 1.15)
+
+    # Add value labels on bars
+    for bar, pct in zip(bars, quintile_pcts):
+        ax.annotate(f'{pct:.0f}%',
+                    xy=(bar.get_x() + bar.get_width()/2, bar.get_height()),
+                    ha='center', va='bottom', fontsize=10, fontweight='bold')
 
     plt.suptitle('Confident-Wrong Curve: Energy on FB15k-237', fontsize=14, fontweight='bold', y=1.02)
     plt.tight_layout()
