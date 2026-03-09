@@ -1,20 +1,36 @@
 # KG Uncertainty Paper - Strong Accept Campaign
 
-## Current Phase: Reviewer Response
-## Target: NeurIPS 2026 Strong Accept (8+/10)
-## Current Score: 7/10 (Accept, not Strong)
+## Current Phase: STRONG ACCEPT ACHIEVED
+## Target: NeurIPS 2026 Strong Accept (8+/10) ✅
+## Current Score: 8.3/10 (Strong Accept)
 
 ---
 
-## Reviewer Panel Summary (2026-03-09)
+## Reviewer Panel History
 
-| Reviewer | Focus | Score | Key Concern |
-|----------|-------|-------|-------------|
-| R1 | Theory | 7/10 | GNN boundary imprecise |
-| R2 | Empirical | 7/10 | ULTRA validation missing |
-| R3 | Applications | 7/10 | Hetionet OOD experiment missing |
+| Round | Theory | Empirical | Applications | Avg | Status |
+|-------|--------|-----------|--------------|-----|--------|
+| 1 | 7.0 | 7.0 | 7.0 | 7.0 | Accept |
+| 2 | 7.5 | 8.0 | 8.0 | 7.8 | Accept |
+| **3** | **8.5** | **8.5** | **8.0** | **8.3** | **Strong Accept** |
 
-**Consensus**: Accept, but not Strong Accept
+---
+
+## Key Achievements
+
+### Must Have (All Complete)
+- [x] ULTRA validation: **0.29 AUROC** (anti-predictive)
+- [x] Hetionet OOD AUROC: **0.503** (random), CtD=**0.431** (anti-predictive)
+- [x] GNN boundary analysis: Topology > capacity
+- [x] YAGO3-10 validation: **Honest negative result** (0.47 despite low γ)
+
+### What Made It Strong Accept
+1. **83% confident-wrong** - striking core finding
+2. **Impossibility theorems** - rigorous theory
+3. **ULTRA fails** (0.29) - foundation models inherit blind spot
+4. **Honest negative result** - YAGO3-10 strengthened claims
+5. **Biomedical safety** - 99% OOD in drug repurposing
+6. **Trivial fix** - hash table solves the problem
 
 ---
 
@@ -33,7 +49,7 @@
 ### In Progress
 | Experiment | Status | ETA | Notes |
 |------------|--------|-----|-------|
-| - | All critical done | - | Ready for next reviewer panel |
+| YAGO3-10 GNNSafe | 🔄 Running | ~15min | Validates γ=2.9 prediction |
 
 ### Pending (for Strong Accept)
 | Experiment | Priority | Estimated Impact |
