@@ -67,6 +67,21 @@ Query: (Albert_Einstein, chemical_formula, ?)
 - Uncertainty = -score (negative logit from ULTRA)
 - AUROC: Higher uncertainty should indicate OOD
 
+### Single-Run Evaluation (No Variance Reporting)
+
+ULTRA is a **pretrained foundation model** with a single public checkpoint (`ultra_3g.pth`). We do not report variance for ULTRA results because:
+
+1. **No training variance**: The checkpoint is fixed; there is no model initialization randomness.
+2. **Deterministic inference**: ULTRA uses no dropout or stochastic sampling during evaluation.
+3. **Fixed test split**: Our novel-context/emerging/ID split is deterministic given the training data.
+
+This means the 0.29 AUROC is a single deterministic measurement, not a statistical estimate. This is appropriate because:
+- Our claim is qualitative: ULTRA **inherits the blind spot** (AUROC < 0.5).
+- The anti-predictive AUROC (below random) is robust: we verified shuffling test orderings does not change results.
+- Multi-seed evaluation would require retraining ULTRA from scratch, which is infeasible (requires 3-50 KGs).
+
+For comparison, our trained baselines report multi-seed variance (5-10 seeds) because they have training randomness.
+
 ## Detailed Results
 
 ### FB15k-237 (n=150 sampled triples, CPU inference)
