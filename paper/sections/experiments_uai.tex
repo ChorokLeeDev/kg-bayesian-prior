@@ -262,3 +262,68 @@ Entity-level ($\sigma^2(e)$) & 0.500 $\pm$ 0.000 & +0pp \\
 \end{tabular}
 \end{table}
 
+\subsection{Cross-Domain Validation: Biomedical KGs}
+\label{sec:biomedical}
+
+To test whether the coverage blind spot generalizes beyond standard benchmarks, we evaluate on \textbf{Hetionet}~\citep{himmelstein2017systematic}---a biomedical knowledge graph for drug repurposing (45K entities, 24 relation types, 2.25M edges).
+
+\paragraph{Random split hides the problem.}
+Under random 80/10/10 splits, Hetionet shows only 1.7\% novel-context rate---seemingly contradicting our 11--25\% finding on standard benchmarks. However, this aggregated metric masks \emph{relation-specific} blind spots:
+
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\toprule
+Relation Type & Novel Context & Description \\
+\midrule
+DdG & \textbf{61.7\%} & Disease-downregulates-Gene \\
+DuG & \textbf{58.6\%} & Disease-upregulates-Gene \\
+DaG & \textbf{30.4\%} & Disease-associates-Gene \\
+CbG & 8.5\% & Compound-binds-Gene \\
+Overall & 1.7\% & Dominated by hub genes \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The low aggregate rate is driven by \emph{hub genes}---highly connected entities that appear with most relation types. But the \textbf{drug discovery-critical relations} (Disease-Gene) show 30--62\% novel-context rates, higher than any standard benchmark.
+
+\paragraph{Inductive split reveals 99\% OOD.}
+To simulate realistic drug repurposing (predicting for new diseases), we construct an inductive split: 80\% of diseases for training, 20\% held out.
+
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\toprule
+Category & Count & Percentage \\
+\midrule
+Novel context & 5,983 & 64.9\% \\
+Emerging entity & 3,138 & 34.0\% \\
+In-distribution & 101 & 1.1\% \\
+\textbf{Total OOD} & \textbf{9,121} & \textbf{98.9\%} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{99\% of drug repurposing predictions for new diseases involve coverage blind spots.} This has direct safety implications: models will confidently predict drug-disease-gene pathways with zero training evidence.
+
+\paragraph{Split strategy is decisive.}
+OGBL-BioKG~\citep{hu2020open} provides a striking comparison: despite nearly identical coverage density to WN18RR (1.83 vs 1.84 relations per entity), BioKG shows only \textbf{0.4\% novel-context} vs WN18RR's \textbf{39\%}. The difference is entirely due to split strategy:
+
+\begin{center}
+\small
+\begin{tabular}{lccc}
+\toprule
+Dataset & Rel/Entity & Split Strategy & Novel Context \\
+\midrule
+BioKG & 1.83 & Random edge & 0.4\% \\
+WN18RR & 1.84 & Structural & 39.2\% \\
+FB15k-237 & 9.56 & Structural & 31.4\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Random edge splits (OGB default) preserve coverage overlap: if entity $e$ appears with relation $r$ in training, test edges are uniformly sampled from the same $(e,r)$ pairs. Structural splits (FB15k-237, WN18RR) deliberately include entity-relation combinations absent from training.
+
+\paragraph{Implication.}
+(1) Random splits systematically underestimate real-world OOD prevalence---explaining why some biomedical KG papers report high accuracy without acknowledging coverage blind spots. (2) Our coverage tracking recommendation is especially critical for biomedical applications where overconfident predictions can mislead therapeutic development. (3) Practitioners should prefer structural or temporal splits when evaluating OOD robustness.
+
