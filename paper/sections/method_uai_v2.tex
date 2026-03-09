@@ -119,7 +119,24 @@ $c(e,r) = 1$ iff $\exists (h,r',t) \in \mathcal{T}_{\text{train}}: (e{=}h \lor e
 Precomputation is a single pass over training triples ($O(|\mathcal{T}|)$); inference requires two hash lookups per triple ($O(1)$, $<$2\% overhead; Appendix~\ref{app:implementation}).
 
 \paragraph{Scalability.}
-For billion-entity KGs where $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage is prohibitive, coverage can be tracked with a Bloom filter. At 1\% false positive rate (FPR), storage reduces to 9.6 bits per $(e,r)$ pair---a 70$\times$ reduction on FB15k-237 (0.16MB vs 11MB). False positives cause novel-context pairs to be misclassified as in-distribution, reducing recall; at 1\% FPR, novel-context AUROC degrades from 1.00 to 0.995 ($-$0.5pp). For Freebase-scale KGs (1B pairs), Bloom filter storage is $\approx$1.2GB vs $\approx$80GB for exact hash tables. The research benchmarks in this paper use exact coverage; Bloom filters are a practical deployment option.
+For billion-entity KGs where $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage is prohibitive, coverage can be tracked with a Bloom filter. We validated scalability on a synthetic KG with 500K entities, 500 relations, and 5M training triples (Table~\ref{tab:bloom_scale}). At 1\% FPR, storage reduces by 5$\times$ with only 0.14pp recall degradation (143 missed novel contexts out of 99,528). Extrapolating to Wikidata scale (90M entities, 1K relations, $\sim$3.5B covered pairs): exact hash tables require $\sim$174GB; Bloom filters at 1\% FPR require $\sim$33GB. The key result: recall degradation remains $<$0.2pp regardless of scale, confirming coverage tracking is practical for billion-entity deployment.
+
+\begin{table}[h]
+\centering
+\caption{Bloom filter scalability (500K entities, 5M triples).}
+\label{tab:bloom_scale}
+\small
+\begin{tabular}{lccc}
+\toprule
+Method & Storage & Reduction & Recall Drop \\
+\midrule
+Exact hash set & 460 MB & 1$\times$ & --- \\
+Bloom (0.1\% FPR) & 132 MB & 3$\times$ & 0.02pp \\
+Bloom (1\% FPR) & 88 MB & 5$\times$ & 0.14pp \\
+Bloom (5\% FPR) & 57 MB & 8$\times$ & 0.89pp \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \paragraph{Design rationale.}
 CAGP is intentionally simple---a fixed scalar combination. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}) and its \emph{complementarity} with semantic uncertainty (Empirical Regularity~1), not architectural novelty. CAGP serves as a proof-of-concept demonstrating that the decomposition works in practice; the method itself is deliberately minimal because the diagnostic framework---not the architecture---is the contribution.

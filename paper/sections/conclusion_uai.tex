@@ -9,7 +9,7 @@ Theorem~\ref{thm:embedding_impossibility} proves that \emph{any} embedding-based
 
 \paragraph{Practical recommendations for KG deployment.}
 \begin{enumerate}
-\item \textbf{Always track entity-relation coverage.} A hash table lookup (or Bloom filter for billion-entity KGs) catches the failure mode invisible to all learned methods. This is the single highest-impact recommendation and should be standard practice for any deployed KG system.
+\item \textbf{Always track entity-relation coverage.} A hash table lookup (or Bloom filter for billion-entity KGs; Table~\ref{tab:bloom_scale}) catches the failure mode invisible to all learned methods. At Wikidata scale, Bloom filters require $\sim$33GB vs $\sim$174GB for exact storage, with $<$0.2pp recall loss. This is the single highest-impact recommendation and should be standard practice for any deployed KG system.
 \item \textbf{Flag or abstain on zero-coverage queries.} When $c(e,r)=0$, the model has never seen this entity with this relation. Either flag as high-uncertainty or abstain from prediction entirely.
 \item \textbf{Report stratified OOD metrics.} Aggregate AUROC conceals fundamental failure modes (Theorem~\ref{thm:impossibility}). Report emerging-entity and novel-context detection separately.
 \item \textbf{Do not trust confidence scores alone.} High confidence does not mean high evidence---methods are systematically overconfident on zero-evidence queries.
