@@ -327,3 +327,31 @@ Random edge splits (OGB default) preserve coverage overlap: if entity $e$ appear
 \paragraph{Implication.}
 (1) Random splits systematically underestimate real-world OOD prevalence---explaining why some biomedical KG papers report high accuracy without acknowledging coverage blind spots. (2) Our coverage tracking recommendation is especially critical for biomedical applications where overconfident predictions can mislead therapeutic development. (3) Practitioners should prefer structural or temporal splits when evaluating OOD robustness.
 
+\subsection{Foundation Models Inherit the Blind Spot: ULTRA Validation}
+\label{sec:ultra}
+
+A natural question: do foundation models trained on multiple KGs escape the impossibility theorem? We validate on \textbf{ULTRA}~\citep{galkin2024ultra}---the state-of-the-art KG foundation model using NBFNet~\citep{zhu2021neural} with relation-aware message passing.
+
+\paragraph{Hypothesis.} ULTRA maps entities to representations via 6-layer Bellman-Ford message passing, but these representations are not conditioned on the query relation. Per Theorem~\ref{thm:embedding_impossibility}, ULTRA should achieve near-random AUROC on novel contexts.
+
+\paragraph{Results (FB15k-237).}
+
+\begin{center}
+\small
+\begin{tabular}{lccc}
+\toprule
+Method & Novel Ctx & Emerging & Overall \\
+\midrule
+ULTRA & \textbf{0.29} & 0.46 & 0.37 \\
+Coverage & 0.94 & 0.86 & 0.97 \\
+Random & 0.50 & 0.50 & 0.50 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{ULTRA achieves 0.29 AUROC on novel contexts---below random.} This means ULTRA assigns \emph{high confidence} to queries with zero training evidence. High-connectivity entities produce confident predictions regardless of which relation is queried.
+
+\paragraph{Why this happens.} ULTRA's NBFNet learns rich entity representations from overall graph structure (multi-hop paths, connectivity patterns). But this does not encode \emph{which relations each entity has been observed with}. When queried with an unseen relation, ULTRA produces confident predictions because the entity embedding is well-constrained---exactly the failure mode our impossibility theorem predicts.
+
+\paragraph{Implication.} Scale does not fix the coverage blind spot. ULTRA is trained on 3--50 KGs with up to 157 relation types, yet still cannot detect novel contexts. Any deployment using ULTRA (or similar foundation models) \textbf{must} implement explicit coverage tracking to flag zero-evidence queries.
+
