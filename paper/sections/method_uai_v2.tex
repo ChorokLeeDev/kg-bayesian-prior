@@ -82,9 +82,10 @@ Dataset & $|\mathcal{R}|$ & Structure & Cov.\ \% & GNN Nov.\ AUROC \\
 \midrule
 WN18RR & 11 & Hierarchical & 16.7\% & \textbf{0.79} (works) \\
 YAGO3-10 & 37 & Heterogeneous & 8\% & 0.47 (fails) \\
-FB15k-237 & 237 & Heterogeneous & 4\% & 0.43 (fails) \\
+FB15k-237 & 237 & Heterogeneous & 4\% & 0.46 (fails) \\
 \bottomrule
 \end{tabular}
+\label{tab:gnn_boundary}
 \end{center}
 
 \textbf{The ratio heuristic fails}: YAGO3-10 has the lowest ratio (2.9) yet fails (0.47 AUROC). We tested embedding dimension ablation: WN18RR improves monotonically (0.62 at dim=10 to 0.84 at dim=200), while YAGO3-10 fails at all dimensions (0.46 even at dim=400). \textbf{Capacity is necessary but not sufficient.}
