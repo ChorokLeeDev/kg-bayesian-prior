@@ -231,6 +231,8 @@ CAGP & 0.57 $\pm$ 0.01 & \textbf{0.97} $\pm$ 0.01 \\
 \end{tabular}
 \end{table}
 
+\textbf{Limitation.} CAGP's modest gain (+0pp over $U_{\text{str}}$) on GDELT role-shift confirms the decomposition's limits: when coverage fails to separate OOD from ID ($\rho = 0.84$), and semantic also fails (AUROC = 0.50), the combination cannot succeed. Role-shift OOD fundamentally requires \emph{relation-conditioned} uncertainty---detecting that an entity is using an atypical relation requires knowing which relations are typical for that entity. RelCondVar (\S\ref{sec:relcondvar_exp}) addresses this but requires auxiliary supervision.
+
 \textbf{Implication.} The impossibility is not an artifact of low $\rho$. Even when coverage fails to separate OOD from ID ($\rho = 0.84$, structural AUROC = 0.58), semantic variance cannot fill the gap. Role-shift OOD requires \emph{relation-conditioned} uncertainty (\S\ref{sec:relcondvar_exp}), which our theory predicts and experiments confirm.
 
 \subsection{Escaping the Impossibility: Relation-Conditioned Variance}
