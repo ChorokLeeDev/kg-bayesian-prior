@@ -13,7 +13,17 @@
 | 1 | 7.0 | 7.0 | 7.0 | 7.0 | Accept |
 | 2 | 7.5 | 8.0 | 8.0 | 7.8 | Accept |
 | 3 | 8.5 | 8.5 | 8.0 | 8.3 | Strong Accept |
-| **4** | **8.0** | **9.0** | **8.0** | **8.3** | **Strong Accept** |
+| 4 | 8.0 | 9.0 | 8.0 | 8.3 | Strong Accept |
+| **5** | **9.0** | **8.0** | **8.0** | **8.3** | **Strong Accept** |
+
+### Skeptical Reviewer Progression
+| Round | Score | Key Issue |
+|-------|-------|-----------|
+| 4 | 4/10 | Circularity, missing baselines |
+| 5 | 7/10 | After counter-arguments |
+| 6 | 5/10 | New harsh attack |
+| 7 | 7.5/10 | ICEWS correlation, Mahalanobis |
+| **8** | **8/10** | ALL issues resolved |
 
 ---
 
