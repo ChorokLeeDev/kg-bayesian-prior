@@ -66,11 +66,11 @@ KG embeddings optimize $\min \sum_{(h,r,t)} \mathcal{L}(\text{score}(\phi(h), \p
 \textbf{(iv)} Energy: $E = -\log\sum\exp(f(\phi(h), \psi(r), \phi(t)))$ inherits the embedding's blindness.
 
 \textbf{GNN boundary condition.}
-Theorem~\ref{thm:embedding_impossibility} requires \eqref{eq:ra_condition} to hold. GNN architectures can violate this: $\phi(e) = \text{AGG}(\{\phi(n) : n \in \mathcal{N}(e)\})$ aggregates neighbor information, and $\mathcal{N}(e)$ is determined by training graph structure. The impossibility applies when $|\mathcal{R}| \gg \bar{|\mathcal{N}(e)|}$ (relation space exceeds typical neighborhood size). Concretely, on WN18RR with $|\mathcal{R}|{=}11$ and $\bar{|\mathcal{N}(e)|} \approx 2.2$, neighbors CAN proxy for coverage (GNNSafe: 0.79 AUROC). On FB15k-237 with $|\mathcal{R}|{=}237$ and $\bar{|\mathcal{N}(e)|} \approx 19$, neighbors CANNOT (GNNSafe: 0.43 AUROC). The transition occurs around $|\mathcal{R}|/\bar{|\mathcal{N}(e)|} \approx 10$.
+Theorem~\ref{thm:embedding_impossibility} requires \eqref{eq:ra_condition} to hold. GNN architectures can violate this: $\phi(e) = \text{AGG}(\{\phi(n) : n \in \mathcal{N}(e)\})$ aggregates neighbor information, and $\mathcal{N}(e)$ is determined by training graph structure. The impossibility applies when $|\mathcal{R}| \gg \bar{|\mathcal{N}(e)|}$ (relation space exceeds typical neighborhood size). Concretely, on WN18RR with $|\mathcal{R}|{=}11$ and $\bar{|\mathcal{N}(e)|} \approx 2.2$ (ratio $\approx 5$), neighbors CAN proxy for coverage (GNNSafe: 0.79 AUROC). On FB15k-237 with $|\mathcal{R}|{=}237$ and $\bar{|\mathcal{N}(e)|} \approx 19$ (ratio $\approx 12$), neighbors CANNOT (GNNSafe: 0.43 AUROC). Based on these two data points, the transition occurs somewhere in the ratio range 5--12; additional benchmarks would narrow this interval.
 
 \paragraph{Empirical Regularity 1: Complementarity of Uncertainty Signals.}
 \label{reg:complementarity}
-We observe empirically that semantic and structural uncertainty exhibit predictable, complementary failure modes across all benchmarks:
+We observe empirically that semantic and structural uncertainty exhibit predictable, complementary failure modes on \emph{novel-context} and \emph{emerging-entity} OOD (not role-shift OOD, which requires relation-conditioned methods; see \S\ref{sec:relcondvar_exp}):
 \textbf{(i)} Semantic uncertainty achieves AUROC $\approx 0.50$ on novel contexts (consistent with Theorem~\ref{thm:impossibility}).
 \textbf{(ii)} Structural uncertainty achieves AUROC $< 1$ on emerging entities (some emerging entities have coverage for the query relation).
 \textbf{(iii)} The gain from combining signals is dominated by emerging entities:

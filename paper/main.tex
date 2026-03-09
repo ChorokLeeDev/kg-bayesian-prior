@@ -118,7 +118,7 @@ We state the full assumptions and prove both theorems.
 
 \paragraph{Assumptions.}
 \begin{enumerate}
-    \item[\textbf{(A1)}] \textbf{Approximate variance-frequency monotonicity}: Spearman$(\freq, \sigma^2) \leq {-}0.6$. This implies $\sigma^2 \approx g(\freq)$ for some decreasing function $g$, with residual variance bounded by $O(\sqrt{1-\rho^2})$.
+    \item[\textbf{(A1)}] \textbf{Approximate variance-frequency monotonicity}: Spearman$(\freq, \sigma^2) \leq {-}0.6$. This threshold is chosen post-hoc to fit observed data (all datasets satisfy $\rho_s \leq {-}0.68$). The assumption implies $\sigma^2 \approx g(\freq)$ for some decreasing function $g$, with residual variance bounded by $O(\sqrt{1-\rho_s^2})$.
     \item[\textbf{(A2)}] \textbf{ID coverage} (definitional; follows from Definition~\ref{def:ood}): For all $(h,r,t) \in \mathcal{D}_{\text{ID}}$: $c(h,r) = c(t,r) = 1$.
     \item[\textbf{(A3)}] \textbf{Frequency overlap}: For any $(h,r,t) \in \mathcal{D}_{\text{novel}}$, there exists $(h',r',t') \in \mathcal{D}_{\text{ID}}$ with $|\freq(h) - \freq(h')| \leq \epsilon_h$ and $|\freq(t) - \freq(t')| \leq \epsilon_t$.
     \item[\textbf{(A4)}] \textbf{Bounded semantic gap}: $\Delta = \max_{x \in \mathcal{D}_{\text{novel}}, x' \in \mathcal{D}_{\text{ID}}} [\tilde{U}_{\text{sem}}(x') - \tilde{U}_{\text{sem}}(x)] < 1$.
