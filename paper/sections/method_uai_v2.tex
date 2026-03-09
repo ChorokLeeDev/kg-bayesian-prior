@@ -117,6 +117,9 @@ We precompute $\mathbf{C} \in \{0,1\}^{|\mathcal{E}| \times |\mathcal{R}|}$ from
 $c(e,r) = 1$ iff $\exists (h,r',t) \in \mathcal{T}_{\text{train}}: (e{=}h \lor e{=}t) \land r'{=}r$.
 Precomputation is a single pass over training triples ($O(|\mathcal{T}|)$); inference requires two hash lookups per triple ($O(1)$, $<$2\% overhead; Appendix~\ref{app:implementation}).
 
+\paragraph{Scalability.}
+For billion-entity KGs where $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage is prohibitive, coverage can be tracked with a Bloom filter. At 1\% false positive rate (FPR), storage reduces to 9.6 bits per $(e,r)$ pair---a 70$\times$ reduction on FB15k-237 (0.16MB vs 11MB). False positives cause novel-context pairs to be misclassified as in-distribution, reducing recall; at 1\% FPR, novel-context AUROC degrades from 1.00 to 0.995 ($-$0.5pp). For Freebase-scale KGs (1B pairs), Bloom filter storage is $\approx$1.2GB vs $\approx$80GB for exact hash tables. The research benchmarks in this paper use exact coverage; Bloom filters are a practical deployment option.
+
 \paragraph{Design rationale.}
 CAGP is intentionally simple---a fixed scalar combination. The contribution is identifying the \emph{necessity} of structural uncertainty (Theorem~\ref{thm:impossibility}) and its \emph{complementarity} with semantic uncertainty (Empirical Regularity~1), not architectural novelty. CAGP serves as a proof-of-concept demonstrating that the decomposition works in practice; the method itself is deliberately minimal because the diagnostic framework---not the architecture---is the contribution.
 
