@@ -19,23 +19,23 @@ R-GCN should STILL fail on novel-context detection because:
 
 ## Experimental Setup
 
-- **Model**: R-GCN with PyTorch Geometric (2-layer, 5 bases)
+- **Model**: R-GCN with PyTorch Geometric (2-layer, 10 bases)
 - **Dataset**: FB15k-237
-- **Embedding dim**: 50
-- **Training epochs**: 5
-- **Seeds**: [42]
+- **Embedding dim**: 100
+- **Training epochs**: 10
+- **Seeds**: [42, 123, 456]
 
 ## Results
 
 | Uncertainty | OOD Type | AUROC |
 |-------------|----------|-------|
-| Energy (R-GCN) | Emerging | 0.666 +/- 0.000 |
-| Energy (R-GCN) | **Novel-context** | **0.463 +/- 0.000** |
+| Energy (R-GCN) | Emerging | 0.617 +/- 0.016 |
+| Energy (R-GCN) | **Novel-context** | **0.453 +/- 0.025** |
 | Coverage | Novel-context | 1.000 +/- 0.000 |
 
 ## Key Finding
 
-**R-GCN energy-based uncertainty achieves 0.46 AUROC on novel-context detection.**
+**R-GCN energy-based uncertainty achieves 0.45 AUROC on novel-context detection.**
 
 This confirms our hypothesis:
 
@@ -49,7 +49,7 @@ This confirms our hypothesis:
 | Method | Emerging AUROC | Novel-Context AUROC |
 |--------|----------------|---------------------|
 | Energy (DistMult) | ~0.75 | ~0.42 |
-| Energy (R-GCN) | 0.67 | 0.46 |
+| Energy (R-GCN) | 0.62 | 0.45 |
 | Coverage | ~0.88 | ~0.94 |
 
 **Conclusion**: Relation-aware GNNs like R-GCN do not solve the novel-context blind spot.
@@ -67,4 +67,4 @@ Consider query `(Barack Obama, CEO_of, ?)`:
 This is exactly the blind spot that coverage tracking addresses.
 
 ---
-*Generated: 2026-03-09 22:49:31*
+*Generated: 2026-03-10 05:03:13*
