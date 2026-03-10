@@ -74,7 +74,7 @@ KG embeddings optimize $\min \sum_{(h,r,t)} \mathcal{L}(\text{score}(\phi(h), \p
 \textbf{GNN boundary condition.}
 Theorem~\ref{thm:embedding_impossibility} requires \eqref{eq:ra_condition} to hold. GNN architectures can violate this when neighbor structure correlates with relation coverage. We tested this across three benchmarks:
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{GNN boundary analysis: Coverage correlation determines whether GNNs can detect novel contexts.}
 \label{tab:gnn_boundary}
@@ -148,7 +148,7 @@ Precomputation is a single pass over training triples ($O(|\mathcal{T}|)$); infe
 \paragraph{Scalability.}
 For billion-entity KGs where $O(|\mathcal{E}| \times |\mathcal{R}|)$ storage is prohibitive, coverage can be tracked with a Bloom filter. We validated scalability on OGB-WikiKG2 (2.5M entities, 535 relations, 16M triples) and a synthetic KG (500K entities). Results are consistent across scales (Table~\ref{tab:bloom_scale}): at 1\% FPR, storage reduces by 5$\times$ with $\leq$1pp recall degradation (0.87pp on WikiKG2, 0.14pp on Synthetic). Extrapolating to Wikidata scale (90M entities, 1K relations, $\sim$3.5B covered pairs): exact hash tables require $\sim$174GB; Bloom filters at 1\% FPR require $\sim$33GB. The key result: recall degradation remains $\leq$1pp regardless of scale, confirming coverage tracking is practical for billion-entity deployment.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Bloom filter scalability. WikiKG2: real OGB benchmark (2.5M entities). Synthetic: power-law distributed (500K entities).}
 \label{tab:bloom_scale}

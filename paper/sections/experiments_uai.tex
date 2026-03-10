@@ -242,7 +242,7 @@ On standard random-corruption OOD (Appendix~\ref{app:standard_ood_full}), CAGP t
 
 \textbf{Results (5 seeds, 30 epochs).} Table~\ref{tab:gdelt} summarizes the results. \textbf{All methods fail}: semantic achieves \textbf{0.50 AUROC} (random), structural achieves 0.58, and CAGP achieves 0.57---no improvement over structural alone. This is a clear failure case for our approach.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{\textbf{GDELT role-shift OOD: A negative result} ($\rho = 0.84$, 5 seeds). When coverage overlap is high, neither signal works, and CAGP inherits this failure.\label{tab:gdelt}}
 \begin{tabular}{lcc}
@@ -280,7 +280,7 @@ Theorem~\ref{thm:impossibility} applies to \emph{entity-level} uncertainty $\sig
 
 \textbf{Caveat: Auxiliary supervision required.} An ablation removing the auxiliary objective ($w_{\text{aux}}=0$) yields AUROC of 0.501$\pm$0.112---indistinguishable from chance. We tested five alternative objectives to escape this circularity: (A) binary coverage supervision (seen/unseen, not frequency), (B) contrastive loss (seen vs.\ unseen relations), (C) reconstruction (predict relation from entity+variance), (D) KL regularization, and (E) extended training (100 epochs). Results: A=0.787, B=0.704, C=0.357, D=0.506, E=0.583. While A and B appear promising, their success stems from implicit frequency leakage: negative sampling over-represents frequent pairs among ``seen'' examples, and rare relations are disproportionately ``unseen.'' Role-shift OOD is \emph{defined} by frequency (atypical = low-frequency relations), so any successful detector must encode frequency information---making non-circular detection fundamentally impossible for this OOD type. This validates our practical recommendation: track coverage explicitly rather than attempting to learn it.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{\textbf{RelCondVar on role-shift OOD (ICEWS14).} When all OOD triples have coverage ($\rho=1.0$), structural uncertainty provides no signal, but relation-conditioned variance achieves +25pp.\label{tab:relcondvar}}
 \begin{tabular}{lcc}
