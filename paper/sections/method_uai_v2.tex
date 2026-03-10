@@ -25,7 +25,7 @@ Novel-context detection by $U_{\text{str}}$ is perfect by construction since the
 
 \subsection{Theoretical Results}
 
-The following theorems formalize why existing methods fail. The results are not surprising---relation-agnostic methods obviously cannot detect relation-specific novelty---but the formalization serves two purposes: (1) it identifies the precise conditions (A1--A3) under which failure occurs, enabling empirical verification, and (2) it explains why the 78\% confident-wrong finding is not a bug but an architectural inevitability.
+The following theorems formalize why existing methods fail. The results are not surprising---relation-agnostic methods obviously cannot detect relation-specific novelty---but the formalization serves three purposes: (1) it identifies the precise conditions (A1--A3) under which failure occurs, enabling empirical verification, (2) it explains why the 78\% confident-wrong finding is not a bug but an architectural inevitability, and (3) it establishes universality over \emph{all} combining functions $f(\sigma^2_h, \sigma^2_t)$, ruling out learned combinations. The assumptions A1--A3 are \emph{empirically verifiable} (we measure them), not definitions; if they failed to hold, the theorem would not apply.
 
 \begin{theorem}[Limitation of Relation-Agnostic Detection]
 \label{thm:impossibility}
