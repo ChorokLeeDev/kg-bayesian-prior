@@ -25,3 +25,6 @@ CAGP validates the decomposition; the primary practical contribution is \emph{ze
 \textbf{Role-shift OOD defeats our approach.} On GDELT role-shift ($\rho = 0.84$), CAGP achieves only 0.57 AUROC---essentially no better than chance (\S\ref{sec:gdelt}). When coverage overlap is high (OOD entities are well-covered) \emph{and} entities are high-frequency (low variance), neither signal helps. Role-shift detection requires relation-conditioned uncertainty, which our decomposition does not provide. The approach also assumes transductive settings; inductive KGs require different mechanisms (an entity with no training triples has zero coverage for all relations). Semantic gains (+8--11pp) appear on static benchmarks where OOD partitions create emerging entities with partial coverage; on non-circular temporal benchmarks (ICEWS, GDELT), coverage alone suffices or both signals fail. A4 is violated on all benchmarks ($\Delta \geq 1.0$); Empirical Regularity~1 is thus an observed pattern rather than a worst-case guarantee.
 
 Future directions include inductive coverage tracking, GNN encoders with relation-aware variance, and conformal prediction wrappers for coverage guarantees.
+
+\paragraph{Reproducibility.}
+Code, trained models, and exact data splits will be released upon publication.
