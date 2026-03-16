@@ -60,13 +60,17 @@ Let $\phi: \mathcal{E} \to \mathbb{R}^d$ satisfy Definition~\ref{def:relation_ag
 \textbf{Empirical test of Definition~\ref{def:relation_agnostic}.}
 We tested whether trained embeddings satisfy the CMI condition \eqref{eq:ra_condition} by predicting $c(e,r)$ from $\phi(e)$ \emph{within frequency strata}. If CMI $\approx 0$, within-stratum AUC should be $\approx 0.5$. \textbf{Surprising result:} trained DistMult embeddings achieve AUC $= 0.96 \pm 0.04$ within each frequency quintile (vs.\ random baseline 0.50), indicating embeddings \emph{do} encode substantial coverage information beyond frequency. However, \textbf{this leakage does not help OOD detection}: novel-context AUROC remains 0.34--0.50 (Table~\ref{tab:temporal_ood}).
 
-\textbf{Why can't learned methods extract coverage from embeddings?} The CMI test uses a classifier $g: \mathbb{R}^d \to [0,1]$ trained \emph{specifically} on coverage labels $(e, r, c(e,r))$. Standard uncertainty methods use \emph{different} functions without coverage supervision: (a) variance $\sigma^2(e)$ is a scalar aggregate of embedding uncertainty, not a learned coverage predictor; (b) Energy $-\log\sum\exp(\text{score}(h,r,t))$ optimizes link prediction, not coverage detection; (c) ensembles average over models, but each model's uncertainty ignores coverage. The information exists in $\phi(e)$ but is encoded in directions orthogonal to what unsupervised uncertainty methods measure. \textbf{Implication:} Definition~\ref{def:relation_agnostic} is a sufficient (not necessary) condition---embeddings may violate it yet still exhibit the failure mode because standard uncertainty functions cannot access the coverage signal without explicit supervision. This strengthens our practical conclusion: explicit coverage tracking is necessary because implicit coverage encoding cannot be extracted by standard uncertainty methods. Consequently:
+\textbf{Why can't learned methods extract coverage from embeddings?} The CMI test uses a classifier $g: \mathbb{R}^d \to [0,1]$ trained \emph{specifically} on coverage labels $(e, r, c(e,r))$. Standard uncertainty methods use \emph{different} functions without coverage supervision:
 \textbf{(i)} Variance-based ($\sigma^2_e$): Entity variance reflects training frequency, not relation coverage.
 \textbf{(ii)} Deep Ensembles: Each model's $\phi_k(e)$ shares the same blind spot---none encode coverage.
 \textbf{(iii)} MC Dropout: Dropout adds noise to $\phi(e)$ but doesn't add coverage information.
 \textbf{(iv)} Energy: $E = -\log\sum\exp(f(\phi(h), \psi(r), \phi(t)))$ inherits the embedding's blindness.
 \textbf{(v)} R-GCN/CompGCN: Message-passing GNNs aggregate neighbor information via relation-typed transforms, but the output $h_e$ is the same regardless of whether entity $e$ has ever appeared with relation $r$. The embedding encodes graph structure, not coverage statistics.
+
+The information exists in $\phi(e)$ but is encoded in directions orthogonal to what unsupervised uncertainty methods measure. \textbf{Implication:} Definition~\ref{def:relation_agnostic} is a sufficient (not necessary) condition---embeddings may violate it yet still exhibit the failure mode because standard uncertainty functions cannot access the coverage signal without explicit supervision. This strengthens our practical conclusion: explicit coverage tracking is necessary because implicit coverage encoding cannot be extracted by standard uncertainty methods.
+
 \textbf{Can training fix this?} We attempted coverage-aware training by regularizing high uncertainty on sampled unseen $(e,r)$ pairs. The model memorizes training unseen pairs but \emph{fails to generalize}: AUROC on held-out unseen pairs \emph{decreases} from 0.63 to 0.58 ($-$4.3pp). This confirms the architectural limitation---training cannot overcome the blind spot (Appendix~\ref{app:coverage_training}).
+
 \textbf{Can a supervised classifier extract coverage?} We trained an MLP $g([\phi(h); \psi(r); \phi(t)]) \to [0,1]$ with explicit OOD supervision on 80\% of test triples. Despite full access to embeddings and labels, the MLP achieves \textbf{0.50 AUROC}---exactly random chance. This definitively proves coverage information is not extractable from embeddings, even with explicit supervision. The CMI test shows embeddings encode coverage for classification (AUC$=$0.96), but this information does not transfer to OOD detection: the MLP learns to predict coverage for \emph{training} pairs but cannot generalize to \emph{test} pairs with different coverage patterns.
 
 \textbf{GNN boundary condition.}
@@ -79,11 +83,11 @@ Theorem~\ref{thm:embedding_impossibility} requires \eqref{eq:ra_condition} to ho
 \small
 \begin{tabular}{lcccc}
 \toprule
-Dataset & $|\mathcal{R}|$ & Structure & Cov.\ \% & GNN Nov.\ AUROC \\
+Dataset & $|\mathcal{R}|$ & Structure & Cov.\ Corr. & Novel AUROC \\
 \midrule
-WN18RR & 11 & Hierarchical & 16.7\% & \textbf{0.79} (works) \\
-YAGO3-10 & 37 & Heterogeneous & 8\% & 0.47 (fails) \\
-FB15k-237 & 237 & Heterogeneous & 4\% & 0.46 (fails) \\
+WN18RR & 11 & Hierarchical & 0.46 & \textbf{0.79} (works) \\
+YAGO3-10 & 37 & Heterogeneous & 0.29 & 0.47 (fails) \\
+FB15k-237 & 237 & Heterogeneous & 0.08 & 0.46 (fails) \\
 \bottomrule
 \end{tabular}
 \end{table}
