@@ -15,7 +15,7 @@ Fix threshold $\tau > 0$. OOD queries partition into:
 We set $\tau$ to the 25th percentile of entity frequencies; results vary $<$0.02 AUROC across $\tau \in [5\text{th}, 30\text{th}]$ percentile (Appendix~\ref{app:implementation}).
 \end{definition}
 
-Novel-context detection by $U_{\text{str}}$ is perfect by construction since the same $c(e,r)$ defines both the OOD label and the detector. \textbf{To be clear: the contribution is not that coverage detects zero-coverage (which is trivial). The contribution is proving that all embedding-based methods are blind to this} (Theorem~\ref{thm:impossibility}), \textbf{demonstrating this empirically via the 78\% confident-wrong finding} (Table~\ref{tab:confident_wrong}), and establishing that 11--25\% of test queries fall into this blind spot; see Remark~\ref{rem:circularity}.
+Novel-context detection by $U_{\text{str}}$ is perfect by construction since the same $c(e,r)$ defines both the OOD label and the detector. The substantive contributions are: (1) proving all embedding-based methods are blind to novel contexts (Theorem~\ref{thm:impossibility}), (2) demonstrating this empirically---78\% of top-confident predictions have zero evidence (Table~\ref{tab:confident_wrong}), and (3) quantifying that 11--25\% of test queries fall into this blind spot. See Remark~\ref{rem:circularity} for circularity discussion.
 
 \subsection{Uncertainty Signals}
 
@@ -25,7 +25,7 @@ Novel-context detection by $U_{\text{str}}$ is perfect by construction since the
 
 \subsection{Theoretical Results}
 
-The following results formalize why existing methods fail. The intuition is unsurprising---relation-agnostic methods obviously cannot detect relation-specific novelty---but the formalization is non-trivial: (1) it identifies \emph{precise, falsifiable} conditions (A1--A3) under which failure occurs, enabling empirical verification rather than hand-waving, (2) it provides quantitative predictions (AUROC $\leq 0.5 + O(\epsilon)$) that we validate against observed values, and (3) it establishes universality over \emph{all} combining functions $f(\sigma^2_h, \sigma^2_t)$, ruling out learned combinations. The assumptions A1--A3 are \emph{empirically testable} (Table~\ref{tab:assumptions})---if they failed to hold, the theorem would not apply, making the result falsifiable rather than definitional.
+The following results formalize why existing methods fail. The formalization provides: (1) \emph{precise, falsifiable} conditions (A1--A3) under which failure occurs, (2) quantitative predictions (AUROC $\leq 0.5 + O(\epsilon)$) validated against observed values, and (3) universality over \emph{all} combining functions $f(\sigma^2_h, \sigma^2_t)$, ruling out learned combinations. The assumptions A1--A3 are \emph{empirically testable} (Table~\ref{tab:assumptions})---if they failed to hold, the theorem would not apply.
 
 \begin{theorem}[Limitation of Relation-Agnostic Detection]
 \label{thm:impossibility}
@@ -38,7 +38,7 @@ where $\epsilon$ measures frequency-matching tightness (A3).
 
 \textbf{Proof sketch.} By A1, $\sigma^2_e$ is determined by $\text{freq}(e)$. By A3, novel-context triples have frequency-matched ID counterparts, so $U(h,r,t) \approx U(h',r',t')$, giving AUROC $\approx 1/2$. Full proof in Appendix~\ref{app:proof}. $\square$
 
-\textbf{Remark (Non-triviality).} Theorem~\ref{thm:impossibility} formalizes an intuition that may seem obvious in hindsight: relation-agnostic uncertainty cannot detect relation-specific novelty. Yet this ``obvious'' limitation has not prevented widespread deployment of relation-agnostic methods without coverage tracking. The theorem's contribution is \emph{diagnostic}: it identifies \emph{which} queries will fail (those satisfying A1--A3), predicts \emph{how badly} (AUROC $\approx 0.5$), and proves universality over \emph{all} combining functions---including learned ones. The 78\% confident-wrong finding (Table~\ref{tab:confident_wrong}) and 11--25\% prevalence validate these predictions empirically, demonstrating the theorem is not vacuous.
+\textbf{Remark.} Theorem~\ref{thm:impossibility} identifies \emph{which} queries will fail (those satisfying A1--A3), predicts \emph{how badly} (AUROC $\approx 0.5$), and proves universality over \emph{all} combining functions---including learned ones. The 78\% confident-wrong finding (Table~\ref{tab:confident_wrong}) and 11--25\% prevalence validate these predictions empirically.
 
 \begin{definition}[Relation-Agnostic Embedding]
 \label{def:relation_agnostic}
