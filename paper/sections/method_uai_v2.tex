@@ -25,7 +25,7 @@ Novel-context detection by $U_{\text{str}}$ is perfect by construction since the
 
 \subsection{Theoretical Results}
 
-The following theorems formalize why existing methods fail. The results are not surprising---relation-agnostic methods obviously cannot detect relation-specific novelty---but the formalization serves three purposes: (1) it identifies the precise conditions (A1--A3) under which failure occurs, enabling empirical verification, (2) it explains why the 78\% confident-wrong finding is not a bug but an architectural inevitability, and (3) it establishes universality over \emph{all} combining functions $f(\sigma^2_h, \sigma^2_t)$, ruling out learned combinations. The assumptions A1--A3 are \emph{empirically verifiable} (we measure them), not definitions; if they failed to hold, the theorem would not apply.
+The following results formalize why existing methods fail. The intuition is unsurprising---relation-agnostic methods obviously cannot detect relation-specific novelty---but the formalization is non-trivial: (1) it identifies \emph{precise, falsifiable} conditions (A1--A3) under which failure occurs, enabling empirical verification rather than hand-waving, (2) it provides quantitative predictions (AUROC $\leq 0.5 + O(\epsilon)$) that we validate against observed values, and (3) it establishes universality over \emph{all} combining functions $f(\sigma^2_h, \sigma^2_t)$, ruling out learned combinations. The assumptions A1--A3 are \emph{empirically testable} (Table~\ref{tab:assumptions})---if they failed to hold, the theorem would not apply, making the result falsifiable rather than definitional.
 
 \begin{theorem}[Limitation of Relation-Agnostic Detection]
 \label{thm:impossibility}
@@ -38,7 +38,7 @@ where $\epsilon$ measures frequency-matching tightness (A3).
 
 \textbf{Proof sketch.} By A1, $\sigma^2_e$ is determined by $\text{freq}(e)$. By A3, novel-context triples have frequency-matched ID counterparts, so $U(h,r,t) \approx U(h',r',t')$, giving AUROC $\approx 1/2$. Full proof in Appendix~\ref{app:proof}. $\square$
 
-\textbf{Remark.} Theorem~\ref{thm:impossibility} formalizes an intuition that may seem obvious in hindsight: relation-agnostic uncertainty cannot detect relation-specific novelty. Yet this ``obvious'' limitation has not prevented widespread deployment of relation-agnostic methods without coverage tracking. The theorem's value is diagnostic: it identifies \emph{which} queries will fail (those satisfying A1--A3) and predicts \emph{how badly} (AUROC $\approx 0.5$). The 78\% confident-wrong finding (Table~\ref{tab:confident_wrong}) and 11--25\% prevalence validate these predictions empirically.
+\textbf{Remark (Non-triviality).} Theorem~\ref{thm:impossibility} formalizes an intuition that may seem obvious in hindsight: relation-agnostic uncertainty cannot detect relation-specific novelty. Yet this ``obvious'' limitation has not prevented widespread deployment of relation-agnostic methods without coverage tracking. The theorem's contribution is \emph{diagnostic}: it identifies \emph{which} queries will fail (those satisfying A1--A3), predicts \emph{how badly} (AUROC $\approx 0.5$), and proves universality over \emph{all} combining functions---including learned ones. The 78\% confident-wrong finding (Table~\ref{tab:confident_wrong}) and 11--25\% prevalence validate these predictions empirically, demonstrating the theorem is not vacuous.
 
 \begin{definition}[Relation-Agnostic Embedding]
 \label{def:relation_agnostic}

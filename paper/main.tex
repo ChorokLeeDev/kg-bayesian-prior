@@ -164,7 +164,7 @@ The deviation from exactly 0.5 is $O(\epsilon)$, controlled by the tightness of 
 
 \textbf{Step 1.} For novel context $(h,r,t)$ where $c(h,r) = 0$, the embedding $\phi(h)$ contains no information about whether $h$ has seen relation $r$ beyond what $\freq(h)$ reveals.
 
-\textbf{Step 2.} By A3, there exists ID triple $(h',r',t')$ with $|\freq(h) - \freq(h')| \leq \epsilon$. Since $\phi(h)$ depends only on frequency (not coverage), $\phi(h) \approx \phi(h')$ in the relevant statistical sense.
+\textbf{Step 2.} By A3, there exists ID triple $(h',r',t')$ with $|\freq(h) - \freq(h')| \leq \epsilon$. By Step 1, the conditional distribution $P(\phi(h) \mid \freq(h))$ does not depend on $c(h,r)$. Therefore, conditioned on $\freq(h) \approx \freq(h')$, the distributions $P(\phi(h))$ and $P(\phi(h'))$ are statistically indistinguishable---not point-wise equal, but drawn from the same conditional distribution.
 
 \textbf{Step 3.} Therefore $U(h,r,t) = F(\phi(h), \psi(r), \phi(t)) \approx F(\phi(h'), \psi(r'), \phi(t')) = U(h',r',t')$, giving AUROC $\approx 1/2$.
 
