@@ -4,4 +4,4 @@ Among Energy scoring's 100 most confident predictions on knowledge graphs, 78\%$
 
 We trace the failure to a structural mismatch: entity-level uncertainty cannot detect relation-specific novelty. High-frequency entities receive low uncertainty regardless of which relation is queried, causing methods to be \emph{most confident where they have least evidence}. On temporal KGs with ground-truth timestamps (ICEWS14/18), all baselines collapse to chance while a simple coverage check---tracking which (entity, relation) pairs appeared in training---achieves 0.99 AUROC.
 
-The fix is trivial: a hash table lookup. The contribution is the discovery: quantifying a pervasive failure mode hidden by aggregate evaluation metrics. We release code and recommend coverage tracking as standard practice for deployed KG systems.
+The fix is simple: track coverage via hash table. The contribution is quantifying and explaining a pervasive failure mode---affecting 11--25\% of queries---that aggregate evaluation metrics have hidden.
