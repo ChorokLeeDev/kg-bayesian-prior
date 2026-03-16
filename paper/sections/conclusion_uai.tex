@@ -1,30 +1,18 @@
-% Conclusion - NeurIPS revision (Blind Spot Exposure framing)
+% Conclusion - Reframed: Confident, not defensive
 
-We identify a systematic blind spot in all existing KG uncertainty methods: 11--25\% of test queries involve novel relational contexts where these methods report low uncertainty despite having no training evidence. We characterize why this failure is unavoidable for relation-agnostic estimators (Theorem~\ref{thm:impossibility}) and show all major methods---variational embeddings, ensembles, energy scoring---exhibit this pattern empirically. Worse, these methods are \emph{most confident} on zero-evidence queries: 78\%$\pm$3\% of Energy's top-100 predictions have no training evidence (Table~\ref{tab:confident_wrong}).
+We discover that KG uncertainty methods are systematically overconfident on zero-evidence queries: 78\% of Energy's top-100 predictions have no training evidence. This affects 11--25\% of test queries across seven benchmarks---a substantial failure mode hidden by aggregate evaluation.
 
-\textbf{The diagnosis is the contribution---not the fix.} A skeptical reader might object: ``Coverage detects zero-coverage; that's circular.'' But this conflates the trivial fix with the non-trivial diagnosis. The contributions are: (1) a formal characterization of when and why embedding-based methods fail on novel contexts---an intuition that, while perhaps obvious in hindsight, has not prevented widespread deployment without coverage tracking, (2) the 78\% confident-wrong finding showing that Energy assigns \emph{highest confidence} to zero-evidence queries (Table~\ref{tab:confident_wrong})---an empirical discovery about learned methods, not a tautology about coverage, and (3) quantifying that this blind spot affects 11--25\% of test queries. The blind spot has persisted because standard benchmarks leak inverse relations, aggregate AUROC masks per-category failures, and novel-context detection was never separately measured. On ICEWS14/18/GDELT with ground-truth timestamps, all baselines collapse to chance while a simple coverage check achieves 0.99 AUROC.
+The cause is structural: entity-level uncertainty cannot detect relation-specific novelty. High-frequency entities receive low uncertainty regardless of which relation is queried. Theorem~\ref{thm:impossibility} formalizes this, and our experiments confirm it holds across variational embeddings, ensembles, energy scoring, and foundation models (ULTRA achieves 0.29 AUROC---below random).
 
-\paragraph{Why training cannot fix this.}
-Theorem~\ref{thm:embedding_impossibility} shows that \emph{any} embedding-based uncertainty inherits the blind spot: embeddings encode semantic similarity, not which relations each entity has seen. More training data, larger models, or foundation architectures (e.g., ULTRA) do not escape this---the limitation is structural, not statistical. The only escape is explicit coverage tracking.
-
-\paragraph{Practical recommendations for KG deployment.}
+\paragraph{Practical recommendations.}
 \begin{enumerate}
-\item \textbf{Always track entity-relation coverage.} A hash table lookup (or Bloom filter for billion-entity KGs; Table~\ref{tab:bloom_scale}) catches the failure mode invisible to all learned methods. At Wikidata scale, Bloom filters require $\sim$33GB vs $\sim$174GB for exact storage, with $<$0.2pp recall loss. This is the single highest-impact recommendation and should be standard practice for any deployed KG system.
-\item \textbf{Flag or abstain on zero-coverage queries.} When $c(e,r)=0$, the model has never seen this entity with this relation. Either flag as high-uncertainty or abstain from prediction entirely.
-\item \textbf{Report stratified OOD metrics.} Aggregate AUROC conceals fundamental failure modes (Theorem~\ref{thm:impossibility}). Report emerging-entity and novel-context detection separately.
-\item \textbf{Do not trust confidence scores alone.} High confidence does not mean high evidence---methods are systematically overconfident on zero-evidence queries.
+\item \textbf{Track entity-relation coverage.} A hash table catches the failure mode invisible to learned methods. For billion-entity KGs, Bloom filters reduce storage 5$\times$ with $<$0.2pp recall loss.
+\item \textbf{Flag zero-coverage queries.} When $c(e,r)=0$, the model has no evidence for this combination.
+\item \textbf{Report stratified metrics.} Aggregate AUROC hides category-specific failures.
 \end{enumerate}
 
-\paragraph{Implications for KG training.}
-Current training objectives (BCE, margin loss, contrastive) optimize link prediction accuracy but provide no signal for coverage-aware uncertainty. Our RelCondVar experiments show that learning relation-conditioned variance requires explicit auxiliary supervision---and even then, the supervision encodes inverse frequency, creating circularity. \emph{Recommendation}: Keep training as-is for link prediction; add coverage tracking as a post-hoc module. Attempting to learn coverage from embeddings is provably futile (Theorem~\ref{thm:embedding_impossibility}).
-
-\paragraph{What we do not claim.}
-CAGP validates the decomposition; the primary practical contribution is \emph{zero-cost coverage tracking}, which can augment any existing KG system without retraining. ICEWS14/18 are \emph{solved cases}: coverage alone achieves 0.99 AUROC, so the semantic component provides zero additional gain---exactly as Empirical Regularity~1 predicts when $\rho \approx 0$.
-
 \paragraph{Limitations.}
-\textbf{Role-shift OOD defeats our approach.} On GDELT role-shift ($\rho = 0.84$), CAGP achieves only 0.57 AUROC---essentially no better than chance (\S\ref{sec:gdelt}). When coverage overlap is high (OOD entities are well-covered) \emph{and} entities are high-frequency (low variance), neither signal helps. Role-shift detection requires relation-conditioned uncertainty, which our decomposition does not provide. The approach also assumes transductive settings; inductive KGs require different mechanisms (an entity with no training triples has zero coverage for all relations). Semantic gains (+8--11pp) appear on static benchmarks where OOD partitions create emerging entities with partial coverage; on non-circular temporal benchmarks (ICEWS, GDELT), coverage alone suffices or both signals fail. A4 is violated on all benchmarks ($\Delta \geq 1.0$); Empirical Regularity~1 is thus an observed pattern rather than a worst-case guarantee.
-
-Future directions include inductive coverage tracking, GNN encoders with relation-aware variance, and conformal prediction wrappers for coverage guarantees.
+Coverage tracking fails on role-shift OOD (GDELT: 0.57 AUROC) where entities use atypical relations but have full coverage. This requires relation-conditioned methods beyond our scope. The approach assumes transductive settings; inductive KGs need different mechanisms.
 
 \paragraph{Reproducibility.}
-Code, trained models, and exact data splits will be released upon publication.
+Code, models, and data splits released upon publication.
