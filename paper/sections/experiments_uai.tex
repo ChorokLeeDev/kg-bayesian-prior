@@ -106,6 +106,13 @@ UKGE & \textbf{78\%} & 65\% & 62\% \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/confident_wrong_combined.pdf}
+\caption{\textbf{Energy-based uncertainty is overconfident on novel contexts.}
+(a) Among Energy's 100 most confident predictions on FB15k-237, 84\% have zero training evidence for the queried (entity, relation) pair---2.6$\times$ higher than the 32\% baseline. (b) These zero-coverage predictions achieve only 15.5\% Hits@1 (84.5\% Error@1), while the 16 predictions with coverage achieve 0\% Hits@1. The model is systematically most confident where it has the least basis for confidence.\label{fig:confident_wrong}}
+\end{figure}
+
 Table~\ref{tab:complementarity} confirms Empirical Regularity~1: $U_{\text{sem}}$ achieves near-random AUROC on novel contexts (0.34--0.40 on static benchmarks). These values are \textbf{significantly below 0.5} (one-sample t-test: FB15k-237 $t{=}{-}17.9$, $p{<}10^{-4}$; WN18RR $t{=}{-}11.2$, $p{<}10^{-3}$), confirming anti-predictive behavior: high-frequency novel-context entities have lower variance than in-distribution, so variance-based methods assign them \emph{higher} confidence. GNNSafe exhibits the same pattern on FB15k-237: 0.43 on novel contexts (anti-predictive), confirming the limitation applies to GNN-style architectures that still produce entity-level uncertainties.
 
 \paragraph{Why does GNNSafe succeed on WN18RR but fail elsewhere?}
