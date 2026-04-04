@@ -413,14 +413,14 @@ A potential objection is that 20 MC passes may be insufficient. We ablate over s
 
 \begin{table}[h]
 \centering
-\caption{MC Dropout AUROC vs. number of passes for novel-context detection. Increasing passes does not improve detection, confirming the issue is architectural.}
+\caption{MC Dropout AUROC vs. number of passes for novel-context detection. Increasing passes does not improve detection, confirming the issue is architectural (mean $\pm$ std over 3 seeds).}
 \label{tab:mc_ablation}
 \begin{tabular}{lcccc}
 \toprule
 Dataset & 10 passes & 20 passes & 30 passes & 50 passes \\
 \midrule
-FB15k-237 & .60 & .61 & .60 & .61 \\
-WN18RR & .47 & .47 & .48 & .47 \\
+FB15k-237 & .586$\pm$.014 & .587$\pm$.013 & .586$\pm$.014 & .586$\pm$.014 \\
+WN18RR & .455$\pm$.054 & .447$\pm$.066 & .447$\pm$.073 & .443$\pm$.064 \\
 \bottomrule
 \end{tabular}
 \end{table}
