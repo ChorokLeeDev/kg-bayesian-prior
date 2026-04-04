@@ -1,0 +1,7 @@
+% Abstract - Reframed: Empirical discovery first
+
+Among Energy scoring's 100 most confident predictions, zero-evidence queries are overrepresented 2.4$\times$ relative to the base rate---the model is \emph{most confident where it has least evidence}. This systematic overconfidence affects every major uncertainty method (variational embeddings, ensembles, energy scoring, foundation models) and 11--25\% of test queries across seven benchmarks.
+
+We trace the failure to a structural mismatch: entity-level uncertainty cannot detect relation-specific novelty. High-frequency entities receive low uncertainty regardless of which relation is queried, causing methods to be \emph{most confident where they have least evidence}. On temporal KGs with ground-truth timestamps (ICEWS14/18), baselines achieve 0.38--0.87 AUROC (varying by method and dataset) while a simple coverage check---tracking which (entity, relation) pairs appeared in training---achieves 0.99 AUROC.
+
+The fix is simple: track coverage via hash table. This is obvious in hindsight, yet no major uncertainty method implements it. The contribution is quantifying and explaining a pervasive failure mode---affecting 11--25\% of queries---that aggregate evaluation metrics have hidden.

@@ -1,0 +1,50 @@
+% RCUE: Relation-Conditioned Uncertainty Estimation for Knowledge Graphs
+% Target: NeurIPS 2026
+
+\documentclass{article}
+\usepackage[final]{neurips_2024}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{subcaption}
+
+\newcommand{\method}{RCUE}
+\newcommand{\cov}{\mathrm{cov}}
+
+\title{Relation-Conditioned Uncertainty Estimation\\for Knowledge Graph Embedding}
+
+\author{
+  Anonymous Author(s)
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Knowledge graph embedding (KGE) models learn continuous representations of entities and relations, but existing uncertainty quantification methods produce \emph{relation-agnostic} uncertainty: the same entity receives identical uncertainty regardless of which relation is queried. This blind spot causes models to be confidently wrong on \emph{novel contexts}---queries involving familiar entities in unseen relational contexts. We prove that relation-agnostic uncertainty \emph{cannot} detect novel contexts (AUROC $\leq$ 0.5), then introduce \textbf{RCUE} (Relation-Conditioned Uncertainty Estimation), where entity variance depends on the queried relation: $\sigma^2(e|r)$ instead of $\sigma^2(e)$. RCUE combines a learned variance network with a coverage-aware boost that amplifies uncertainty for unseen entity-relation pairs. Across four benchmarks (FB15k-237, WN18RR, YAGO3-10, ICEWS14), RCUE achieves 0.95--0.998 AUROC on novel context detection, improving over energy-based methods (+11--43pp), deep ensembles (+45pp), and probabilistic embeddings like UKGE (+45pp). The boost factor is learnable and converges to $\sim$3.5$\times$, validating that this is not an arbitrary heuristic. RCUE maintains competitive link prediction performance while providing reliable uncertainty for safety-critical deployment.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/method}
+\input{sections/theory}
+\input{sections/experiments}
+\input{sections/conclusion}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\appendix
+\input{sections/appendix}
+
+\end{document}

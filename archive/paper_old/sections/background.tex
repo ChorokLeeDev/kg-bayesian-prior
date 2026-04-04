@@ -1,0 +1,30 @@
+% Background - Problem Setup
+
+\paragraph{Knowledge Graphs.}
+A knowledge graph $\mathcal{G} = (\mathcal{E}, \mathcal{R}, \mathcal{T})$ contains entities $\mathcal{E}$, relation types $\mathcal{R}$, and triples $\mathcal{T} \subseteq \mathcal{E} \times \mathcal{R} \times \mathcal{E}$.
+Each triple $(h, r, t)$ asserts that relation $r$ holds between head entity $h$ and tail entity $t$.
+
+\paragraph{OOD Detection Task.}
+Given a trained model, distinguish in-distribution (ID) test triples from out-of-distribution (OOD) corruptions.
+Following \citet{bordes2013translating}, the standard protocol generates OOD triples by replacing the tail with a random entity: $(h, r, t) \to (h, r, t')$ where $t' \sim \text{Uniform}(\mathcal{E})$.
+However, this creates easily detectable corruptions (low model scores).
+We additionally evaluate on \emph{temporal OOD}---emerging entities and novel relational contexts---which are harder to detect (\S\ref{sec:experiments}).
+Performance is measured by AUROC.
+
+\paragraph{Variational KG Embedding Uncertainty (GP-KGE).}
+Probabilistic embedding methods~\citep{choudhary2021perm} learn Gaussian distributions over entity embeddings:
+\begin{equation}
+    \vect{e}_i \sim \mathcal{N}(\vect{\mu}_i, \text{diag}(\exp(\vect{\ell}_i)))
+\end{equation}
+where $\vect{\mu}_i, \vect{\ell}_i \in \mathbb{R}^d$ are the mean and log-variance for entity $i$.
+Uncertainty for a triple $(h, r, t)$ is typically the average entity variance:
+\begin{equation}
+    U_{\text{GP}}(h, r, t) = \frac{1}{2}\left(\bar{\sigma}^2_h + \bar{\sigma}^2_t\right)
+    \label{eq:gp_uncertainty}
+\end{equation}
+where $\bar{\sigma}^2_e = \frac{1}{d}\sum_j \exp(\ell_{e,j})$ is the mean variance across dimensions.
+We denote this entity-level uncertainty $U_{\text{sem}}$ (semantic uncertainty) in our decomposition (\S\ref{sec:method}).
+This uncertainty is \emph{relation-agnostic}---it depends only on entity variances, not the query relation $r$. Intuitively, an entity observed in 1000 triples receives low variance even for relations it has never appeared with, since $\bar{\sigma}^2_e$ reflects overall observation count rather than per-relation experience.
+
+\paragraph{Naming convention.}
+Despite the ``GP'' label inherited from~\citet{choudhary2021perm}, the model uses variational Gaussian inference (KL-regularized ELBO with reparameterization sampling)---not kernel-based Gaussian process posterior inference~\citep{rasmussen2006gaussian}. We use ``GP-KGE'' only when referencing the original method; our framework uses \emph{semantic uncertainty} ($U_{\text{sem}}$) to denote the diagonal posterior variance of a learned entity embedding, avoiding GP terminology.

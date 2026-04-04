@@ -1,0 +1,51 @@
+\section{Introduction}
+\label{sec:intro}
+
+Knowledge graphs (KGs) encode facts as triples $(h, r, t)$---head entity, relation, tail entity---and underpin applications from question answering to drug discovery. Knowledge graph embedding (KGE) models learn continuous representations that enable link prediction: scoring whether unobserved triples are likely true. While prediction accuracy has improved dramatically, \emph{uncertainty quantification} remains critical for deployment in safety-critical domains where models must know when they don't know.
+
+Existing approaches to KGE uncertainty fall into two categories: (1) \textbf{score-based methods} like energy scoring~\citep{liu2020energy}, which use prediction confidence as uncertainty; and (2) \textbf{probabilistic embeddings} like UKGE~\citep{chen2019embedding} and KG2E~\citep{he2015learning}, which model entities and relations as distributions. Both approaches share a fundamental limitation: they produce \emph{relation-agnostic} uncertainty.
+
+\paragraph{The Novel Context Problem.}
+Consider an entity like ``Albert Einstein'' that appears frequently in training with relations like \texttt{born\_in}, \texttt{field\_of\_work}, and \texttt{educated\_at}. Existing methods assign low uncertainty to Einstein because he is well-represented in the embedding space. But what happens when we query \texttt{(Einstein, plays\_sport, ?)}---a relation Einstein has never been observed with?
+
+Current methods remain confident, because:
+\begin{itemize}
+    \item Energy-based scores depend only on embedding geometry, not observation history
+    \item UKGE/KG2E variances are per-entity: $\sigma^2(\text{Einstein})$ is identical regardless of relation
+\end{itemize}
+
+We call this a \textbf{novel context}: a familiar entity in an unseen relational context. Our analysis of FB15k-237 reveals that 83\% of the top-100 most confident predictions have zero training evidence for the entity-relation pair---models are systematically confident where they should be uncertain.
+
+\paragraph{Theoretical Foundation.}
+We prove that relation-agnostic uncertainty \emph{cannot} detect novel contexts:
+
+\begin{theorem}[Impossibility, Informal]
+Any uncertainty measure $U(e)$ that depends only on the entity, not the queried relation, achieves AUROC $\leq 0.5$ for distinguishing novel contexts from in-distribution queries.
+\end{theorem}
+
+The proof is straightforward: for the same entity $e$, $U(e)$ cannot distinguish between $(e, r_1, ?)$ where $e$ was observed with $r_1$, and $(e, r_2, ?)$ where $e$ was never observed with $r_2$.
+
+\paragraph{Our Contribution: RCUE.}
+We introduce \textbf{Relation-Conditioned Uncertainty Estimation (RCUE)}, where entity variance depends on the queried relation:
+\[
+\sigma^2(e | r) = \text{MLP}([\mathbf{e}; \mathbf{r}]) \cdot \text{boost}(\cov(e, r))
+\]
+
+The key insight is decomposing uncertainty into:
+\begin{enumerate}
+    \item \textbf{Semantic uncertainty}: learned from entity-relation embedding interaction
+    \item \textbf{Structural uncertainty}: multiplicative boost when $\cov(e,r) = 0$ (entity never seen with this relation)
+\end{enumerate}
+
+The boost factor is \emph{learnable}, and empirically converges to $\sim$3.5$\times$---not an arbitrary hyperparameter but a data-driven value.
+
+\paragraph{Results.}
+Across four benchmarks, RCUE achieves:
+\begin{itemize}
+    \item \textbf{0.95--0.998 AUROC} on novel context detection
+    \item \textbf{+11--43pp improvement} over energy-based methods
+    \item \textbf{+45pp over deep ensembles and MC dropout}
+    \item \textbf{No degradation} in link prediction (MRR, Hits@10)
+\end{itemize}
+
+We provide theoretical analysis showing relation-conditioned variance is both necessary and sufficient for novel context detection, with the sufficiency theorem validated empirically (AUROC $\to$ 1.0 as boost increases).

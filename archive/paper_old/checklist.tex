@@ -1,0 +1,88 @@
+\section*{NeurIPS Paper Checklist}
+
+\begin{enumerate}
+
+\item {\bf Claims}
+    \item[] Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The abstract and introduction state three main claims: (1) impossibility theorem for entity-level uncertainty on novel contexts, (2) 78\% confident-wrong finding, and (3) CAGP achieving 0.90--0.99 AUROC. All are supported by Theorem~1, Table~5, and Table~1 respectively.
+
+\item {\bf Limitations}
+    \item[] Question: Does the paper discuss the limitations of the work performed by the authors?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Limitations are discussed throughout: (1) Assumption A4 is violated on all benchmarks (Appendix~A.5), (2) circularity in static benchmarks is disclosed in Remark~1, (3) YAGO uses only 3 seeds (Appendix~B.14), (4) the theorem provides directional insights under idealized conditions (Section~4).
+
+\item {\bf Theory assumptions and proofs}
+    \item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Assumptions A1--A6 are explicitly stated in Appendix~A.1. Complete proofs for Theorem~1 (Appendix~A.2), Theorem~2 (Appendix~A.3), and Theorem~3 (Appendix~A.6) are provided. Empirical verification of assumptions is in Appendix~A.5.
+
+    \item {\bf Experimental result reproducibility}
+    \item[] Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Training configuration (Appendix~B.6), dataset statistics (Appendix~B.7), OOD split methodology (Appendix~B.5), and result provenance (Appendix~B.13) are provided. All hyperparameters and seed values are specified.
+
+
+\item {\bf Open access to data and code}
+    \item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Complete source code, experiment scripts, and per-seed result logs are included in supplementary material (Appendix~B.13). All datasets (WN18RR, FB15k-237, YAGO3-10, ICEWS14, ICEWS18) are publicly available research benchmarks.
+
+
+\item {\bf Experimental setting/details}
+    \item[] Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer) necessary to understand the results?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Training configuration in Appendix~B.6 specifies: embedding dimension (100), learning rate ($10^{-3}$), batch size (1024), KL weight (0.001), epochs (30), optimizer (Adam), and number of seeds per dataset. OOD split methodology is detailed in Appendix~B.5.
+
+\item {\bf Experiment statistical significance}
+    \item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Main results (Tables~1--4) report mean$\pm$std over 5--10 seeds. Appendix~B.15 provides statistical significance tests (paired t-tests, 95\% CIs, Cohen's $d$) for key comparisons. Per-seed breakdowns in Appendix~B.14.
+
+\item {\bf Experiments compute resources}
+    \item[] Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Compute resources are detailed in Appendix~B.6: Google Colab T4/V100 GPUs, 10--30 minutes per run depending on dataset, approximately 50 GPU-hours total.
+
+\item {\bf Code of ethics}
+    \item[] Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics \url{https://neurips.cc/public/EthicsGuidelines}?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: This work presents diagnostic analysis of existing methods using publicly available research benchmarks. No human subjects, no new data collection, no dual-use concerns. Ethics statement provided before references.
+
+
+\item {\bf Broader impacts}
+    \item[] Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Ethics statement discusses positive impact (improving KG system reliability by flagging unreliable predictions) and notes no foreseeable negative impacts. The primary recommendation---coverage tracking---is a safety improvement.
+
+\item {\bf Safeguards}
+    \item[] Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pre-trained language models, image generators, or scraped datasets)?
+    \item[] Answer: \answerNA{}
+    \item[] Justification: This paper does not release pre-trained models, generators, or scraped datasets. The released code implements diagnostic methods for OOD detection on existing research benchmarks, posing no misuse risk.
+
+\item {\bf Licenses for existing assets}
+    \item[] Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: All datasets are cited: WN18RR~\citep{dettmers2018convolutional}, FB15k-237~\citep{toutanova2015observed}, YAGO3-10~\citep{mahdisoltani2015yago3}, ICEWS14/18~\citep{garcia2018learning}. All are publicly available research benchmarks under permissive licenses.
+
+\item {\bf New assets}
+    \item[] Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The released code includes README documentation, experiment scripts with clear naming conventions (Appendix~B.13), and comments explaining the implementation. No new datasets are introduced.
+
+\item {\bf Crowdsourcing and research with human subjects}
+    \item[] Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)?
+    \item[] Answer: \answerNA{}
+    \item[] Justification: This paper does not involve crowdsourcing or human subjects research.
+
+\item {\bf Institutional review board (IRB) approvals or equivalent for research with human subjects}
+    \item[] Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained?
+    \item[] Answer: \answerNA{}
+    \item[] Justification: This paper does not involve human subjects research.
+
+\item {\bf Declaration of LLM usage}
+    \item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does \emph{not} impact the core methodology, scientific rigor, or originality of the research, declaration is not required.
+    \item[] Answer: \answerNA{}
+    \item[] Justification: LLMs are not used as a component of the core methodology. The research methods (GP-based uncertainty, coverage tracking) do not involve LLMs.
+
+\end{enumerate}

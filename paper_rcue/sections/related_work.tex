@@ -1,0 +1,24 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Knowledge Graph Embeddings.}
+TransE~\citep{bordes2013translating} pioneered translational embeddings where $\mathbf{h} + \mathbf{r} \approx \mathbf{t}$. DistMult~\citep{yang2015embedding} uses bilinear scoring, while ComplEx~\citep{trouillon2016complex} extends to complex-valued embeddings. These methods focus on prediction accuracy, not uncertainty.
+
+\paragraph{Probabilistic KG Embeddings.}
+KG2E~\citep{he2015learning} represents entities and relations as Gaussians with learned mean and variance. However, the variance is \emph{per-entity}: $\sigma^2_e$ is a fixed parameter independent of which relation is queried. UKGE~\citep{chen2019embedding} models triple-level confidence but uses deterministic entity embeddings. BEUrRE~\citep{chen2021probabilistic} uses box embeddings where uncertainty corresponds to box volume, but box dimensions are entity-specific, not relation-conditioned.
+
+\textbf{Key distinction}: All prior probabilistic KGE methods produce relation-agnostic uncertainty. RCUE is the first to condition entity variance on the queried relation.
+
+\paragraph{Uncertainty Quantification in Deep Learning.}
+MC Dropout~\citep{gal2016dropout} approximates Bayesian inference via dropout at test time. Deep Ensembles~\citep{lakshminarayanan2017simple} use prediction variance across independently trained models. Energy-based OOD detection~\citep{liu2020energy} uses the energy function (negative log-sum-exp of logits). SNGP~\citep{liu2020simple} combines spectral normalization with Gaussian processes.
+
+When applied to KGE, these methods remain relation-agnostic: ensemble variance depends on entity embeddings, not observation history with specific relations.
+
+\paragraph{Graph Neural Networks and Uncertainty.}
+Graph Posterior Networks~\citep{stadler2021graph} propagate uncertainty through graph structure for node classification. GNNSafe~\citep{wu2023energy} adapts energy-based OOD detection to graphs. These target node-level tasks, not triple-level KG completion.
+
+\paragraph{Relation-Aware Scoring (but not Uncertainty).}
+R-GCN~\citep{schlichtkrull2018modeling} and CompGCN~\citep{vashishth2020composition} use relation-specific transformations for \emph{scoring}. However, relation-aware scoring does not imply relation-aware uncertainty---the uncertainty still comes from entity embeddings alone.
+
+\paragraph{Positioning RCUE.}
+RCUE addresses a gap: existing methods have relation-aware \emph{scoring} but relation-agnostic \emph{uncertainty}. We introduce relation-conditioned \emph{uncertainty} via $\sigma^2(e|r)$, which is necessary for detecting novel contexts where familiar entities appear with unseen relations.

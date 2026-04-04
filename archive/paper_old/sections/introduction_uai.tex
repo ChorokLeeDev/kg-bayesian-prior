@@ -1,0 +1,28 @@
+% Introduction - Reframed: Empirical discovery first, theory as explanation
+
+\paragraph{An Empirical Discovery.}
+Among Energy scoring's 100 most confident predictions on FB15k-237, zero-evidence queries appear at \textbf{2.4$\times$ the base rate}---the model is most confident precisely where it has no training evidence (Table~\ref{tab:confident_wrong}). The pattern holds across methods: UKGE shows 2.5$\times$ elevation, and both methods exhibit 1.5--2.1$\times$ elevation even after controlling for entity frequency. This is not miscalibration in the usual sense---it is \emph{systematic overconfidence on zero-evidence queries}.
+
+\paragraph{The Failure is Pervasive.}
+Across seven benchmarks, 11--25\% of test queries involve \emph{novel relational contexts}: familiar entities appearing in relationships never observed during training. Every major uncertainty method---variational embeddings~\citep{chen2019embedding,chen2021probabilistic}, Bayesian approaches~\citep{choudhary2021perm}, ensembles, energy scoring, and even foundation models like ULTRA~\citep{galkin2024ultra}---fails identically on these queries (AUROC $\leq$ 0.50). The failure has remained hidden because standard evaluation aggregates over query types, masking category-specific collapse.
+
+\paragraph{Why This Happens.}
+The explanation is intuitive: entity $e$ appearing in 1000 triples with relations $\{r_1, \ldots, r_{10}\}$ receives low variance (well-observed), yet queries $(?, r_{11}, e)$ are genuinely uncertain. Any uncertainty depending only on entity identity cannot distinguish these cases. We formalize this in Theorem~\ref{thm:impossibility}: under empirically-verified conditions, relation-agnostic uncertainty achieves AUROC $\leq 0.5$ on novel contexts---and often \emph{below} 0.5 (anti-predictive) because high-frequency entities dominate novel contexts yet receive lowest uncertainty. The theorem explains the overconfidence: high-frequency entities receive low uncertainty regardless of which relation is queried, so methods are most confident precisely where they lack evidence.
+
+\paragraph{The Fix.}
+Track which (entity, relation) pairs appeared during training via a hash table. This $O(1)$ lookup catches the failure mode invisible to all learned methods. The fix is obvious in hindsight---but no major uncertainty method implements it, and 11--25\% of queries fall into this blind spot. On ICEWS14/18 with ground-truth temporal splits, coverage achieves 0.99 AUROC while baselines achieve 0.38--0.87 (Table~\ref{tab:temporal_ood}).
+
+\paragraph{Contributions.}
+\textbf{(1) Empirical discovery}: We identify systematic overconfidence on zero-evidence queries---top-confident predictions contain zero-evidence queries at 2--2.5$\times$ the base rate. This finding, not previously reported, reveals a fundamental evaluation gap.
+\textbf{(2) Prevalence quantification}: 11--25\% of test queries across seven benchmarks fall into this blind spot, making it a substantial rather than edge-case failure.
+\textbf{(3) Theoretical explanation}: Theorem~\ref{thm:impossibility} formalizes why the failure occurs, providing testable conditions (A1--A3) that predict when AUROC degrades to chance.
+\textbf{(4) Validation}: On temporal KGs with ground-truth timestamps (ICEWS14/18), coverage achieves 0.99 AUROC---confirming the diagnosis is correct and the fix works.
+\textbf{(5) Practical recommendation}: Always track entity-relation coverage. For billion-entity KGs, Bloom filters reduce storage 5$\times$ with $<$0.2pp recall loss.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig1_main_results.pdf}
+
+\caption{Temporal OOD detection on FB15k-237 (AUROC). Existing methods achieve 0.42--0.63; coverage alone reaches 0.94. On ICEWS14 with ground-truth timestamps, coverage achieves 0.99 while baselines achieve 0.38--0.80.}
+\label{fig:main_results}
+\end{figure*}

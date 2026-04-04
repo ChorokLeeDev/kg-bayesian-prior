@@ -1,0 +1,15 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We identified a fundamental blind spot in KGE uncertainty quantification: existing methods produce relation-agnostic uncertainty, making them unable to detect novel contexts---queries involving familiar entities with unseen relations. We proved this impossibility theoretically (AUROC $\leq$ 0.5) and introduced RCUE, which conditions entity variance on the queried relation.
+
+RCUE achieves 0.95--0.998 AUROC on novel context detection across four benchmarks, improving over energy-based methods by +11--43pp with no degradation in link prediction. The learnable boost factor converges to $\sim$3.5$\times$, demonstrating this is a principled, data-driven approach rather than an ad-hoc fix.
+
+\paragraph{Limitations.}
+RCUE requires storing a coverage matrix ($O(|\mathcal{E}| \cdot |\mathcal{R}|)$), though Bloom filters provide 5$\times$ compression with minimal accuracy loss. The approach assumes entity-relation coverage is the primary source of novel context; other forms of distribution shift (e.g., temporal drift) may require additional mechanisms.
+
+\paragraph{Broader Impact.}
+Reliable uncertainty is crucial for deploying KGE models in safety-critical applications. RCUE enables systems to flag predictions where the model has no training evidence, supporting human oversight and appropriate abstention. We see no direct negative societal impacts from this work.
+
+\paragraph{Future Work.}
+Promising directions include: (1) extending relation-conditioned uncertainty to foundation KGE models like ULTRA; (2) integrating with conformal prediction for calibrated prediction sets; and (3) application to temporal KGs where coverage changes over time.

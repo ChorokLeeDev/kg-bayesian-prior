@@ -1,0 +1,25 @@
+% Related Work - NeurIPS version (heavily compressed for 9-page limit)
+
+\paragraph{Probabilistic KG Embeddings.}
+UKGE~\citep{chen2019embedding}, BEUrRE~\citep{chen2021probabilistic}, and GP-KGE~\citep{choudhary2021perm} learn uncertainty over KG embeddings, but all produce relation-agnostic variances.
+KG2E~\citep{he2015learning} assigns learned Gaussians per entity and relation type---fixed parameters, not conditioned on whether a specific entity has been observed with that relation.
+Despite training on entity-relation co-occurrence patterns, these methods do not learn relation-specific uncertainty, necessitating explicit decomposition.
+Relation-aware scoring (R-GCN~\citep{schlichtkrull2018modeling}, CompGCN~\citep{vashishth2020composition}) conditions \emph{predictions} on relations but still produces relation-agnostic uncertainty; our decomposition addresses uncertainty independently of scoring architecture.
+
+\paragraph{OOD Detection.}
+MC Dropout~\citep{gal2016dropout}, Deep Ensembles~\citep{lakshminarayanan2017simple}, Energy~\citep{liu2020energy}, and SNGP~\citep{liu2020simple} capture model uncertainty but not structural observation patterns.
+When applied using entity embeddings (as done here), they remain relation-agnostic.
+Graph Posterior Networks~\citep{stadler2021graph} and GNNSafe~\citep{wu2023energy} propagate uncertainty via graph structure but target node classification rather than triple-level KG OOD.
+The OpenOOD benchmark~\citep{zhang2023openood} provides stratified evaluation for images; our stratified KG evaluation (novel-context vs emerging-entity) is analogous but addresses relational structure.
+
+\paragraph{Temporal KGs and Conformal Prediction.}
+Temporal KG methods~\citep{garcia2018learning,lacroix2020tensor} model \emph{when} facts hold but do not address uncertainty quantification.
+Conformal prediction approaches~\citep{zhu2025conformalized,zhu2025certainty} provide prediction set coverage guarantees rather than OOD \emph{detection}; our decomposition complements them by identifying which uncertainty type drives unreliability.
+
+\paragraph{Foundation KGE.}
+ULTRA~\citep{galkin2024ultra} enables zero-shot link prediction on unseen KGs.
+We hypothesize ULTRA inherits the coverage blind spot: its NBFNet architecture encodes connectivity but not which specific relations each entity has seen.
+Empirical validation confirms this: ULTRA achieves 0.29--0.31 AUROC on novel contexts, below random, indicating anti-predictive behavior.
+
+\paragraph{Positioning.}
+Prior work treats uncertainty as a single quantity. We show KG uncertainty decomposes into semantic (entity-level) and structural (relation-specific) components, with validated predictions on when each is necessary. LLM-based KG methods use text and can transfer knowledge without training observation; our setting is structure-only embedding methods, where explicit coverage tracking is necessary.

@@ -1,0 +1,118 @@
+\section{Method}
+\label{sec:method}
+
+\subsection{Problem Setting}
+
+A knowledge graph $\mathcal{G} = (\mathcal{E}, \mathcal{R}, \mathcal{T})$ consists of entities $\mathcal{E}$, relations $\mathcal{R}$, and observed triples $\mathcal{T} \subseteq \mathcal{E} \times \mathcal{R} \times \mathcal{E}$. Given a query $(h, r, ?)$, link prediction ranks candidate tail entities by plausibility.
+
+\paragraph{Coverage.}
+We define the coverage function $\cov: \mathcal{E} \times \mathcal{R} \to \{0, 1\}$:
+\[
+\cov(e, r) = \begin{cases}
+1 & \text{if } \exists t: (e, r, t) \in \mathcal{T} \text{ or } (t, r, e) \in \mathcal{T} \\
+0 & \text{otherwise}
+\end{cases}
+\]
+This indicates whether entity $e$ has been observed with relation $r$ in training.
+
+\paragraph{Novel Context.}
+A test triple $(h, r, t)$ is in \textbf{novel context} if $\cov(h, r) = 0$ or $\cov(t, r) = 0$. The entity is familiar (seen in training), but appears with a relation it has never been observed with.
+
+\subsection{RCUE: Relation-Conditioned Uncertainty Estimation}
+
+RCUE models uncertainty as a function of both entity and relation:
+
+\paragraph{Entity and Relation Embeddings.}
+Each entity $e \in \mathcal{E}$ has embedding $\mathbf{e} \in \mathbb{R}^d$. Each relation $r \in \mathcal{R}$ has embedding $\mathbf{r} \in \mathbb{R}^d$. These are used for both scoring and uncertainty estimation.
+
+\paragraph{Scoring Function.}
+We use DistMult scoring:
+\[
+s(h, r, t) = \langle \mathbf{h}, \mathbf{r}, \mathbf{t} \rangle = \sum_{i=1}^d h_i \cdot r_i \cdot t_i
+\]
+Other scoring functions (TransE, ComplEx) are compatible with our uncertainty estimation.
+
+\paragraph{Relation-Conditioned Variance.}
+The core innovation is computing entity variance conditioned on the relation:
+\[
+\sigma^2(e | r) = f_\theta([\mathbf{e}; \mathbf{r}]) \cdot \text{boost}(\cov(e, r))
+\]
+
+where $f_\theta$ is a neural network:
+\[
+f_\theta(\mathbf{x}) = \text{Softplus}(\text{MLP}(\mathbf{x}))
+\]
+
+The MLP has two hidden layers with ReLU activations. Softplus ensures positive variance.
+
+\paragraph{Coverage Boost.}
+The multiplicative boost amplifies uncertainty for unseen entity-relation pairs:
+\[
+\text{boost}(c) = 1 + k \cdot (1 - c)
+\]
+
+For $\cov(e,r) = 1$ (seen): boost $= 1$ (no change)\\
+For $\cov(e,r) = 0$ (unseen): boost $= 1 + k$ (amplified)
+
+The boost factor $k$ is \emph{learnable}:
+\[
+k = \exp(\phi)
+\]
+where $\phi$ is a scalar parameter. This allows the model to learn the optimal separation between seen and unseen pairs.
+
+\paragraph{Triple Uncertainty.}
+For a triple $(h, r, t)$, the total uncertainty is:
+\[
+U(h, r, t) = \sigma^2(h | r) + \sigma^2(t | r)
+\]
+
+This sums the relation-conditioned variances for head and tail entities.
+
+\subsection{Training}
+
+The loss function combines link prediction and uncertainty objectives:
+\[
+\mathcal{L} = \mathcal{L}_\text{score} + \lambda \cdot \mathcal{L}_\text{unc}
+\]
+
+\paragraph{Score Loss.}
+Margin ranking loss for link prediction:
+\[
+\mathcal{L}_\text{score} = \sum_{(h,r,t) \in \mathcal{T}} \max(0, \gamma - s(h,r,t) + s(h,r,t'))
+\]
+where $t'$ is a corrupted (negative) tail and $\gamma$ is the margin.
+
+\paragraph{Uncertainty Loss.}
+Encourage higher uncertainty for negative samples:
+\[
+\mathcal{L}_\text{unc} = \sum_{(h,r,t) \in \mathcal{T}} \max(0, U(h,r,t) - U(h,r,t') + \epsilon)
+\]
+
+This trains the model to be more uncertain about negative (likely false) triples.
+
+\subsection{Why Multiplicative Boost?}
+
+We chose multiplicative over additive boost for theoretical and empirical reasons:
+
+\paragraph{Scale Invariance.}
+Multiplicative boost respects the scale of base variance:
+\begin{itemize}
+    \item High-variance entity in unseen context: even higher variance
+    \item Low-variance entity in unseen context: moderately higher variance
+\end{itemize}
+
+Additive boost ($\sigma^2 + k$) would dominate low-variance entities while barely affecting high-variance ones.
+
+\paragraph{Empirical Validation.}
+Experiments confirm multiplicative outperforms additive by +2pp AUROC.
+
+\subsection{Computational Complexity}
+
+RCUE adds minimal overhead:
+\begin{itemize}
+    \item \textbf{Parameters}: $O(2d \cdot h + h^2)$ for the MLP, plus one scalar $\phi$
+    \item \textbf{Coverage matrix}: $O(|\mathcal{E}| \cdot |\mathcal{R}|)$ binary values
+    \item \textbf{Inference}: One MLP forward pass per entity-relation pair
+\end{itemize}
+
+For large KGs, the coverage matrix can be replaced with a Bloom filter (5$\times$ compression, 0.14pp recall drop at 1\% FPR).

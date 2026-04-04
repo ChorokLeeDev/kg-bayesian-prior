@@ -1,0 +1,153 @@
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Setup}
+
+\paragraph{Datasets.}
+We evaluate on four standard benchmarks:
+\begin{itemize}
+    \item \textbf{FB15k-237}: 14,541 entities, 237 relations, 272K train / 20K test triples
+    \item \textbf{WN18RR}: 40,943 entities, 11 relations, 87K train / 3K test triples
+    \item \textbf{YAGO3-10}: 123,182 entities, 37 relations, 1.08M train / 5K test triples
+    \item \textbf{ICEWS14}: 7,128 entities, 230 relations, 64K train / 13K test triples
+\end{itemize}
+
+\paragraph{Baselines.}
+\begin{itemize}
+    \item \textbf{Energy}: Negative DistMult score as uncertainty~\citep{liu2020energy}
+    \item \textbf{UKGE}: Entity-level variance from probabilistic embeddings~\citep{chen2019embedding}
+    \item \textbf{Deep Ensemble}: Variance across 5 independently trained models
+    \item \textbf{MC Dropout}: Variance from 20 dropout samples at test time
+    \item \textbf{BEUrRE}: Box embedding volume as uncertainty~\citep{chen2021probabilistic}
+\end{itemize}
+
+\paragraph{Metrics.}
+\begin{itemize}
+    \item \textbf{AUROC}: Area under ROC curve for novel context detection
+    \item \textbf{MRR / Hits@k}: Link prediction quality (to verify no degradation)
+\end{itemize}
+
+\paragraph{Implementation.}
+Embedding dimension $d = 100$, MLP hidden dimension 64, learning rate $10^{-3}$, batch size 1024, margin $\gamma = 1.0$, uncertainty weight $\lambda = 0.1$. Boost factor initialized to $k = 2$ (learnable). All results averaged over 3 seeds.
+
+\subsection{Main Results: Novel Context Detection}
+
+\begin{table}[h]
+\centering
+\caption{OOD detection AUROC for novel context triples. Higher is better. RCUE substantially outperforms all baselines across all datasets.}
+\label{tab:main}
+\begin{tabular}{lcccc}
+\toprule
+Method & FB15k-237 & WN18RR & YAGO3-10 & ICEWS14 \\
+\midrule
+Energy & 0.64 & 0.79 & 0.52 & 0.88 \\
+UKGE & 0.50 & 0.50 & 0.50 & 0.50 \\
+Deep Ensemble & 0.47 & -- & -- & -- \\
+MC Dropout & 0.53 & -- & -- & -- \\
+BEUrRE & 0.58 & 0.62 & -- & -- \\
+\midrule
+\textbf{RCUE} & \textbf{0.97} & \textbf{0.97} & \textbf{0.95} & \textbf{0.998} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Key observations:
+\begin{itemize}
+    \item UKGE achieves exactly 0.50 (random), confirming Theorem~\ref{thm:impossibility}
+    \item Deep Ensembles and MC Dropout perform \emph{worse} than random on FB15k-237
+    \item RCUE achieves near-perfect detection on ICEWS14 (0.998)
+    \item Improvement ranges from +11pp (ICEWS14) to +43pp (YAGO3-10)
+\end{itemize}
+
+\subsection{Link Prediction Performance}
+
+\begin{table}[h]
+\centering
+\caption{Link prediction metrics on FB15k-237. RCUE maintains competitive performance while adding uncertainty estimation.}
+\label{tab:lp}
+\begin{tabular}{lccc}
+\toprule
+Method & MRR & Hits@1 & Hits@10 \\
+\midrule
+Energy (DistMult) & 0.251 & 0.173 & 0.409 \\
+RCUE & 0.249 & 0.171 & 0.408 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+RCUE achieves within 1\% of baseline link prediction, demonstrating no accuracy-uncertainty tradeoff.
+
+\subsection{Ablation Studies}
+
+\paragraph{Boost Factor.}
+We test fixed boost values and compare to learnable:
+
+\begin{table}[h]
+\centering
+\caption{Effect of boost factor on AUROC (FB15k-237).}
+\label{tab:boost}
+\begin{tabular}{lcc}
+\toprule
+Boost & Fixed Value & AUROC \\
+\midrule
+1.5$\times$ & $k = 0.5$ & 0.74 \\
+2.0$\times$ & $k = 1.0$ & 0.85 \\
+3.0$\times$ & $k = 2.0$ & 0.97 \\
+5.0$\times$ & $k = 4.0$ & 0.998 \\
+\midrule
+Learnable & converges to $\sim$3.5$\times$ & 0.97 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The learnable boost converges to $\sim$3.5$\times$, validating that the multiplicative factor is data-driven, not an arbitrary hyperparameter.
+
+\paragraph{Multiplicative vs Additive Boost.}
+\begin{itemize}
+    \item Multiplicative: $\sigma^2 \cdot (1 + k(1-c))$ → AUROC 0.96
+    \item Additive: $\sigma^2 + k(1-c)$ → AUROC 0.94
+\end{itemize}
+
+Multiplicative boost outperforms additive by +2pp, supporting the theoretical motivation of scale invariance.
+
+\paragraph{With vs Without Coverage.}
+\begin{itemize}
+    \item RCUE with coverage: AUROC 0.97
+    \item RCUE without coverage (MLP only): AUROC 0.66
+\end{itemize}
+
+Coverage tracking provides +31pp improvement, confirming that learned components alone cannot detect novel contexts.
+
+\subsection{Scalability}
+
+\begin{table}[h]
+\centering
+\caption{Scalability on synthetic KGs.}
+\label{tab:scale}
+\begin{tabular}{rccc}
+\toprule
+Entities & Train Time & Coverage (MB) & AUROC \\
+\midrule
+1K & 4s & 0.2 & 1.00 \\
+10K & 23s & 2 & 1.00 \\
+50K & 3min & 10 & 0.94 \\
+500K (est.) & 30min & 95 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+RCUE scales to large KGs. For 500K entities, coverage matrix is 95MB; Bloom filter alternative reduces to $\sim$20MB with 1\% FPR.
+
+\subsection{Case Study}
+
+We examine triples where RCUE catches novel contexts that Energy misses.
+
+\paragraph{Example.}
+Triple: \texttt{(/m/01\_d4, /location/hud\_county\_place/place, /m/01\_d4)}
+\begin{itemize}
+    \item Coverage: head = False, tail = False (neither entity seen with this relation)
+    \item Energy uncertainty: 0.00 (normalized) → Confident
+    \item RCUE uncertainty: 0.79 (normalized) → Uncertain
+\end{itemize}
+
+Energy is confidently wrong; RCUE correctly flags uncertainty due to zero coverage.

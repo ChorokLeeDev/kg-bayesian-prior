@@ -1,0 +1,118 @@
+% Experiments Section - NeurIPS version (heavily compressed for 9-page limit)
+
+\subsection{Experimental Setup}
+
+\paragraph{Datasets.}
+Static benchmarks with simulated temporal OOD: \textbf{FB15k-237} (14.5K entities, 237 relations), \textbf{WN18RR} (40.9K, 11). Temporal KGs with ground-truth timestamps: \textbf{ICEWS14} (7.1K, 230), \textbf{ICEWS18} (23K, 256), where OOD categories emerge from chronological splits---breaking the definitional coupling between coverage and OOD labels.
+
+\paragraph{Baselines.}
+UKGE~\citep{chen2019embedding}, Energy~\citep{liu2020energy}, Deep Ensembles~\citep{lakshminarayanan2017simple}, and single signals ($U_{\text{sem}}$, $U_{\text{str}}$). All share identical splits, hyperparameters (dim$=$100, lr$=10^{-3}$, 30 epochs), and evaluation protocol.
+
+\paragraph{Metrics.}
+AUROC (primary). WN18RR/ICEWS18 use 5 seeds; FB15k-237/ICEWS14 use 10 seeds; YAGO3-10 uses 3 seeds (directionally consistent but less statistically precise; Appendix~\ref{app:per_seed}). Statistical significance: CAGP vs.\ baselines $p < 0.001$; effect sizes $d > 5$ (Appendix~\ref{app:significance}).
+
+\subsection{Main Results}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Temporal OOD detection} ($\tau{=}25^{\text{th}}$ pctl, multi-seed mean$\pm$std). Em.\ = emerging-entity AUROC; All = overall. $^\ddagger$Simulated splits. $^*$Ground-truth temporal splits.\label{tab:temporal_ood}}
+\resizebox{\linewidth}{!}{%
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{l cc cc cc cc}
+\toprule
+ & \multicolumn{2}{c}{WN18RR$^\ddagger$} & \multicolumn{2}{c}{FB15k-237$^\ddagger$}
+ & \multicolumn{2}{c}{\textbf{ICEWS14}$^*$}
+ & \multicolumn{2}{c}{\textbf{ICEWS18}$^*$} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+Method & Em. & All & Em. & All & Em. & All & Em. & All \\
+\midrule
+UKGE       & .49  & .49\tiny{$\pm$.01} & .38 & .41\tiny{$\pm$.01} & .41 & .38\tiny{$\pm$.01} & .81 & .78\tiny{$\pm$.01} \\
+Energy     & .60  & .60\tiny{$\pm$.02} & .51 & .51\tiny{$\pm$.01} & .60 & .59\tiny{$\pm$.01} & .92 & .87\tiny{$\pm${\textless}.01} \\
+Deep Ens.  & .53  & .53\tiny{$\pm$.01} & .63 & .63\tiny{$\pm$.01} & .74 & .80\tiny{$\pm${\textless}.01} & .82 & .80\tiny{$\pm$.01} \\
+\midrule
+$U_{\text{sem}}$ & .71 & .62\tiny{$\pm${\textless}.01} & .62 & .42\tiny{$\pm${\textless}.01} & .98 & .84\tiny{$\pm${\textless}.01} & .99 & .91\tiny{$\pm${\textless}.01} \\
+$U_{\text{str}}$ & .83 & .86\tiny{$\pm${\textless}.01} & .78 & .94\tiny{$\pm${\textless}.01} & .98 & .99\tiny{$\pm${\textless}.01} & .98 & .99\tiny{$\pm${\textless}.01} \\
+\midrule
+CAGP       & \textbf{.91} & \textbf{.92}\tiny{$\pm$.001} & .89 & \textbf{.97}\tiny{$\pm$.001} & \textbf{1.0} & \textbf{.99}\tiny{$\pm${\textless}.01} & \textbf{.98} & \textbf{.99}\tiny{$\pm${\textless}.01} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\textbf{Key findings} (Table~\ref{tab:temporal_ood}). \emph{Non-circular evidence (ICEWS14/18):} On temporal KGs with ground-truth timestamps, $U_{\text{str}}$ achieves 0.99 AUROC while baselines achieve 0.38--0.87. This is not circular---OOD is defined by timestamp, not coverage. On ICEWS, CAGP$\approx U_{\text{str}}$ because $\rho \approx 0$ (nearly all emerging entities lack coverage), leaving no room for semantic tiebreaking---exactly as Theorem~\ref{thm:info_decomp}(iii) predicts. \emph{Semantic gains on static benchmarks:} Where $\rho > 0$ (34--66\% coverage overlap), semantic variance adds +8--11pp on emerging entities over coverage alone (WN18RR: +8pp, FB15k-237: +11pp; both $p < 0.001$). \emph{Circularity disclosure:} On static benchmarks, novel-context AUROC$=$1.0 by construction; these are diagnostic, not performance claims.
+
+\subsection{Confident-Wrong Analysis}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Confident-wrong analysis}: Fraction of top-K most confident predictions with zero training evidence, and elevation relative to baseline. Confidence: negative energy score (Energy) or predicted probability (UKGE). ``Zero evidence'': at least one of $c(h,r)=0$ or $c(t,r)=0$. Baseline: fraction of all test triples with zero evidence. Results: 5-seed mean$\pm$std on FB15k-237.\label{tab:confident_wrong}}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Method & Top-100 & Top-500 & Top-1000 & Elevation \\
+\midrule
+\multicolumn{5}{l}{\textit{FB15k-237} (baseline: 32\%)} \\
+Energy & 78\%$\pm$3 & 57\%$\pm$2 & 51\%$\pm$1 & \textbf{2.4$\times$} \\
+UKGE & 80\%$\pm$4 & 61\%$\pm$3 & 56\%$\pm$2 & \textbf{2.5$\times$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:confident_wrong} reveals score-based methods are \emph{most confident} on zero-evidence queries. Among Energy's top-100 predictions, zero-evidence queries appear at 2.4$\times$ the base rate (78\% vs 32\% baseline). This elevation---not the absolute percentage---is the key finding: methods systematically assign highest confidence to queries with no training evidence. \textbf{Coverage tracking directly addresses this}: all zero-evidence queries would be flagged as high uncertainty.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Stratified OOD detection} (multi-seed mean). Nov.\ = novel-context AUROC (1.0 by construction on static benchmarks$^\ddagger$; non-circular on ICEWS$^*$).\label{tab:complementarity}}
+\resizebox{\linewidth}{!}{%
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{lccc ccc ccc ccc}
+\toprule
+ & \multicolumn{3}{c}{WN18RR$^\ddagger$} & \multicolumn{3}{c}{FB15k-237$^\ddagger$} & \multicolumn{3}{c}{\textbf{ICEWS14}$^*$} & \multicolumn{3}{c}{\textbf{ICEWS18}$^*$} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-13}
+Method & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All & Em. & Nov. & All \\
+\midrule
+$U_{\text{sem}}$ & .71 & .40 & .62 & .62 & .34 & .42 & .98 & .78 & .84 & .99 & .83 & .91 \\
+$U_{\text{str}}$ & .83 & \textbf{1.0} & .86 & .78 & \textbf{1.0} & .94 & .98 & \textbf{1.0} & .99 & .98 & \textbf{1.0} & .99 \\
+CAGP & \textbf{.91} & \textbf{1.0} & \textbf{.92} & \textbf{.89} & \textbf{1.0} & \textbf{.97} & \textbf{1.0} & \textbf{1.0} & \textbf{.99} & \textbf{.98} & \textbf{1.0} & \textbf{.99} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Table~\ref{tab:complementarity} confirms Empirical Regularity~1: $U_{\text{sem}}$ achieves 0.34--0.40 on novel contexts (significantly below 0.5, $p < 10^{-3}$). This \emph{anti-predictive} behavior (AUROC $<$ 0.5 means high uncertainty correlates with ID, not OOD) occurs because novel-context entities are high-frequency (by definition, $\freq(e) > \tau$), hence receive \emph{lower} variance than ID entities---the opposite of what OOD detection requires. This is consistent with Theorem~\ref{thm:impossibility}'s bound: the theorem guarantees AUROC $\leq$ 0.5, and the observed values fall within this bound.
+
+\subsection{Adversarial Evaluation: ICEWS14 Strict Split}
+
+Inverse relations can inflate temporal OOD performance. We construct a \emph{strict split} removing all inverse-relation overlap (58.5\% removed).
+
+\begin{table}[t]
+\centering
+\caption{\textbf{ICEWS14 strict split} (10-seed mean). Energy collapses; coverage is unaffected.\label{tab:strict_split}}
+\small
+\begin{tabular}{lcc}
+\toprule
+Method & Original & Strict Split \\
+\midrule
+Energy & .59$\pm$.007 & .50$\pm$.007 \\
+$U_{\text{str}}$ & .99$\pm${\textless}.001 & \textbf{1.0}$\pm${\textless}.001 \\
+CAGP & 1.0$\pm${\textless}.001 & \textbf{1.0}$\pm${\textless}.001 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Energy collapses to chance (0.59$\to$0.50, $p < 0.001$); CAGP maintains 1.00 AUROC (Table~\ref{tab:strict_split}).
+
+\subsection{Negative Result: GDELT Role-Shift}
+\label{sec:gdelt}
+
+CAGP fails when coverage overlap is high. On GDELT role-shift ($\rho = 0.84$, 500K entities): semantic achieves 0.50 AUROC (random), structural achieves 0.58, CAGP achieves 0.57. When 84\% of OOD has full coverage, neither signal works. Role-shift OOD requires relation-conditioned methods beyond our scope.
+
+\subsection{Cross-Domain: Biomedical KGs and Foundation Models}
+
+\paragraph{Hetionet.} On drug-disease relations, 61.7\% are novel contexts. Energy achieves 0.50 (random); Coverage achieves 1.00. Under inductive splits (new diseases), 99\% of predictions involve coverage blind spots.
+
+\paragraph{ULTRA.} The KG foundation model achieves 0.29 AUROC on novel contexts---\emph{below random}---confirming Theorem~\ref{thm:embedding_impossibility}: scale does not fix the blind spot.
+
+\subsection{Ablations}
+
+Removing $\mathcal{L}_{\text{margin}}$ causes $<$0.1pp change; reparameterization is essential (without it: 0.92$\to$0.72, $p < 0.001$). Standard random-corruption OOD: CAGP ties best single signal (Appendix~\ref{app:standard_ood_full}).
