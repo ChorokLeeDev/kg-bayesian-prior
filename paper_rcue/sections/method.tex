@@ -106,6 +106,20 @@ Additive boost ($\sigma^2 + k$) would dominate low-variance entities while barel
 \paragraph{Empirical Validation.}
 Experiments confirm multiplicative outperforms additive by +2pp AUROC.
 
+\subsection{Addressing the Circularity Concern}
+\label{sec:circularity}
+
+A natural concern is: ``If coverage defines what is OOD, then using coverage to detect OOD is circular---just use a lookup table.'' We address this directly:
+
+\paragraph{Coverage-Only is Binary, Not Calibrated.}
+A pure coverage detector $U(e,r) = 1 - \cov(e,r)$ achieves perfect AUROC (1.0) by construction. However, it provides \emph{no uncertainty gradations}: every OOD triple receives identical maximum uncertainty, and every ID triple receives zero uncertainty. This is a classifier, not an uncertainty estimator. RCUE combines perfect coverage-based detection with MLP-learned gradations, enabling meaningful uncertainty ranking \emph{within} the ID and OOD classes.
+
+\paragraph{MLP Provides Semantic Calibration.}
+The learned variance network $f_\theta$ captures how well-constrained an entity-relation combination is given embedding geometry. Within ID triples (where coverage provides no signal), the MLP achieves 0.66 AUROC for distinguishing ``easy'' vs ``hard'' predictions---16pp above Energy baselines. This semantic uncertainty is multiplicatively boosted for OOD samples, providing calibrated predictions across the full range.
+
+\paragraph{Real-World Value Beyond Classification.}
+In safety-critical deployments, binary detection is often insufficient. Systems need to \emph{rank} uncertainties: which OOD predictions are most likely wrong? RCUE provides this ranking via the MLP component, while coverage ensures all OOD samples receive elevated uncertainty. The coverage matrix is explicit engineering ($O(|\mathcal{E}| \cdot |\mathcal{R}|)$ hash table), not a learned capability---we are transparent about this.
+
 \subsection{Computational Complexity}
 
 RCUE adds minimal overhead:

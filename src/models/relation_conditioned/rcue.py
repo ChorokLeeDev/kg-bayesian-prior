@@ -67,6 +67,10 @@ class RCUE(nn.Module):
             nn.Softplus()  # Ensure positive variance
         )
 
+        # Learnable boost factor: k = exp(boost_logit)
+        # boost(cov=0) = 1 + k, boost(cov=1) = 1
+        self.boost_logit = nn.Parameter(torch.tensor(0.7))  # ~2.0 initial boost
+
         # Coverage matrix (precomputed from training data)
         self.register_buffer(
             'coverage',
@@ -103,11 +107,12 @@ class RCUE(nn.Module):
 
         # Coverage as multiplicative factor:
         # - coverage=1 (seen): variance stays as is
-        # - coverage=0 (unseen): variance boosted by factor
+        # - coverage=0 (unseen): variance boosted by factor (1 + k)
         if self.use_coverage:
             cov = self.coverage[entity_ids, relation_ids]  # [batch]
-            # Boost factor: 1.0 for seen, 3.0 for unseen
-            boost = 1.0 + 2.0 * (1.0 - cov)
+            # Learnable boost: k = exp(boost_logit)
+            k = torch.exp(self.boost_logit)
+            boost = 1.0 + k * (1.0 - cov)
             variance = base_variance * boost
         else:
             variance = base_variance
