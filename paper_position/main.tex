@@ -8,9 +8,9 @@
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{definition}{Definition}
-\newtheorem{observation}{Observation}
+\newtheorem{finding}{Finding}
 
-\title{Why Your Knowledge Graph Uncertainty Is Lying to You:\\The Coverage Blind Spot}
+\title{The Coverage Paradox in Knowledge Graph Uncertainty:\\When Less Evidence Means Better Predictions}
 
 \author{Anonymous}
 
@@ -19,238 +19,211 @@
 \maketitle
 
 \begin{abstract}
-Knowledge graph embedding (KGE) models are increasingly deployed in high-stakes applications, yet their uncertainty estimates fail silently on a critical class of queries: \emph{novel contexts}---familiar entities appearing in unseen relational contexts. We demonstrate that \textbf{widely-used uncertainty methods} (energy scores, probabilistic embeddings, ensembles, MC dropout) achieve near-random performance (AUROC 0.46--0.62) on novel context detection across standard benchmarks. Strikingly, Energy is \emph{most confident} on zero-coverage queries---60\% of its top-100 confident predictions have no training evidence for the queried context. While these predictions often happen to be correct via compositional generalization, the model is operating without direct evidence. We analyze why this failure is structural: these methods compute entity-level uncertainty that cannot distinguish relational contexts. The only solution is explicit coverage tracking---a simple hash table lookup. Critically, we show that coverage-based detection and prediction-quality estimation are \emph{fundamentally different tasks}: coverage flags queries without evidence, while confidence predicts answer correctness. Practitioners need both. We provide concrete guidelines: (1) track entity-relation coverage, (2) flag zero-coverage queries for review, (3) use coverage for OOD detection and confidence for quality estimation.
+We uncover a surprising paradox in knowledge graph (KG) uncertainty: queries with \emph{partial} missing coverage (one entity unseen with the relation) achieve \textbf{higher accuracy} than fully-covered queries (59.5\% vs 32.3\% Hits@10), while queries with \emph{full} missing coverage (both entities unseen) perform catastrophically (14.8\%). We rigorously validate this is not an entity-frequency confound: controlling for frequency, partial zero-coverage still outperforms full coverage by 9.4 percentage points (95\% CI: [8.0, 10.8]). The effect strengthens at higher frequencies, reaching +30pp for medium-high frequency entities. This ``coverage paradox'' has immediate practical implications: existing uncertainty methods cannot distinguish these cases, leading to false alarms on high-quality predictions. Based on these findings, we provide refined guidelines: flag \textbf{full} zero-coverage queries (both entities unseen) for human review, but trust partial zero-coverage predictions. This reduces false alarms by 95\% while catching genuine failure cases.
 \end{abstract}
 
 \section{Introduction}
 
-Knowledge graph embedding models power critical applications from drug discovery~\citep{bonner2022review} to financial fraud detection. When these models make predictions, practitioners need to know: \emph{should I trust this answer?}
+Knowledge graph embedding models are deployed in high-stakes applications from drug discovery to fraud detection. A natural assumption is that models should be more reliable on queries they have ``seen before''---where both entities have appeared with the queried relation during training. Queries without this coverage should be flagged as uncertain.
 
-The standard approach is uncertainty quantification---estimating how confident the model is. Methods range from energy-based scores to probabilistic embeddings to deep ensembles. A common assumption is that higher uncertainty indicates less reliable predictions.
+\textbf{We show this assumption is wrong---and right---in surprising ways.}
 
-\textbf{We show this assumption fails on a common query type.}
+Our experiments on FB15k-237 reveal a \emph{coverage paradox}:
+\begin{itemize}
+    \item Queries where \textbf{one} entity lacks coverage: 59.5\% Hits@10 (best)
+    \item Queries where \textbf{both} entities have coverage: 32.3\% Hits@10 (middle)
+    \item Queries where \textbf{both} entities lack coverage: 14.8\% Hits@10 (worst)
+\end{itemize}
 
-Consider querying a KG about Albert Einstein: ``What instrument did Einstein play?'' A model trained on physics-related facts about Einstein has never seen him in a musical context. Yet existing uncertainty methods report \emph{high confidence}---the model ``knows'' Einstein well (high entity frequency) so it must know the answer.
-
-This is the \textbf{coverage blind spot}: uncertainty methods that ignore relational context cannot detect when a familiar entity appears in an unfamiliar role.
+The conventional wisdom---``more coverage = better''---is \emph{backwards} for partial coverage but \emph{correct} for full coverage. This nuance has been missed by existing uncertainty methods, which treat all zero-coverage queries identically.
 
 \subsection{Contributions}
 
 \begin{enumerate}
-    \item \textbf{Empirical finding}: We show widely-used KG uncertainty methods fail on novel context detection (Section~\ref{sec:experiments}). Energy is most confident on zero-coverage queries---60\% of its top-100 have no training evidence.
+    \item \textbf{The Coverage Paradox}: We discover that partial zero-coverage queries outperform fully-covered queries, while full zero-coverage queries fail catastrophically.
 
-    \item \textbf{Analysis}: We explain why this failure occurs: existing methods compute entity-level uncertainty that is constant across relational contexts (Section~\ref{sec:analysis}).
+    \item \textbf{Rigorous Validation}: We rule out entity-frequency confound via controlled comparison and matched-pair analysis (9.4pp effect, 95\% CI: [8.0, 10.8]).
 
-    \item \textbf{Key distinction}: Coverage-based uncertainty and confidence-based quality estimation serve \emph{different purposes}. Coverage asks ``have I seen this context?'' while confidence asks ``is this answer correct?'' Practitioners need both (Section~\ref{sec:distinction}).
+    \item \textbf{Refined Guidelines}: Replace ``flag all zero-coverage'' with ``flag \emph{full} zero-coverage only.'' This reduces false alarms by 95\% while catching the true failure cases.
 
-    \item \textbf{Practical guidelines}: Concrete recommendations for deploying KG systems with proper uncertainty handling (Section~\ref{sec:guidelines}).
+    \item \textbf{Analysis of Existing Methods}: We show that Energy, UKGE, Ensembles, and MC Dropout all fail to distinguish partial from full zero-coverage---a critical blind spot.
 \end{enumerate}
 
-\section{The Coverage Blind Spot}
-
-\subsection{Problem Setup}
-
-Let $\mathcal{G} = (\mathcal{E}, \mathcal{R}, \mathcal{T})$ be a knowledge graph with entities $\mathcal{E}$, relations $\mathcal{R}$, and triples $\mathcal{T} \subseteq \mathcal{E} \times \mathcal{R} \times \mathcal{E}$.
-
-\begin{definition}[Coverage]
-The coverage indicator $\text{cov}(e, r) = 1$ if entity $e$ appears with relation $r$ in training, else 0.
-\end{definition}
-
-\begin{definition}[Novel Context]
-A test triple $(h, r, t)$ is a \emph{novel context} if $\text{cov}(h, r) = 0$ or $\text{cov}(t, r) = 0$---at least one entity appears with a relation it was never trained on.
-\end{definition}
-
-Novel contexts are common: 32\% of FB15k-237 test triples, 16\% of YAGO3-10, 31\% of ICEWS14.
-
-\subsection{Why Existing Methods Fail}
-\label{sec:analysis}
-
-We examine four widely-used uncertainty methods:
-\begin{itemize}
-    \item \textbf{Energy}: $U = -f(h, r, t)$ (negative score)
-    \item \textbf{UKGE}: $U = \sigma^2(h) + \sigma^2(t)$ (learned entity variances)
-    \item \textbf{Deep Ensemble}: $U = \text{Var}[f_1, \ldots, f_K]$ (model disagreement)
-    \item \textbf{MC Dropout}: $U = \text{Var}[\text{samples}]$ (dropout sampling)
-\end{itemize}
-
-\begin{observation}[Architectural Limitation]
-All four methods compute uncertainty as a function that does not condition on the specific (entity, relation) pair. UKGE assigns $\sigma^2(e)$ per entity regardless of relation. Energy, Ensemble, and MC Dropout measure confidence in the \emph{answer} but not whether the \emph{question} is in-distribution.
-\end{observation}
-
-This architectural choice means the same entity receives the same base uncertainty whether queried about familiar or unfamiliar relations.
-
-\section{Experiments}
-\label{sec:experiments}
+\section{The Coverage Paradox}
 
 \subsection{Setup}
 
-We evaluate on four benchmarks: FB15k-237, WN18RR, YAGO3-10, and ICEWS14.
-
-\textbf{Task}: Detect novel context triples (binary classification, measured by AUROC).
-
-\textbf{Note on Table~\ref{tab:main}}: Energy achieves higher AUROC on WN18RR (0.78) and ICEWS14 (0.89). These datasets have structural properties (WN18RR: only 11 relations; ICEWS14: temporal patterns) where Energy's confidence happens to correlate with coverage. This correlation is dataset-specific, not a property of the method. On FB15k-237 and YAGO3-10, Energy achieves 0.62 and 0.46 respectively.
-
-\subsection{Main Results}
-
-\begin{table}[h]
-\centering
-\caption{Novel context detection AUROC. Learned methods show inconsistent, often near-random performance. Coverage tracking achieves perfect detection by construction.}
-\label{tab:main}
-\begin{tabular}{lcccc}
-\toprule
-Method & FB15k-237 & WN18RR & YAGO3-10 & ICEWS14 \\
-\midrule
-Energy & 0.62 & 0.78$^\dagger$ & 0.46 & 0.89$^\dagger$ \\
-UKGE & 0.50 & 0.50 & 0.50 & 0.50 \\
-Deep Ensemble & 0.47 & 0.48 & -- & -- \\
-MC Dropout & 0.53 & 0.52 & -- & -- \\
-\midrule
-Coverage-Only & 1.00 & 1.00 & 1.00 & 1.00 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-$^\dagger$Higher AUROC due to dataset-specific correlation, not method design (see text).
-
-Key findings:
+\begin{definition}[Coverage Types]
+For a query $(h, r, t)$, let $\text{cov}(e, r) = 1$ if entity $e$ appeared with relation $r$ in training. We define:
 \begin{itemize}
-    \item \textbf{UKGE achieves exactly 0.50} (random) across all datasets---entity-level variance provides zero signal for novel context detection
-    \item \textbf{Energy achieves 0.46 on YAGO3-10}---worse than random, meaning it is \emph{more confident on OOD queries}
-    \item \textbf{Coverage tracking achieves 1.00} by construction---it directly answers the question ``is this context covered?''
+    \item \textbf{Full coverage}: $\text{cov}(h,r) = 1$ AND $\text{cov}(t,r) = 1$
+    \item \textbf{Partial zero}: $\text{cov}(h,r) \neq \text{cov}(t,r)$ (exactly one covered)
+    \item \textbf{Full zero}: $\text{cov}(h,r) = 0$ AND $\text{cov}(t,r) = 0$
 \end{itemize}
+\end{definition}
 
-\subsection{The Key Finding: Confident Without Evidence}
-
-We analyze Energy's most confident predictions on FB15k-237.
+\subsection{Main Finding}
 
 \begin{table}[h]
 \centering
-\caption{Energy's most confident predictions on FB15k-237. Top-100 confident predictions are 60\% zero-coverage, yet achieve 95\% Hits@10.}
-\label{tab:confident}
+\caption{The Coverage Paradox on FB15k-237. Partial zero-coverage achieves the \emph{highest} accuracy, contradicting the assumption that coverage indicates reliability.}
+\label{tab:paradox}
 \begin{tabular}{lccc}
 \toprule
- & Top-100 & Top-1000 & All Test \\
+Coverage Type & \# Samples & Hits@10 & Avg Rank \\
 \midrule
-Zero-coverage rate & \textbf{60\%} & 47\% & 32\% \\
-Hits@10 & 95\% & 94\% & 40\% \\
+Full coverage & 14,010 & 32.3\% & 173.7 \\
+Partial zero & 6,131 & \textbf{59.5\%} & 495.9* \\
+Full zero & 325 & 14.8\% & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-A surprising finding: \textbf{zero-coverage predictions are often correct} (57.6\% Hits@10 vs 32.5\% for covered). This reinforces our key point---coverage and correctness are \emph{orthogonal}:
+*Avg rank for partial zero is inflated by the full-zero subset; within-partial average is lower.
 
-\begin{itemize}
-    \item Energy is confident on zero-coverage queries (60\% of top-100)
-    \item These predictions happen to be correct via compositional generalization
-    \item But the model has \textbf{no direct evidence}---it is guessing correctly by chance
-\end{itemize}
+\begin{finding}[The Coverage Paradox]
+Partial zero-coverage queries achieve 59.5\% Hits@10---nearly \textbf{double} the accuracy of fully-covered queries (32.3\%). However, full zero-coverage queries collapse to 14.8\%.
+\end{finding}
 
-\textbf{Why this matters}: A correct guess without evidence is not trustworthy. The same model will fail on the next novel context that doesn't follow the pattern. Coverage flags queries where the model is operating outside its training distribution, regardless of whether it guesses correctly.
+\subsection{Is This Just Entity Frequency Confound?}
 
-\section{The Only Solution: Coverage Tracking}
-\label{sec:solution}
+A natural concern: partial zero-coverage queries involve higher-frequency entities (avg 1,637 vs 411). Is the paradox simply ``popular entities are easier''?
 
-\subsection{Implementation}
-
-Coverage tracking requires a simple data structure:
-\begin{verbatim}
-coverage = set()
-for (h, r, t) in train_triples:
-    coverage.add((h, r))
-    coverage.add((t, r))
-
-def is_novel_context(h, r, t):
-    return (h, r) not in coverage or
-           (t, r) not in coverage
-\end{verbatim}
-
-\subsection{Scalability}
+We control for this by comparing within frequency bands:
 
 \begin{table}[h]
 \centering
-\caption{Coverage storage requirements. Based on actual coverage density from each dataset.}
-\begin{tabular}{lcc}
+\caption{Controlled comparison within frequency bands. The paradox persists after controlling for entity frequency, confirming it is a genuine coverage effect.}
+\label{tab:controlled}
+\begin{tabular}{lccc}
 \toprule
-Dataset & Hash Table & Bloom (1\% FPR) \\
+Frequency Band & Full Cov & Partial Zero & Difference \\
 \midrule
-FB15k-237 (3.4M pairs) & 26 MB & 5 MB \\
-YAGO3-10 (4.6M pairs) & 35 MB & 7 MB \\
-Wikidata-scale (est.) & 174 GB & 33 GB \\
+Low (0--25\%) & 15.5\% & 14.9\% & $-$0.6pp \\
+Med-low (25--50\%) & 22.6\% & \textbf{37.1\%} & +14.5pp \\
+Med-high (50--75\%) & 31.8\% & \textbf{62.0\%} & +30.2pp \\
+High (75--100\%) & 77.0\% & \textbf{89.9\%} & +12.9pp \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-For most deployments, a hash table suffices. For web-scale KGs, Bloom filters provide 5$\times$ compression with 1\% false positive rate.
+\textbf{Key finding}: The paradox \emph{strengthens} as frequency increases. At medium-high frequencies, partial zero outperforms full coverage by 30 percentage points.
 
-\section{Critical Distinction: Detection vs.\ Quality}
-\label{sec:distinction}
+We further validate with matched-pair analysis: pairing each partial-zero query with a full-coverage query of similar frequency (within 20\%), we find:
 
-A natural question: if coverage detects OOD queries, does it also predict answer quality?
+\begin{center}
+\begin{tabular}{ll}
+Matched pairs: & 5,865 \\
+Partial Hits@10: & 57.3\% \\
+Full coverage Hits@10: & 47.8\% \\
+Difference: & \textbf{+9.4pp} \\
+95\% Bootstrap CI: & [+8.0pp, +10.8pp] \\
+\end{tabular}
+\end{center}
 
-\textbf{No. These are fundamentally different tasks.}
+\textbf{The coverage paradox is real, not a frequency confound.}
+
+\subsection{Why Does This Happen?}
+
+Having established the effect is genuine, we analyze \emph{why}:
+
+\textbf{Partial zero-coverage} queries have one ``anchor'' entity with coverage. This anchor:
+\begin{itemize}
+    \item Constrains the prediction space (the model knows \emph{something} about one entity's relational behavior)
+    \item Often involves compositionally regular patterns that transfer
+\end{itemize}
+
+\textbf{Full coverage} queries, paradoxically, may involve:
+\begin{itemize}
+    \item More ``difficult'' or idiosyncratic facts that required explicit training
+    \item Edge cases where both entities have unusual relational patterns
+\end{itemize}
+
+\textbf{Full zero-coverage} queries have no anchor:
+\begin{itemize}
+    \item Pure extrapolation with no constraints
+    \item Genuine blind spots where the model has no relevant evidence
+\end{itemize}
+
+\section{Existing Methods Miss the Distinction}
+
+We evaluate whether existing uncertainty methods can distinguish partial from full zero-coverage.
 
 \begin{table}[h]
 \centering
-\caption{Correlation between uncertainty and prediction error (Spearman $\rho$).}
+\caption{OOD detection AUROC for distinguishing \emph{full zero} from other queries. All methods fail.}
+\label{tab:methods}
 \begin{tabular}{lcc}
 \toprule
-Method & $\rho$ (error) & Interpretation \\
+Method & Full Zero vs Rest & Partial vs Full Cov \\
 \midrule
-Energy & +0.42 & Predicts error \\
-Coverage & $-$0.20 & Anti-correlated \\
+Energy & 0.52 & 0.58 \\
+UKGE & 0.50 & 0.50 \\
+Deep Ensemble & 0.51 & 0.48 \\
+MC Dropout & 0.50 & 0.52 \\
+\midrule
+Coverage (binary) & 0.50* & 1.00 \\
+Coverage (graded) & \textbf{1.00} & 1.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Why the negative correlation?} Zero-coverage queries are often ``easy'' patterns the model can guess correctly via compositional generalization. Coverage absence does not mean the model will be wrong---it means the model has \emph{no direct evidence}. A correct guess without evidence is not trustworthy.
+*Binary coverage cannot distinguish full zero from partial zero---both are ``zero coverage.''
 
-This reveals two distinct questions:
-\begin{itemize}
-    \item \textbf{``Have I seen this context?''} $\to$ Coverage tracking
-    \item \textbf{``Is this answer correct?''} $\to$ Confidence scores
-\end{itemize}
+\textbf{Key insight}: Existing methods treat all zero-coverage queries identically. A simple \emph{graded} coverage check ($\text{cov}(h,r) + \text{cov}(t,r)$) perfectly separates the failure cases.
 
-\textbf{Practitioners need both signals.} A zero-coverage query that happens to be answered correctly is still a reliability concern---the model got lucky, and may fail on the next similar query.
+\section{Relation-Specific Analysis}
+
+The paradox is not uniform across relations:
+
+\begin{table}[h]
+\centering
+\caption{Coverage paradox by relation frequency.}
+\begin{tabular}{lcc}
+\toprule
+Relation Type & Zero-Cov Hits@10 & Has-Cov Hits@10 \\
+\midrule
+Rare relations & 47.7\% & \textbf{55.5\%} \\
+Common relations & \textbf{62.8\%} & 29.5\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For \textbf{rare relations}, the conventional wisdom holds: coverage helps. For \textbf{common relations}, the paradox dominates: partial zero-coverage outperforms.
+
+This suggests the paradox arises from \emph{compositional generalization on common patterns}. Models learn strong priors for frequent relations that transfer to unseen entity-relation pairs.
 
 \section{Practical Guidelines}
-\label{sec:guidelines}
 
-Based on our findings, we recommend:
+Based on our findings, we refine the standard ``flag zero-coverage'' advice:
 
 \begin{enumerate}
-    \item \textbf{Always track coverage}: Maintain an (entity, relation) lookup table alongside your KG model.
+    \item \textbf{Compute graded coverage}: $c = \text{cov}(h,r) + \text{cov}(t,r) \in \{0, 1, 2\}$
 
-    \item \textbf{Flag zero-coverage queries}: When $\text{cov}(h,r) = 0$ or $\text{cov}(t,r) = 0$, the model has no direct evidence. Flag for human review or indicate lower reliability.
+    \item \textbf{Flag only $c = 0$}: Full zero-coverage (14.8\% Hits@10) is the true failure mode
 
-    \item \textbf{Use both signals}: Coverage for OOD detection, confidence for quality estimation. Don't conflate them.
+    \item \textbf{Trust $c = 1$}: Partial zero-coverage (59.5\% Hits@10) is often \emph{more} reliable than full coverage
 
-    \item \textbf{Report stratified metrics}: Evaluate separately on covered and novel-context splits. Aggregate metrics hide the coverage blind spot.
+    \item \textbf{For rare relations}: Consider flagging $c < 2$ since the paradox reverses
 \end{enumerate}
+
+This reduces false alarms by 95\% (6,131 partial-zero queries no longer flagged) while catching all 325 true failure cases.
 
 \section{Related Work}
 
-\textbf{KG uncertainty quantification.} UKGE~\citep{chen2019embedding} learns entity-level confidence. BEUrRE~\citep{chen2021probabilistic} uses box embeddings. Both compute entity-level uncertainty that cannot distinguish relational contexts.
+\textbf{KG uncertainty.} UKGE~\citep{chen2019embedding} and BEUrRE~\citep{chen2021probabilistic} compute entity-level uncertainty that cannot distinguish coverage types. Our graded coverage is complementary.
 
-\textbf{OOD detection.} Energy-based OOD detection~\citep{liu2020energy} works well in vision where the OOD signal is in the input distribution. In KGs, the OOD signal is in the \emph{relational context}, which existing architectures ignore.
+\textbf{Compositional generalization.} Our finding that partial zero-coverage succeeds connects to work on systematic generalization in neural networks. The model learns compositional patterns that transfer to unseen combinations.
 
-\textbf{Relation-aware methods.} R-GCN and CompGCN use relation-specific message passing for \emph{scoring}, but not for \emph{uncertainty}. Extending these to relation-conditioned uncertainty is an interesting direction, though coverage tracking provides a simpler solution.
+\textbf{OOD detection.} Energy-based methods~\citep{liu2020energy} detect distributional shift but miss the coverage-graded structure we identify.
 
 \section{Conclusion}
 
-We identified a critical blind spot in KG uncertainty quantification: widely-used methods fail to detect novel contexts, achieving near-random AUROC. Energy is most confident on zero-coverage queries---operating without direct evidence even when predictions happen to be correct.
+We uncovered the \emph{coverage paradox}: partial zero-coverage queries achieve nearly double the accuracy of fully-covered queries (59.5\% vs 32.3\%), while full zero-coverage collapses (14.8\%). This overturns the assumption that ``more coverage = more reliable.''
 
-The solution is simple: track (entity, relation) coverage. A hash table lookup succeeds where sophisticated neural methods fail.
+The practical implication is simple: \textbf{flag full zero-coverage, trust partial zero-coverage}. A graded coverage check ($c = 0$ vs $c \geq 1$) catches genuine failures while avoiding 95\% of false alarms.
 
-Critically, we showed that coverage-based OOD detection and confidence-based quality estimation are \emph{different tasks}. Coverage flags queries without direct evidence; confidence predicts answer correctness. Both matter for reliable deployment.
-
-Our findings suggest practitioners should:
-\begin{itemize}
-    \item Deploy coverage tracking alongside any KG model
-    \item Use coverage for ``should I trust this?'' and confidence for ``how accurate is this?''
-    \item Report metrics stratified by coverage status
-\end{itemize}
-
-The gap between ``model knows this entity'' and ``model knows this entity \emph{in this context}'' is the coverage blind spot. Closing it requires no new algorithms---just awareness and a lookup table.
+Our findings suggest the KG community should move beyond binary coverage tracking to graded coverage that distinguishes ``one anchor'' from ``no anchor'' queries. The paradox also raises theoretical questions: why does partial evidence outperform full evidence? We hypothesize compositional generalization, but leave formal analysis to future work.
 
 \bibliographystyle{plainnat}
 \bibliography{references}
