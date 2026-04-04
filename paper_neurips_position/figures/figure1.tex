@@ -1,0 +1,67 @@
+% Figure for semantic-structural gap
+% Include this in main.tex with \input{figures/figure1}
+
+\begin{figure}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.3}
+
+\begin{tabular}{c|c|c|}
+\multicolumn{1}{c}{} & \multicolumn{1}{c}{\textbf{Low Semantic Unc.}} & \multicolumn{1}{c}{\textbf{High Semantic Unc.}} \\
+\cline{2-3}
+\rotatebox{90}{\parbox{2cm}{\centering\textbf{High Structural}}} &
+\begin{tabular}{c}
+\fbox{\parbox{3.2cm}{\centering
+\textcolor{red}{\textbf{BLIND SPOT}}\\[2pt]
+\scriptsize Entity never seen with $r$\\
+\scriptsize Embeddings look fine!\\[3pt]
+\scriptsize \textit{67--100\% error rate}\\
+\scriptsize \textit{MC Drop: 0.36 AUROC}
+}}
+\end{tabular}
+&
+\begin{tabular}{c}
+\fbox{\parbox{3.2cm}{\centering
+\textbf{Detectable}\\[2pt]
+\scriptsize Novel context\\
+\scriptsize High variance\\[3pt]
+\scriptsize \textit{Standard methods}\\
+\scriptsize \textit{can flag this}
+}}
+\end{tabular}
+\\
+\cline{2-3}
+\rotatebox{90}{\parbox{2cm}{\centering\textbf{Low Structural}}} &
+\begin{tabular}{c}
+\fbox{\parbox{3.2cm}{\centering
+\textcolor{green!50!black}{\textbf{Reliable}}\\[2pt]
+\scriptsize Entity seen with $r$\\
+\scriptsize Embeddings trained\\[3pt]
+\scriptsize \textit{Standard case}\\
+\scriptsize \textit{Well-handled}
+}}
+\end{tabular}
+&
+\begin{tabular}{c}
+\fbox{\parbox{3.2cm}{\centering
+\textbf{Detectable}\\[2pt]
+\scriptsize Known context\\
+\scriptsize Uncertain embeddings\\[3pt]
+\scriptsize \textit{MC Dropout/Ensemble}\\
+\scriptsize \textit{can detect}
+}}
+\end{tabular}
+\\
+\cline{2-3}
+\end{tabular}
+
+\vspace{0.3cm}
+\begin{tabular}{ll}
+\scriptsize $\blacktriangleright$ \textbf{Standard methods} (MC Dropout, Deep Ensemble, Energy): & \scriptsize Detect high \emph{semantic} uncertainty only \\
+\scriptsize $\blacktriangleright$ \textbf{Coverage lookup}: & \scriptsize Detects high \emph{structural} uncertainty (top-left quadrant) \\
+\end{tabular}
+
+\caption{The semantic-structural gap in KGE uncertainty. Standard methods capture only semantic uncertainty (embedding variance), missing the \textbf{blind spot} where entities have well-trained embeddings but have never been observed with the query relation. This quadrant has 67--100\% error rates yet MC Dropout achieves only 0.36 AUROC---worse than random.}
+\label{fig:quadrant}
+\end{figure}

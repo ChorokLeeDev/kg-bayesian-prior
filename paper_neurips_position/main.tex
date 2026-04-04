@@ -115,6 +115,9 @@ For query $(h, r, t)$, coverage level is:
 
 Coverage is a \textbf{structural property}---it depends only on training set composition, not on learned parameters.
 
+% Figure: Semantic-Structural Gap
+\input{figures/figure1}
+
 %==============================================================================
 \section{Evidence: Standard Methods Fail Catastrophically}
 \label{sec:evidence}
@@ -360,5 +363,62 @@ The fix is simple: track entity-relation coverage with a hash table. This trivia
 
 \bibliographystyle{plainnat}
 \bibliography{references}
+
+%==============================================================================
+\appendix
+%==============================================================================
+
+\section{Additional Baselines and Ablations}
+\label{app:ablations}
+
+\subsection{Bayesian KGE Methods: UKGE and SNGP}
+
+To address the concern that we only tested post-hoc uncertainty methods, we evaluate two methods designed for uncertainty-aware KGE:
+
+\begin{itemize}
+    \item \textbf{UKGE}~\citep{chen2019ukge}: Models confidence scores per triple using probabilistic soft logic
+    \item \textbf{SNGP} (Spectral-normalized Neural GP): A modern Bayesian approach using distance-aware uncertainty
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\caption{Bayesian KGE baselines. Both UKGE and SNGP fail to detect novel-context queries, confirming that embedding-derived uncertainty cannot capture structural gaps.}
+\label{tab:bayesian_baselines}
+\begin{tabular}{llccc}
+\toprule
+Dataset & Method & Overall & Emerging & Novel-ctx \\
+\midrule
+\multirow{2}{*}{FB15k-237}
+& SNGP & .46 & .62 & \textbf{.39} \\
+& Coverage & .66 & .72 & 1.00 \\
+\midrule
+\multirow{2}{*}{YAGO3-10}
+& UKGE & .68 & .79 & \textbf{.58} \\
+& Coverage & .70 & .75 & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both UKGE (0.58 AUROC) and SNGP (0.39 AUROC) achieve near-random or below-random performance on novel-context detection, confirming that any method deriving uncertainty from embeddings faces the same fundamental limitation.
+
+\subsection{MC Dropout: Effect of Sample Count}
+
+A potential objection is that 20 MC passes may be insufficient. We ablate over sample counts (10, 20, 30, 50 passes) on FB15k-237 and WN18RR:
+
+\begin{table}[h]
+\centering
+\caption{MC Dropout AUROC vs. number of passes for novel-context detection. Increasing passes does not improve detection, confirming the issue is architectural.}
+\label{tab:mc_ablation}
+\begin{tabular}{lcccc}
+\toprule
+Dataset & 10 passes & 20 passes & 30 passes & 50 passes \\
+\midrule
+FB15k-237 & .60 & .61 & .60 & .61 \\
+WN18RR & .47 & .47 & .48 & .47 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+AUROC remains flat across pass counts ($\sim$0.47--0.61), demonstrating that the failure is not due to insufficient sampling but to the fundamental limitation that dropout variance measures embedding sensitivity, not coverage.
 
 \end{document}
