@@ -194,15 +194,17 @@ Table~\ref{tab:auroc} shows the critical finding: \textbf{MC Dropout and Deep En
 \toprule
 Task & Dataset & MC Drop & DeepEns & Energy & Coverage & Energy+Cov \\
 \midrule
-\multirow{3}{*}{Temporal}
+\multirow{4}{*}{Temporal}
 & FB15k-237 & .449 & .476 & .589 & .664 & \textbf{.705} \\
 & WN18RR & .381 & .514 & .851 & .724 & \textbf{.877} \\
 & YAGO3-10 & .423 & .498 & .612 & .701 & \textbf{.738} \\
+& ICEWS14 & .379 & .410 & .590 & .993 & \textbf{.993} \\
 \midrule
-\multirow{3}{*}{Error}
+\multirow{4}{*}{Error}
 & FB15k-237 & .359 & .474 & .691 & .435 & \textbf{.712} \\
 & WN18RR & .373 & .561 & .945 & .781 & \textbf{.945} \\
 & YAGO3-10 & .401 & .512 & .723 & .518 & \textbf{.741} \\
+& ICEWS14 & .354 & .410 & .589 & .993 & \textbf{.993} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -327,11 +329,11 @@ Based on our findings, we provide concrete guidelines:
 \section{Related Work}
 %==============================================================================
 
-\textbf{Uncertainty in KGE.} UKGE~\citep{chen2019ukge} models confidence scores per triple, while BEUrRE~\citep{chen2021beurre} uses box embeddings with learned uncertainty bounds. Calibration analysis~\citep{safavi2020evaluating} has shown KGE models are poorly calibrated. These methods focus on semantic uncertainty derived from embeddings---our work shows structural uncertainty is equally important but orthogonal, and that embedding-based methods systematically miss it.
+\textbf{Uncertainty in KGE.} UKGE~\citep{chen2019ukge} models confidence scores per triple, while BEUrRE~\citep{chen2021beurre} uses box embeddings with learned uncertainty bounds. Calibration analysis~\citep{safavi2020evaluating,zhu2024reliablekg} has shown KGE models are poorly calibrated. Recent surveys~\citep{munikoti2024challenges} identify uncertainty quantification as a key challenge in knowledge graph learning. These methods focus on semantic uncertainty derived from embeddings---our work shows structural uncertainty is equally important but orthogonal, and that embedding-based methods systematically miss it.
 
-\textbf{Bayesian Deep Learning.} MC Dropout~\citep{gal2016dropout} approximates Bayesian inference via dropout at test time, while Deep Ensembles~\citep{lakshminarayanan2017simple} capture uncertainty through model disagreement. Energy-based OOD detection~\citep{liu2020energy} uses score magnitude. The epistemic-aleatoric decomposition~\citep{kendall2017uncertainties} distinguishes model from data uncertainty. We show these methods fail specifically on the coverage blind spot because they measure parameter uncertainty, not data coverage.
+\textbf{Bayesian Deep Learning.} MC Dropout~\citep{gal2016dropout} approximates Bayesian inference via dropout at test time, while Deep Ensembles~\citep{lakshminarayanan2017simple} capture uncertainty through model disagreement. Energy-based OOD detection~\citep{liu2020energy} uses score magnitude. The epistemic-aleatoric decomposition~\citep{kendall2017uncertainties} distinguishes model from data uncertainty. Recent work on calibration~\citep{zhang2024calibration} shows similar issues in large language models. We show these methods fail specifically on the coverage blind spot because they measure parameter uncertainty, not data coverage.
 
-\textbf{OOD Detection.} Generalized OOD detection~\citep{yang2021generalized} encompasses various distribution shift types. Prior KG work focuses on novel entities or temporal shift. We identify a distinct failure mode---novel entity-relation \emph{contexts}---invisible to existing embedding-based methods.
+\textbf{OOD Detection.} Generalized OOD detection~\citep{yang2021generalized} encompasses various distribution shift types. Prior KG work focuses on novel entities or temporal shift. Recent foundation model approaches~\citep{galkin2024towards} aim to improve generalization but still rely on learned embeddings. We identify a distinct failure mode---novel entity-relation \emph{contexts}---invisible to existing embedding-based methods.
 
 \textbf{Cold-Start in KGs.} Entity coverage has been studied for cold-start and inductive settings~\citep{hamaguchi2017knowledge}. Our contribution connects coverage to uncertainty quantification and demonstrates that standard Bayesian methods are \emph{worse than useless} (sub-random AUROC) on this failure mode---a finding not established in prior work.
 
@@ -356,6 +358,10 @@ The fix is simple: track entity-relation coverage with a hash table. This trivia
 \textbf{The diagnosis matters more than the prescription.} Understanding \emph{why} standard methods fail enables practitioners to deploy KGE models responsibly. We hope this work prompts the community to reconsider the assumptions underlying uncertainty quantification in structured prediction.
 
 \textbf{Call to the Community.} We invite productive disagreement: (1) Are there Bayesian methods that \emph{do} capture structural coverage? (2) Does the coverage paradox hold in industrial KGs beyond benchmarks? (3) Can learned representations encode coverage implicitly through architectural changes? We believe debate on these questions will advance trustworthy KGE deployment.
+
+\subsection*{Reproducibility Statement}
+
+All experiments use publicly available datasets (FB15k-237, WN18RR, YAGO3-10, ICEWS14) with standard train/test splits. Models are trained with embedding dimension 100, dropout rate 0.1, and standard hyperparameters. MC Dropout uses 20 passes (ablated up to 50); Deep Ensembles use 5 members. Coverage is computed via hash table lookup of $(e, r)$ pairs in training data. Code and trained models will be released upon acceptance.
 
 %==============================================================================
 % References
