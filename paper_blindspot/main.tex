@@ -24,10 +24,10 @@
 \begin{abstract}
 We identify a fundamental gap in uncertainty quantification for knowledge graph embeddings: existing methods capture \emph{semantic} uncertainty (embedding confidence) but miss \emph{structural} uncertainty (whether the model has training signal for a query context).
 This gap manifests as a ``coverage blind spot''---queries where neither entity has been observed with the query relation achieve 67--100\% error rates across all model architectures, yet standard uncertainty methods provide no warning.
-Surprisingly, popular Bayesian approaches (MC Dropout, Deep Ensemble) perform \emph{worse than random} (0.36--0.56 AUROC) on detecting these failures, because they only measure semantic uncertainty.
+Surprisingly, popular Bayesian approaches (MC Dropout, Deep Ensemble) perform \emph{near random} (0.51--0.63 AUROC) on detecting these failures, because they only measure semantic uncertainty.
 We propose combining semantic and structural signals via a coverage-energy ensemble, achieving 0.70--0.95 AUROC across datasets.
-Our neural variant learns context-dependent weighting, improving error prediction by up to 21\% (p$<$0.001).
-The coverage blind spot affects all tested architectures (DistMult, ComplEx, TransE) and represents 2--8\% of real queries---a predictable failure mode invisible to current practice.
+Our neural variant learns context-dependent weighting, improving error prediction by up to 28\% (p$<$0.001).
+The coverage blind spot affects all tested architectures (DistMult, ComplEx, TransE) and represents 1.6--2\% of real queries---a predictable failure mode invisible to current practice.
 \end{abstract}
 
 %==============================================================================
@@ -57,7 +57,7 @@ For these queries:
 \begin{itemize}
     \item Error rates reach \textbf{67--100\%} across all model architectures
     \item Standard uncertainty methods \textbf{fail to detect} the problem
-    \item MC Dropout and Deep Ensemble perform \textbf{worse than random guessing}
+    \item MC Dropout and Deep Ensemble perform \textbf{near random guessing}
 \end{itemize}
 
 The fix is simple: combine semantic uncertainty (energy) with structural uncertainty (coverage).
@@ -67,11 +67,11 @@ But the diagnosis is what matters---without understanding \emph{why} standard me
 \begin{enumerate}
     \item \textbf{Conceptual}: We distinguish semantic vs.\ structural uncertainty in KGE models and show why this distinction is critical (Section~\ref{sec:framework}).
 
-    \item \textbf{Empirical}: We demonstrate that MC Dropout (0.36--0.45 AUROC) and Deep Ensemble (0.47--0.56 AUROC) fail catastrophically---worse than random---because they lack structural awareness (Section~\ref{sec:experiments}).
+    \item \textbf{Empirical}: We demonstrate that MC Dropout (0.51--0.63 AUROC) and Deep Ensemble (0.58--0.60 AUROC) perform near random on novel-context detection because they lack structural awareness (Section~\ref{sec:experiments}).
 
-    \item \textbf{Methodological}: We propose coverage-energy ensembles that combine both uncertainty types, with a neural variant achieving up to 21\% improvement over energy-only baselines (Section~\ref{sec:method}).
+    \item \textbf{Methodological}: We propose coverage-energy ensembles that combine both uncertainty types, with a neural variant achieving up to 28\% improvement over energy-only baselines (Section~\ref{sec:method}).
 
-    \item \textbf{Comprehensive}: We validate across 3 model architectures, 3 datasets, and multiple random seeds with statistical significance (p$<$0.001) (Section~\ref{sec:experiments}).
+    \item \textbf{Comprehensive}: We validate across 3 model architectures, 2 datasets, and multiple random seeds with statistical significance (p$<$0.001) (Section~\ref{sec:experiments}).
 \end{enumerate}
 
 %==============================================================================
@@ -140,7 +140,7 @@ Dataset & Model & Zero & Partial & Full \\
 \end{tabular}
 \end{table}
 
-Zero-coverage queries comprise 2--8\% of test sets (Table~\ref{tab:prevalence})---small but significant, representing the hardest cases where structural uncertainty dominates.
+Zero-coverage queries comprise 1.6--2\% of test sets (Table~\ref{tab:prevalence})---small but significant, representing the hardest cases where structural uncertainty dominates.
 
 \begin{table}[h]
 \centering
@@ -152,7 +152,6 @@ Dataset & Zero & Partial & Full \\
 \midrule
 FB15k-237 & 1.6\% & 30.0\% & 68.5\% \\
 WN18RR & 2.0\% & 43.8\% & 54.1\% \\
-ICEWS14 & 8.2\% & 23.5\% & 68.4\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -206,7 +205,7 @@ Both negligible compared to the base KGE model.
 
 \subsection{Setup}
 
-\paragraph{Datasets.} FB15k-237, WN18RR, ICEWS14.
+\paragraph{Datasets.} FB15k-237, WN18RR.
 
 \paragraph{Models.} DistMult, ComplEx, TransE (dim=100, 15 epochs).
 
@@ -226,29 +225,29 @@ Both negligible compared to the base KGE model.
 
 \subsection{Standard Methods Fail}
 
-Table~\ref{tab:baselines} shows the critical finding: \textbf{MC Dropout and Deep Ensemble perform worse than random} (AUROC $< 0.5$) on both tasks.
+Table~\ref{tab:baselines} shows the critical finding: \textbf{MC Dropout and Deep Ensemble perform near random} (AUROC $\approx 0.5$--$0.6$) on novel-context detection, while coverage-based methods achieve 0.86--0.94 AUROC.
 
 \begin{table}[h]
 \centering
-\caption{Uncertainty method comparison (AUROC). MC Dropout and Deep Ensemble fail catastrophically. Our ensemble combines orthogonal signals effectively.}
+\caption{Uncertainty method comparison (AUROC). MC Dropout and Deep Ensemble perform near random on novel-context detection. Our linear ensemble combines orthogonal signals effectively.}
 \label{tab:baselines}
 \begin{tabular}{llccccc}
 \toprule
-Task & Dataset & MC Drop & DeepEns & Energy & Coverage & \textbf{Ours} \\
+Task & Dataset & MC Drop & DeepEns & Energy & Coverage & \textbf{Linear Ens.} \\
 \midrule
 \multirow{2}{*}{Temporal}
-& FB15k-237 & .449 & .476 & .589 & .664 & \textbf{.705} \\
-& WN18RR & .381 & .514 & .851 & .724 & \textbf{.877} \\
+& FB15k-237 & .626 & .606 & .589 & .664 & \textbf{.705} \\
+& WN18RR & .520 & .577 & .851 & .724 & \textbf{.877} \\
 \midrule
-\multirow{2}{*}{Error}
-& FB15k-237 & .359 & .474 & .691 & .435 & \textbf{.691} \\
-& WN18RR & .373 & .561 & .945 & .781 & \textbf{.945} \\
+\multirow{2}{*}{Novel-Ctx}
+& FB15k-237 & .606 & .588 & .680 & .935 & \textbf{.940} \\
+& WN18RR & .513 & .596 & .938 & .859 & \textbf{.945} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Why do Bayesian methods fail so badly?
-They measure semantic uncertainty---embedding variance---which is \emph{uncorrelated} with structural uncertainty.
+They measure semantic uncertainty---embedding variance---which is \emph{weakly correlated} with structural uncertainty.
 An entity can have well-trained embeddings (low dropout variance) while being completely novel in a particular relational context (high structural uncertainty).
 
 \subsection{Neural Ensemble Results}
@@ -263,9 +262,8 @@ Table~\ref{tab:neural} shows the neural ensemble improves error prediction subst
 \toprule
 Dataset & Energy & Linear & Neural & $\Delta$ \\
 \midrule
-FB15k-237 & .680 & .680 & \textbf{.891}$\pm$.008 & +21.1\% \\
-WN18RR & .938 & .939 & \textbf{.953}$\pm$.007 & +1.4\% \\
-ICEWS14 & .835 & .835 & \textbf{.905}$\pm$.016 & +7.0\% \\
+FB15k-237 & .680 & .691 & \textbf{.868}$\pm$.008 & +27.6\% \\
+WN18RR & .938 & .945 & \textbf{.963}$\pm$.007 & +2.7\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -275,8 +273,8 @@ ICEWS14 & .835 & .835 & \textbf{.905}$\pm$.016 & +7.0\% \\
 Bootstrap confidence intervals (1000 samples) confirm improvements are significant:
 
 \begin{itemize}
-    \item FB15k-237: Energy 0.680 [0.659, 0.700] vs Neural 0.874 [0.862, 0.886], p$<$0.001
-    \item WN18RR: Energy 0.944 [0.933, 0.954] vs Neural 0.954 [0.944, 0.964], p$<$0.001
+    \item FB15k-237: Energy 0.680 [0.659, 0.700] vs Neural 0.868 [0.856, 0.880], p$<$0.001
+    \item WN18RR: Energy 0.938 [0.927, 0.948] vs Neural 0.963 [0.954, 0.972], p$<$0.001
 \end{itemize}
 
 \subsection{Ablation: Which Features Matter?}
@@ -304,6 +302,11 @@ On FB15k-237, removing coverage hurts (-3.5\%).
 On WN18RR, removing energy hurts catastrophically (-30\%).
 The two signals are complementary---neither dominates.
 
+\paragraph{Why coverage matters more on sparse-relation KGs.}
+WN18RR has only 11 relations, so entity-relation coverage is highly informative (each entity sees 17\% of relations on average).
+Removing coverage forces the model to rely on correlated signals (entity degree, relation frequency), which partially recover coverage information but imperfectly.
+On FB15k-237 (237 relations, 4\% coverage per entity), coverage provides less unique signal, explaining the smaller ablation impact.
+
 %==============================================================================
 \section{Related Work}
 %==============================================================================
@@ -326,14 +329,21 @@ Our contribution is connecting coverage to uncertainty quantification and showin
 
 \paragraph{Why This Matters.}
 The coverage blind spot is not an edge case.
-It affects 2--8\% of queries and causes 67--100\% error rates.
+It affects 1.6--2\% of queries and causes 67--100\% error rates.
 More critically, standard uncertainty methods---the ones practitioners actually use---fail to detect it.
 Deploying KGE models with MC Dropout uncertainty could be \emph{worse} than no uncertainty at all.
 
 \paragraph{Limitations.}
 Our neural ensemble requires training data; the linear ensemble is hyperparameter-free.
 We test on standard benchmarks; real-world KGs may differ.
-The coverage paradox on FB15k-237 (partial $>$ full) deserves deeper investigation.
+
+\paragraph{The FB15k-237 Coverage Paradox.}
+Table~\ref{tab:blindspot} shows an apparent anomaly: on FB15k-237, partial coverage (40\% error) outperforms full coverage (67\% error).
+This reflects \emph{relation diversity}: FB15k-237 has 237 relations, so each entity sees only 4\% of possible relations.
+Partial coverage often signals a query involving a frequent, well-learned relation pattern.
+Full coverage can mean both entities appear with the relation in rare, idiosyncratic contexts.
+On WN18RR (11 relations, 17\% coverage per entity), this paradox disappears---full coverage reliably indicates well-supported queries.
+The key finding remains: \textbf{zero coverage universally predicts failure} across both datasets.
 
 \paragraph{Recommendations.}
 \begin{enumerate}
@@ -347,7 +357,7 @@ The coverage paradox on FB15k-237 (partial $>$ full) deserves deeper investigati
 %==============================================================================
 
 We identified a fundamental gap between semantic and structural uncertainty in knowledge graph embeddings.
-Standard Bayesian methods (MC Dropout, Deep Ensemble) capture only semantic uncertainty and fail catastrophically on the coverage blind spot---performing worse than random guessing.
+Standard Bayesian methods (MC Dropout, Deep Ensemble) capture only semantic uncertainty and perform near random on detecting the coverage blind spot.
 By combining energy (semantic) with coverage (structural), we achieve reliable uncertainty quantification across models and datasets.
 The diagnosis matters more than the prescription: understanding \emph{why} standard methods fail enables practitioners to deploy KGE models responsibly.
 
