@@ -14,13 +14,13 @@ Dataset & Energy (mean$\pm$std) & RCUE (mean$\pm$std) & Improvement \\
 \midrule
 FB15k-237 & $0.62 \pm 0.01$ & $0.96 \pm 0.02$ & +34pp \\
 WN18RR & $0.78 \pm 0.00$ & $0.83 \pm 0.16$ & +5pp \\
-YAGO3-10 & $0.52$ & $0.95^*$ & +43pp \\
+YAGO3-10 & $0.46$ & $0.92$ & +46pp \\
 ICEWS14 & $0.89$ & $0.999$ & +11pp \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-$^*$YAGO3-10 run in progress.
+$^*$YAGO3-10 shows Energy AUROC of 0.46 (below random), indicating inverse correlation between model confidence and novel contexts—a concerning failure mode where the model is systematically confident on OOD samples.
 
 Per-seed breakdown for FB15k-237:
 \begin{itemize}

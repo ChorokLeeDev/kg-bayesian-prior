@@ -1,7 +1,0 @@
-% Abstract - Reframed: Empirical discovery first
-
-Among Energy scoring's 100 most confident predictions on knowledge graphs, 78\%$\pm$3\% have zero training evidence---the model has never seen these entity-relation pairs. This systematic overconfidence affects every major uncertainty method (variational embeddings, ensembles, energy scoring, foundation models) and 11--25\% of test queries across seven benchmarks.
-
-We trace the failure to a structural mismatch: entity-level uncertainty cannot detect relation-specific novelty. High-frequency entities receive low uncertainty regardless of which relation is queried, causing methods to be \emph{most confident where they have least evidence}. On temporal KGs with ground-truth timestamps (ICEWS14/18), all baselines collapse to chance while a simple coverage check---tracking which (entity, relation) pairs appeared in training---achieves 0.99 AUROC.
-
-The fix is simple: track coverage via hash table. The contribution is quantifying and explaining a pervasive failure mode---affecting 11--25\% of queries---that aggregate evaluation metrics have hidden.
