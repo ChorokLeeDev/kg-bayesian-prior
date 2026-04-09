@@ -237,35 +237,34 @@ def compute_compositional_score(
 
     Higher score = more compositional (can be derived from multi-hop paths).
     Lower score = more idiosyncratic (must be memorized).
+
+    Optimized: Pre-compute 2-hop reachability.
     """
-    # Build adjacency for path finding
-    adj = defaultdict(lambda: defaultdict(set))
+    # Build simple adjacency (ignore relations for speed)
+    adj_out = defaultdict(set)  # entity -> set of reachable entities
     for h, r, t in train_triples:
-        adj[h][r].add(t)
-        # Also store inverse
-        adj[t][r + num_relations].add(h)  # Inverse relations
+        adj_out[h].add(t)
+
+    # Pre-compute 2-hop paths: entity -> set of 2-hop reachable entities
+    print("Pre-computing 2-hop reachability (sampling for speed)...")
+    two_hop_reachable = {}
+
+    # Sample entities that appear in test triples
+    test_entities = set(triples[:, 0]) | set(triples[:, 2])
+
+    for e in tqdm(test_entities, desc="Building 2-hop cache"):
+        reachable = set()
+        for mid in adj_out.get(e, []):
+            reachable.update(adj_out.get(mid, []))
+        two_hop_reachable[e] = reachable
 
     compositional_scores = []
 
     for h, r, t in tqdm(triples, desc="Computing compositionality"):
-        # Count 2-hop paths from h to t
-        two_hop_count = 0
-        for r1 in adj[h]:
-            for mid in adj[h][r1]:
-                for r2 in adj[mid]:
-                    if t in adj[mid][r2]:
-                        two_hop_count += 1
-
-        # Normalize by relation frequency
-        rel_count = sum(1 for _, r2, _ in train_triples if r2 == r)
-
-        # Compositionality score: more paths = more compositional
-        if rel_count > 0:
-            score = min(1.0, two_hop_count / 5.0)  # Normalized
-        else:
-            score = 0.0
-
-        compositional_scores.append(score)
+        # Check if t is 2-hop reachable from h
+        reachable = two_hop_reachable.get(h, set())
+        has_path = 1.0 if t in reachable else 0.0
+        compositional_scores.append(has_path)
 
     return np.array(compositional_scores)
 
