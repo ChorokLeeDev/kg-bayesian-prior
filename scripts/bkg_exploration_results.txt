@@ -1,0 +1,213 @@
+Connecting to SAP BKG...
+Connected!
+
+
+================================================================================
+1. BPMN PROCESS FLOW BENCHMARK SUBSET
+================================================================================
+
+--- BPMN Entity Types ---
+  SequenceFlow: 20630
+  Task: 12344
+  Lane: 4149
+  EndNoneEvent: 2316
+  ExclusiveGateway: 2022
+  Pool: 1947
+  StartNoneEvent: 1935
+  BPMNDiagram: 1568
+  TextAnnotation: 1442
+  CollapsedSubprocess: 956
+  MessageFlow: 902
+  AssociationUndirected: 697
+  ParallelGateway: 405
+  StartMessageEvent: 261
+  IntermediateMessageEventCatching: 247
+  IntermediateMessageEventThrowing: 204
+  StartTimerEvent: 186
+  AssociationUnidirectional: 166
+  DataObject: 136
+  SubProcess: 118
+
+--- BPMN Relations ---
+  type: 53051
+  is_partOf: 51755
+  has_part: 51755
+  has_incoming: 44819
+  has_outgoing: 44819
+  solutionProcessFlowDiagramElement: 34621
+  label: 26349
+  has_targetRef: 22413
+  has_sourceRef: 22406
+  displayName: 17023
+  solutionActivity: 12134
+  seeAlso: 2
+
+--- Sample BPMN Triples ---
+  e85485a9-208e-41c3-bf67-591316fc631e -- type --> https://www.irit.fr/recherches/MELODI/on
+  0aea231c-ec40-4a12-bf0e-e307d0445601 -- type --> https://www.irit.fr/recherches/MELODI/on
+  b624b6ff-f91c-46b5-a4b1-6ef415de311a -- type --> https://www.irit.fr/recherches/MELODI/on
+  affbc4fa-2acf-414d-8c6d-814c2643daa4 -- type --> https://www.irit.fr/recherches/MELODI/on
+  20b6fe26-7966-4b21-8b4c-6108668bf9dd -- type --> https://www.irit.fr/recherches/MELODI/on
+  7f037bc3-f56f-42e9-a1d8-830bfe155504 -- type --> https://www.irit.fr/recherches/MELODI/on
+  3e1ec93a-2b8c-4f8c-8563-19c0b4fa809f -- type --> https://www.irit.fr/recherches/MELODI/on
+  c8a6d149-f665-49de-9946-26da6721d09b -- type --> https://www.irit.fr/recherches/MELODI/on
+  2a9015fb-712c-4a41-bfdd-a3a3374f3f21 -- type --> https://www.irit.fr/recherches/MELODI/on
+  deb363fd-f984-4402-b1eb-79368dfa575c -- type --> https://www.irit.fr/recherches/MELODI/on
+
+================================================================================
+1b. FIORI APP BENCHMARK SUBSET
+================================================================================
+
+--- Fiori Entity Types ---
+  FioriApp: 6968
+  Intent: 5731
+  BusinessCatalog: 2340
+  FioriResource: 2240
+  BusinessRole: 509
+  Page: 354
+  Space: 229
+
+--- Fiori Relations ---
+  type: 18371
+  hasBusinessRole: 15015
+  name: 10400
+  hasBusinessCatalog: 9062
+  label: 9034
+  description: 6040
+  hasIntent: 5819
+  appType: 5781
+  semanticObject: 5731
+  semanticAction: 5731
+  fioriId: 5602
+  externalReleaseName: 5602
+  releaseName: 5602
+  releaseID: 5602
+  seeAlso: 5138
+  hasSpace: 2611
+  hasPage: 2463
+  hasResource: 2240
+  service: 2240
+  role: 1617
+
+--- Sample Fiori App Triples ---
+  FB02 -- rdf-schema#label --> Change Journal Entries
+  ODMAINIT_MANS1%20%28ODMAINT_BO -- rdf-schema#label --> Object Dependency Maintenance for BOM
+  F2464 -- rdf-schema#label --> Schedule Material Demand Forecast Runs
+  F5721 -- rdf-schema#label --> Schedule Sales Document Status Update – 
+  F3294 -- rdf-schema#label --> Material Price Variance
+  F4723 -- rdf-schema#label --> Manage Resource Requests
+  FIAPPT_CBR -- rdf-schema#label --> Create Central Bank Report - Portugal (D
+  RECON5 -- rdf-schema#label --> Reconcile Statement - External Securitie
+  VK11 -- rdf-schema#label --> Create Condition
+  COR8 -- rdf-schema#label --> Convert Planned Orders - to Process Orde
+  F0333A -- rdf-schema#label --> Allocation Table (S/4HANA)
+  J1ATAXP -- rdf-schema#label --> Taxpayer Integration Process - Argentina
+  COIK -- rdf-schema#label --> Pick Components for Process Orders
+  FEB_BSPROC -- rdf-schema#label --> Reprocess Bank Statement Items - FEB_BSP
+  MB51 -- rdf-schema#label --> Display Material Document List - Depreca
+
+================================================================================
+2. SCHEMA EVOLUTION ANALYSIS
+================================================================================
+
+--- Looking for Temporal Metadata ---
+  http://schema.sap.com/fiori/releaseID
+  http://schema.sap.com/odata/version
+  http://schema.sap.com/fiori/externalReleaseName
+  http://schema.sap.com/fiori/releaseName
+
+--- Sample Temporal Values ---
+  FPE1: S35
+  FTR_FP_DEF: S35
+  FD02: S35
+  MD48: S35
+  MRF1: S35
+  0001: 1.0
+  SAP__CURRENCY: 1.0
+  SAP__DOCUMENTDESCRIPTION: 1.0
+  SAP__DOCUMENTDESCRIPTION: 1.0
+  I_CUSTMGMTPARTNERTYPE: 1.0
+  F3338A: 2508
+  F8249: 2508
+  HUP34: 2508
+  F2557: 2508
+  MBC3: 2508
+  FPE1: S/4HANA Cloud 2508
+  FTR_FP_DEF: S/4HANA Cloud 2508
+  FD02: S/4HANA Cloud 2508
+  MD48: S/4HANA Cloud 2508
+  MRF1: S/4HANA Cloud 2508
+
+--- Named Graph Versioning Patterns ---
+  Graphs with multiple versions:
+    csns: ['csns-g1', 'csns-g10', 'csns-g11', 'csns-g12', 'csns-g3', 'csns-g4', 'csns-g5', 'csns-g6', 'csns-g7', 'csns-g8']
+    cds_description: ['cds_description_g1', 'cds_description_g1', 'cds_description_g1', 'cds_description_g11', 'cds_description_g2', 'cds_description_g3', 'cds_description_g5', 'cds_description_g7', 'cds_description_g8']
+    odata2: ['odata2-g1', 'odata2-g2', 'odata2-g3', 'odata2-g4', 'odata2-g5', 'odata2_g1', 'odata2_g3', 'odata2_g4', 'odata2_g7']
+    cds_view: ['cds_view_g11', 'cds_view_g12', 'cds_view_g3', 'cds_view_g4', 'cds_view_g6', 'cds_view_g7', 'cds_view_g9', 'cds_view_g9']
+    odata4: ['odata4-g2', 'odata4-g2', 'odata4-g3']
+    entity_tables: ['entity_tables_g1', 'entity_tables_g2', 'entity_tables_g3']
+    field_metadata: ['field_metadata_g1', 'field_metadata_g2']
+
+--- CDS View Naming Patterns (potential versions) ---
+
+================================================================================
+3. COMPARISON TABLE STATISTICS
+================================================================================
+
+--- Computing Statistics ---
+  Total triples: 90,599,025
+  Unique entities: 11,242,091
+  Unique relations: 169
+  Entity types: 66
+  Avg degree: 16.12
+
+--- Relation Distribution ---
+    type: 11,122,508 (12.28%)
+    type: 4,355,003 (4.81%)
+    length: 3,963,011 (4.37%)
+    domain: 2,963,656 (3.27%)
+    abapField: 2,855,751 (3.15%)
+    abapTableFieldName: 2,855,751 (3.15%)
+    intType: 2,793,712 (3.08%)
+    intLen: 2,793,712 (3.08%)
+    dataElement: 2,659,395 (2.94%)
+    fieldName: 2,607,388 (2.88%)
+
+================================================================================
+COMPARISON TABLE (for paper)
+================================================================================
+
+| Dataset    | Entities   | Relations | Triples     | Domain           |
+|------------|------------|-----------|-------------|------------------|
+| FB15k-237  |     14,541 |       237 |     310,116 | Freebase (general) |
+| WN18RR     |     40,943 |        11 |      93,003 | WordNet (lexical) |
+| YAGO3-10   |    123,182 |        37 |   1,089,040 | Wikipedia (general) |
+| ICEWS14    |      7,128 |       230 |      90,730 | Events (temporal) |
+| SAP-BKG    | 11,242,091 |       169 |  90,599,025 | Enterprise (schema) |
+
+================================================================================
+SUMMARY: POTENTIAL BENCHMARK SUBSETS
+================================================================================
+
+    1. BPMN Process Flows:
+       - Entities: ~52,631 (Tasks, SequenceFlows, Gateways, Events)
+       - Relations: 12 types (has_part, has_incoming, has_outgoing, etc.)
+       - OOD scenario: New process patterns / unseen task sequences
+
+    2. Fiori App Catalog:
+       - Entities: ~18,371 (Apps, Intents, Catalogs, Roles)
+       - Relations: 20 types
+       - OOD scenario: New apps connecting to existing business objects
+
+    3. CDS View Schema:
+       - Entities: ~127K CDS views, 5.4M fields
+       - Relations: field mappings, foreign keys
+       - OOD scenario: New S4/HANA release introduces new views/fields
+
+    Recommendation: BPMN subset is most suitable for OOD benchmark because:
+       - Clear semantic relations (process flows)
+       - Manageable size for experiments
+       - Natural OOD: new business processes
+    
+
+Connection closed.
