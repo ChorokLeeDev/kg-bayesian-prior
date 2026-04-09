@@ -4,112 +4,85 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Research project on out-of-distribution (OOD) detection in Knowledge Graphs using Gaussian Processes. The core contribution is **CAGP (Coverage-Augmented GP-KGE)**, which combines:
-- **Semantic uncertainty** (GP variance): How well-constrained is the entity embedding?
-- **Structural uncertainty** (Coverage): Has the entity been observed with this relation?
+Research project investigating **uncertainty quantification blind spots in Knowledge Graph Embeddings**.
 
-Key result (v3, with reparameterization sampling fix): CAGP achieves 0.90--0.97 temporal OOD AUROC across WN18RR, FB15k-237, YAGO3-10, and ICEWS14. Target venue: UAI 2026 (deadline Feb 25).
+**Current Focus**: The Coverage Paradox paper
+- Surprising finding: Partial zero-coverage queries (59.5% Hits@10) outperform full coverage queries (32.3%)
+- Full zero-coverage queries fail catastrophically (14.8%)
+- This contradicts the assumption "more coverage = more reliable"
 
-## Commands
+**Active Paper**: `paper/main.tex` (Coverage Paradox)
+
+**Archived Papers** (see `archive/papers/README.md` for why):
+- `paper_neurips_position/` - Impossibility theorem approach (contribution felt "obvious")
+- `paper_rcue/` - RCUE method (MLP contribution marginal, +4.4pp)
+- `paper_blindspot/` - Semantic vs Structural framing (overlaps with above)
+
+## Quick Start
 
 ```bash
-# Install dependencies
+# Install
 pip install -r requirements.txt
-pip install -e .  # Development mode
+pip install -e .
 
-# Run CPU experiments (quick validation)
-python scripts/run_coverage_only_ablation.py
-python scripts/verify_theorem.py
-
-# Held-out relation experiment (breaks circularity critique)
-python scripts/run_held_out_relations.py  # FB15k-237 + YAGO3-10, 3 seeds
-
-# Full GPU experiments require Colab - see notebooks/colab_yago_full.ipynb
+# Key experiment: Coverage Paradox analysis
+python scripts/analyze_anchor_hypothesis.py
+python scripts/analyze_overfitting_hypothesis.py
 
 # Compile paper
 cd paper && pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex
-
-# Format code
-black src/ scripts/
-isort src/ scripts/
 ```
 
-No automated tests exist yet. The `tests/` directory is empty.
+## Project Structure
 
-## Folder Structure Update (2026-02-07)
+```
+kg-bayesian-prior/
+├── paper/                 # Active paper (Coverage Paradox)
+├── src/
+│   ├── data/loaders.py    # Dataset loading (FB15k-237, WN18RR, etc.)
+│   ├── models/            # KGE models
+│   │   ├── base.py        # BaseKGEModel
+│   │   └── relation_conditioned/rcue.py  # RCUE (archived but code remains)
+│   └── evaluation/        # Metrics (AUROC, MRR, calibration)
+├── scripts/               # Experiment scripts
+├── outputs/               # Experiment logs (gitignored)
+├── archive/
+│   ├── papers/            # Archived paper drafts with explanations
+│   └── root_cleanup/      # Old root files (reviews, logs, etc.)
+└── data/raw/              # Datasets
+```
 
-The paper folder was cleaned up to reduce confusion for active writing:
+## Key Concepts
 
-- Active manuscript source of truth: `paper/main.tex`
-- Active section files remain under `paper/sections/`:
-  - `abstract_uai.tex`
-  - `introduction_uai.tex`
-  - `related_work_uai.tex`
-  - `background.tex`
-  - `method_uai_v2.tex`
-  - `experiments_uai.tex`
-  - `conclusion_uai.tex`
-- Legacy section drafts moved to `archive/retired_ideas/paper/sections/`
-- Non-LaTeX PNG figure copies moved to `archive/retired_ideas/paper/figures_png/`
+### Coverage Types
+```python
+# For query (h, r, t):
+cov(e, r) = 1 if entity e seen with relation r in training
 
-Before paper edits, check `docs/FOLDER_STRUCTURE_UPDATE.md`.
+Full coverage:    cov(h,r)=1 AND cov(t,r)=1  → 32.3% Hits@10
+Partial zero:     cov(h,r) ≠ cov(t,r)        → 59.5% Hits@10 (BEST!)
+Full zero:        cov(h,r)=0 AND cov(t,r)=0  → 14.8% Hits@10 (worst)
+```
 
-## Architecture
-
-### Model Hierarchy
-All models inherit from `BaseKGEModel(ABC, nn.Module)` in `src/models/base.py`:
-- `score_triple()`, `score_heads()`, `score_tails()` for scoring
-- Supports DistMult, ComplEx, TransE scoring functions
-
-Key model: `CoverageAugmentedGPKGE` in `src/models/coverage_augmented_gpkge.py`:
-- Entity embeddings: `entity_mean` + `entity_logvar` (variational)
-- Coverage matrix: `[num_entities, num_relations]` binary buffer
-- Adaptive `α` learned via logit parameterization: `U = α * U_gp + (1-α) * U_coverage`
-
-### Graph Kernels (`src/kernels/`)
-Relation-aware kernel computes: `K(i,j) = Σ_r σ_r² · exp(-L_r / ℓ_r²)`
-- Per-relation Laplacian from relation-specific subgraphs
-- Global fallback kernel for sparse-relation KGs (WN18RR has only 11 relations)
-
-### Evaluation (`src/evaluation/`)
-- `ood_detection.py`: AUROC, AUPR, FPR@95TPR
-- `link_prediction.py`: MRR, Hits@10
-- `calibration.py`: Expected calibration error
-
-### Data Flow
-1. Load KG triples (`src/data/loaders.py`)
-2. Build coverage matrix via `model.precompute_coverage(train_triples)`
-3. Train with BCE loss + KL regularization (beta=0.001) + uncertainty margin loss (weight=0.1)
-4. Reparameterization sampling: `h_emb = entity_mean[h] + exp(0.5*logvar[h]) * randn` during training
-5. Evaluate: compute uncertainties -> OOD metrics
-
-## Key Files
-
-- `src/models/coverage_augmented_gpkge.py` - Main CAGP model
-- `src/models/gp_kge.py` - Vanilla GP-KGE with relation-aware kernel
-- `src/kernels/relation_aware.py` - Per-relation kernel implementation
-- `scripts/run_wn18rr_temporal.py` - Canonical experiment script (fixed CAGP+GPOnly with reparameterization sampling)
-- `scripts/test_cagp_fix_multiseed.py` - 3-seed x 3-dataset CAGP validation
-- `scripts/run_held_out_relations.py` - Held-out relation experiment (breaks circularity critique)
-- `configs/default.yaml` - Hydra config for experiments
-- `docs/FINDINGS.md` - Detailed research findings (updated to v3 results)
-- `docs/HELD_OUT_RELATIONS_EXPERIMENT.md` - Documentation for held-out relations experiment
-- `docs/theory/` - Theorem proofs
-
-## Configuration
-
-Uses Hydra for experiment config (`configs/default.yaml`):
-- Dataset: fb15k237, wn18rr (data in `data/raw/`)
-- Model: embedding_dim=100, kernel_type=relation_aware
-- Training: batch_size=128, lr=0.001, kl_weight=0.001
+### The Paradox
+- Conventional wisdom: "More coverage = better predictions"
+- Reality: Partial coverage > Full coverage (frequency-controlled, p<0.001)
+- Hypothesis under investigation: Anchor effect, overfitting, information leakage
 
 ## Datasets
 
 Located in `data/raw/`:
-- **WN18RR**: 40K entities, 11 relations (sparse - needs coverage augmentation)
-- **FB15k-237**: 14K entities, 237 relations (dense - GP works well)
-- **YAGO3-10**: Run via Colab notebooks
+- **FB15k-237**: 14,541 entities, 237 relations (main benchmark)
+- **WN18RR**: 40,943 entities, 11 relations
+- **YAGO3-10**: 123,182 entities, 37 relations
+- **ICEWS14**: 7,128 entities, 230 relations (temporal)
+
+## Current Research Questions
+
+1. **Why does partial > full?** (Anchor hypothesis, overfitting, information leakage)
+2. **Is this dataset-specific?** (Need cross-dataset validation)
+3. **Practical implications?** (When to trust predictions)
 
 ## Dependencies
 
-Core: `torch>=2.0.0`, `gpytorch>=1.10.0`, `torch-geometric>=2.3.0`, `pykeen>=1.10.0`
+Core: `torch>=2.0.0`, `numpy`, `scikit-learn`, `pykeen>=1.10.0`
