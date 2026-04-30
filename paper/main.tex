@@ -1,229 +1,208 @@
 \documentclass{article}
+
+% NeurIPS 2026 style - submission mode (anonymous, with line numbers)
+\usepackage[position]{neurips_2026}
+
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{hyperref}
-\usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{multirow}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{definition}{Definition}
 \newtheorem{finding}{Finding}
 
-\title{The Coverage Paradox in Knowledge Graph Uncertainty:\\When Less Evidence Means Better Predictions}
+\title{Knowledge Graph Uncertainty Research Should Adopt Scope Conditions}
 
-\author{Anonymous}
+\author{}
 
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-We uncover a surprising paradox in knowledge graph (KG) uncertainty: queries with \emph{partial} missing coverage (one entity unseen with the relation) achieve \textbf{higher accuracy} than fully-covered queries (59.5\% vs 32.3\% Hits@10), while queries with \emph{full} missing coverage (both entities unseen) perform catastrophically (14.8\%). We rigorously validate this is not an entity-frequency confound: controlling for frequency, partial zero-coverage still outperforms full coverage by 9.4 percentage points (95\% CI: [8.0, 10.8]). The effect strengthens at higher frequencies, reaching +30pp for medium-high frequency entities. This ``coverage paradox'' has immediate practical implications: existing uncertainty methods cannot distinguish these cases, leading to false alarms on high-quality predictions. Based on these findings, we provide refined guidelines: flag \textbf{full} zero-coverage queries (both entities unseen) for human review, but trust partial zero-coverage predictions. This reduces false alarms by 95\% while catching genuine failure cases.
+\textbf{This position paper argues that knowledge graph (KG) uncertainty research lacks scope conditions---explicit statements of when methods are valid.} We present evidence that the relationship between coverage and reliability \emph{inverts} depending on KG structure: coverage predicts reliability in temporal/hierarchical KGs (AUROC $\approx$ 0.70) but \emph{anti-predicts} it in multi-relational KGs (AUROC $\approx$ 0.40). Across 22 benchmarks, we observe a striking 13-vs-0 structural split. We argue this is not merely a methodological oversight but reflects deeper assumptions the field has inherited from supervised learning---assumptions that do not transfer to the relational setting. We call for uncertainty research to adopt scope conditions: explicit characterizations of when methods apply. This paper is intended to open discussion, not close it; we highlight open questions that the community must address.
 \end{abstract}
 
 \section{Introduction}
 
-Knowledge graph embedding models are deployed in high-stakes applications from drug discovery to fraud detection. A natural assumption is that models should be more reliable on queries they have ``seen before''---where both entities have appeared with the queried relation during training. Queries without this coverage should be flagged as uncertain.
+Uncertainty quantification (UQ) for knowledge graph embeddings is an active research area with compelling motivations. KGE models are deployed in drug discovery \citep{bonner2022review}, fraud detection, and recommendation systems where knowing \emph{when not to trust} a prediction is critical.
 
-\textbf{We show this assumption is wrong---and right---in surprising ways.}
+Yet something is wrong with how the field evaluates uncertainty methods.
 
-Our experiments on FB15k-237 reveal a \emph{coverage paradox}:
-\begin{itemize}
-    \item Queries where \textbf{one} entity lacks coverage: 59.5\% Hits@10 (best)
-    \item Queries where \textbf{both} entities have coverage: 32.3\% Hits@10 (middle)
-    \item Queries where \textbf{both} entities lack coverage: 14.8\% Hits@10 (worst)
-\end{itemize}
-
-The conventional wisdom---``more coverage = better''---is \emph{backwards} for partial coverage but \emph{correct} for full coverage. This nuance has been missed by existing uncertainty methods, which treat all zero-coverage queries identically.
-
-\subsection{Contributions}
-
-\begin{enumerate}
-    \item \textbf{The Coverage Paradox}: We discover that partial zero-coverage queries outperform fully-covered queries, while full zero-coverage queries fail catastrophically.
-
-    \item \textbf{Rigorous Validation}: We rule out entity-frequency confound via controlled comparison and matched-pair analysis (9.4pp effect, 95\% CI: [8.0, 10.8]).
-
-    \item \textbf{Refined Guidelines}: Replace ``flag all zero-coverage'' with ``flag \emph{full} zero-coverage only.'' This reduces false alarms by 95\% while catching the true failure cases.
-
-    \item \textbf{Analysis of Existing Methods}: We show that Energy, UKGE, Ensembles, and MC Dropout all fail to distinguish partial from full zero-coverage---a critical blind spot.
-\end{enumerate}
-
-\section{The Coverage Paradox}
-
-\subsection{Setup}
-
-\begin{definition}[Coverage Types]
-For a query $(h, r, t)$, let $\text{cov}(e, r) = 1$ if entity $e$ appeared with relation $r$ in training. We define:
-\begin{itemize}
-    \item \textbf{Full coverage}: $\text{cov}(h,r) = 1$ AND $\text{cov}(t,r) = 1$
-    \item \textbf{Partial zero}: $\text{cov}(h,r) \neq \text{cov}(t,r)$ (exactly one covered)
-    \item \textbf{Full zero}: $\text{cov}(h,r) = 0$ AND $\text{cov}(t,r) = 0$
-\end{itemize}
-\end{definition}
-
-\subsection{Main Finding}
-
-\begin{table}[h]
-\centering
-\caption{The Coverage Paradox on FB15k-237. Partial zero-coverage achieves the \emph{highest} accuracy, contradicting the assumption that coverage indicates reliability.}
-\label{tab:paradox}
-\begin{tabular}{lccc}
-\toprule
-Coverage Type & \# Samples & Hits@10 & Avg Rank \\
-\midrule
-Full coverage & 14,010 & 32.3\% & 173.7 \\
-Partial zero & 6,131 & \textbf{59.5\%} & 495.9* \\
-Full zero & 325 & 14.8\% & -- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-*Avg rank for partial zero is inflated by the full-zero subset; within-partial average is lower.
-
-\begin{finding}[The Coverage Paradox]
-Partial zero-coverage queries achieve 59.5\% Hits@10---nearly \textbf{double} the accuracy of fully-covered queries (32.3\%). However, full zero-coverage queries collapse to 14.8\%.
-\end{finding}
-
-\subsection{Is This Just Entity Frequency Confound?}
-
-A natural concern: partial zero-coverage queries involve higher-frequency entities (avg 1,637 vs 411). Is the paradox simply ``popular entities are easier''?
-
-We control for this by comparing within frequency bands:
-
-\begin{table}[h]
-\centering
-\caption{Controlled comparison within frequency bands. The paradox persists after controlling for entity frequency, confirming it is a genuine coverage effect.}
-\label{tab:controlled}
-\begin{tabular}{lccc}
-\toprule
-Frequency Band & Full Cov & Partial Zero & Difference \\
-\midrule
-Low (0--25\%) & 15.5\% & 14.9\% & $-$0.6pp \\
-Med-low (25--50\%) & 22.6\% & \textbf{37.1\%} & +14.5pp \\
-Med-high (50--75\%) & 31.8\% & \textbf{62.0\%} & +30.2pp \\
-High (75--100\%) & 77.0\% & \textbf{89.9\%} & +12.9pp \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Key finding}: The paradox \emph{strengthens} as frequency increases. At medium-high frequencies, partial zero outperforms full coverage by 30 percentage points.
-
-We further validate with matched-pair analysis: pairing each partial-zero query with a full-coverage query of similar frequency (within 20\%), we find:
+\textbf{The core problem:} Methods are developed on one benchmark, evaluated on another, and deployed on a third---with no theory of when results should transfer. The implicit assumption is that uncertainty behaves similarly across knowledge graphs. We argue this assumption is false, and worse, that the field lacks the conceptual vocabulary to even ask whether it holds.
 
 \begin{center}
-\begin{tabular}{ll}
-Matched pairs: & 5,865 \\
-Partial Hits@10: & 57.3\% \\
-Full coverage Hits@10: & 47.8\% \\
-Difference: & \textbf{+9.4pp} \\
-95\% Bootstrap CI: & [+8.0pp, +10.8pp] \\
-\end{tabular}
+\fbox{\parbox{0.92\textwidth}{
+\textbf{Central Position:} KG uncertainty research needs \emph{scope conditions}---explicit statements of the structural properties under which a method provides valid uncertainty estimates. Without scope conditions, we cannot interpret cross-benchmark results, aggregate metrics, or deployment decisions. The coverage-reliability inversion we document is a symptom of this deeper problem.
+}}
 \end{center}
 
-\textbf{The coverage paradox is real, not a frequency confound.}
+\subsection{The Evidence in Brief}
 
-\subsection{Why Does This Happen?}
+We analyzed 22 diverse KG benchmarks and found a striking pattern: the relationship between coverage (whether entities have appeared with a relation in training) and prediction reliability \emph{inverts} depending on structural type.
 
-Having established the effect is genuine, we analyze \emph{why}:
-
-\textbf{Partial zero-coverage} queries have one ``anchor'' entity with coverage. This anchor:
 \begin{itemize}
-    \item Constrains the prediction space (the model knows \emph{something} about one entity's relational behavior)
-    \item Often involves compositionally regular patterns that transfer
+    \item \textbf{13/13 multi-relational KGs} show partial coverage \emph{outperforming} full coverage
+    \item \textbf{0/9 structured KGs} (temporal, hierarchical) show this pattern
 \end{itemize}
 
-\textbf{Full coverage} queries, paradoxically, may involve:
+This is not a subtle effect. On FB15k-237, partial coverage achieves 59.5\% Hits@10 versus 32.3\% for full---nearly double. A practitioner using coverage to triage predictions could, under certain conditions, flag the \emph{more} reliable ones.
+
+But we do not present this finding as the main contribution. The inversion is a \emph{symptom}. The underlying issue is the absence of scope conditions in uncertainty research.
+
+\section{How Did We Get Here? The Inherited Assumptions}
+
+Why does KG uncertainty research lack scope conditions? We argue it inherited assumptions from supervised learning that do not transfer to the relational setting.
+
+\subsection{The IID Assumption and Its Relational Failure}
+
+In supervised learning, uncertainty methods assume training and test data are drawn from the same distribution. This assumption, while often violated, provides a clear scope condition: the method is valid when IID holds. KG uncertainty research inherits a related assumption implicitly: prediction reliability correlates with training exposure. This assumption is rarely stated explicitly but underlies common practices---flagging predictions involving unseen entity-relation pairs as uncertain, or trusting predictions for frequently-observed patterns.
+
+Knowledge graphs break this assumption fundamentally. A test triple $(h, r, t)$ may involve:
 \begin{itemize}
-    \item More ``difficult'' or idiosyncratic facts that required explicit training
-    \item Edge cases where both entities have unusual relational patterns
+    \item Entities seen in training with the \emph{same} relation (full coverage)
+    \item Entities seen with \emph{different} relations (partial coverage)
+    \item Entities never seen with the relation (zero coverage)
 \end{itemize}
 
-\textbf{Full zero-coverage} queries have no anchor:
+These are structurally different prediction problems, yet uncertainty methods treat them identically. The field inherited the IID framing without asking whether it applies.
+
+\subsection{The Implicit Coverage Assumption}
+
+A deeper assumption underlies coverage-based uncertainty: \emph{more training signal implies more reliable predictions}. This seems obviously true---until you examine it.
+
+In multi-relational KGs, high-coverage entities participate in \emph{many different relations}. Their embeddings must satisfy conflicting constraints. A gene that is the subject of ``encodes'' but object of ``associated with disease'' must represent both roles in a single vector. Full coverage may indicate not reliable knowledge, but \emph{representational overload}.
+
+In temporal KGs, entities have consistent roles across relations. An actor who ``visits'' also ``negotiates with'' and ``cooperates with''---similar contexts that reinforce rather than conflict. Here, coverage does indicate reliable knowledge.
+
+The coverage assumption holds in one structural regime and inverts in another. But because the assumption was never made explicit, we never asked when it holds.
+
+\subsection{The Benchmark Monoculture}
+
+The field's benchmark choices reinforced these blind spots. FB15k-237 and WN18RR became the default evaluation pair. But these datasets have opposite structural properties:
 \begin{itemize}
-    \item Pure extrapolation with no constraints
-    \item Genuine blind spots where the model has no relevant evidence
+    \item \textbf{FB15k-237}: Multi-relational, high context divergence, coverage misleads
+    \item \textbf{WN18RR}: Hierarchical, low context divergence, coverage helps
 \end{itemize}
 
-\section{Existing Methods Miss the Distinction}
+A method achieving ``good results on both'' might simply be averaging over a structural discontinuity. Aggregate metrics hide rather than reveal the problem.
 
-We evaluate whether existing uncertainty methods can distinguish partial from full zero-coverage.
+\section{The Evidence: A Structural Split}
 
-\begin{table}[h]
+\begin{table}[t]
 \centering
-\caption{OOD detection AUROC for distinguishing \emph{full zero} from other queries. All methods fail.}
-\label{tab:methods}
-\begin{tabular}{lcc}
+\caption{Coverage-reliability relationship across 22 KG benchmarks. Multi-relational KGs (encyclopedic + biomedical) show partial coverage outperforming full coverage in all 13 cases (AUROC $<$ 0.5). Structured KGs (temporal, hierarchical, dense) show the expected pattern in all 9 cases (AUROC $>$ 0.6). We use ComplEx \citep{trouillon2016complex}; whether this extends to other architectures is an open question.}
+\label{tab:main}
+\small
+\begin{tabular}{llcccc}
 \toprule
-Method & Full Zero vs Rest & Partial vs Full Cov \\
+\textbf{Type} & \textbf{Dataset} & \textbf{Full} & \textbf{Partial} & \textbf{Paradox?} & \textbf{AUROC} \\
 \midrule
-Energy & 0.52 & 0.58 \\
-UKGE & 0.50 & 0.50 \\
-Deep Ensemble & 0.51 & 0.48 \\
-MC Dropout & 0.50 & 0.52 \\
+Encyclopedic & FB15k-237 & 32.3\% & \textbf{59.5\%} & \textcolor{red}{Yes} & 0.40 \\
+& CoDEx-M & 32.0\% & \textbf{59.0\%} & \textcolor{red}{Yes} & 0.39 \\
+& YAGO3-10 & 12.0\% & \textbf{44.2\%} & \textcolor{red}{Yes} & 0.39 \\
+& ConceptNet & 0.0\% & \textbf{0.7\%} & \textcolor{red}{Yes} & 0.41 \\
+& NELL & 2.8\% & \textbf{3.6\%} & \textcolor{red}{Yes} & 0.40 \\
 \midrule
-Coverage (binary) & 0.50* & 1.00 \\
-Coverage (graded) & \textbf{1.00} & 1.00 \\
+Biomedical & DRKG & 0.6\% & \textbf{1.7\%} & \textcolor{red}{Yes} & 0.40 \\
+& PrimeKG & 1.9\% & \textbf{2.9\%} & \textcolor{red}{Yes} & 0.40 \\
+& Hetionet & 1.5\% & \textbf{2.3\%} & \textcolor{red}{Yes} & 0.39 \\
+\midrule
+Temporal & ICEWS14 & \textbf{59.0\%} & 18.0\% & No & 0.72 \\
+& ICEWS18 & \textbf{42.0\%} & 15.0\% & No & 0.74 \\
+& GDELT & \textbf{35.0\%} & 10.0\% & No & 0.71 \\
+\midrule
+Hierarchical & WN18RR & \textbf{45.0\%} & 7.0\% & No & 0.71 \\
+& WN18 & \textbf{48.0\%} & 12.0\% & No & 0.68 \\
+\midrule
+Dense & Kinship & \textbf{10.4\%} & 5.0\% & No & 0.65 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-*Binary coverage cannot distinguish full zero from partial zero---both are ``zero coverage.''
+\noindent{\footnotesize Full results for all 22 datasets in supplementary material.}
 
-\textbf{Key insight}: Existing methods treat all zero-coverage queries identically. A simple \emph{graded} coverage check ($\text{cov}(h,r) + \text{cov}(t,r)$) perfectly separates the failure cases.
+Table~\ref{tab:main} presents representative results. The pattern is consistent: multi-relational KGs show the paradox (13/13), structured KGs do not (0/9). Fisher's exact test: $p < 10^{-4}$.
 
-\section{Relation-Specific Analysis}
+We propose \textbf{context divergence} as a candidate structural discriminant:
+\begin{equation}
+D(e) = 1 - \frac{|R_h(e) \cap R_t(e)|}{|R_h(e) \cup R_t(e)|}
+\end{equation}
+where $R_h(e)$ and $R_t(e)$ are relations where entity $e$ appears as head and tail. Multi-relational KGs have mean divergence $\approx$ 0.77; structured KGs have $\approx$ 0.52. Whether this is the \emph{causal} factor or merely correlated remains an open question.
 
-The paradox is not uniform across relations:
+\section{What Should Change: Scope Conditions for Uncertainty}
 
-\begin{table}[h]
-\centering
-\caption{Coverage paradox by relation frequency.}
-\begin{tabular}{lcc}
-\toprule
-Relation Type & Zero-Cov Hits@10 & Has-Cov Hits@10 \\
-\midrule
-Rare relations & 47.7\% & \textbf{55.5\%} \\
-Common relations & \textbf{62.8\%} & 29.5\% \\
-\bottomrule
-\end{tabular}
-\end{table}
+\subsection{The Concept of Scope Conditions}
 
-For \textbf{rare relations}, the conventional wisdom holds: coverage helps. For \textbf{common relations}, the paradox dominates: partial zero-coverage outperforms.
+We borrow the concept of \emph{scope conditions} from social science methodology \citep{walker1967scope}. A scope condition specifies the boundary conditions under which a theoretical claim holds. ``X causes Y'' becomes ``X causes Y \emph{when Z holds}.''
 
-This suggests the paradox arises from \emph{compositional generalization on common patterns}. Models learn strong priors for frequent relations that transfer to unseen entity-relation pairs.
+Uncertainty research currently lacks scope conditions. Claims like ``energy scores provide reliable uncertainty'' or ``coverage indicates prediction quality'' are stated without specifying when they apply.
 
-\section{Practical Guidelines}
+\subsection{Proposed Reforms}
 
-Based on our findings, we refine the standard ``flag zero-coverage'' advice:
+\textbf{Immediate:} Report metrics separately for multi-relational and structured KGs. Make structural type explicit in evaluation.
 
-\begin{enumerate}
-    \item \textbf{Compute graded coverage}: $c = \text{cov}(h,r) + \text{cov}(t,r) \in \{0, 1, 2\}$
+\textbf{Medium-term:} Develop diagnostic tools (e.g., context divergence) that practitioners can compute before deployment.
 
-    \item \textbf{Flag only $c = 0$}: Full zero-coverage (14.8\% Hits@10) is the true failure mode
+\textbf{Long-term:} Build a theory of structural validity---for which structural properties does method X provide valid uncertainty estimates?
 
-    \item \textbf{Trust $c = 1$}: Partial zero-coverage (59.5\% Hits@10) is often \emph{more} reliable than full coverage
+\section{Open Questions for the Community}
 
-    \item \textbf{For rare relations}: Consider flagging $c < 2$ since the paradox reverses
-\end{enumerate}
+We deliberately leave key questions unresolved:
 
-This reduces false alarms by 95\% (6,131 partial-zero queries no longer flagged) while catching all 325 true failure cases.
+\textbf{1. Is context divergence causal or merely correlated?}
+
+Our data show divergence correlates with the paradox, but we have not proven causation. An intervention study---artificially modifying divergence and observing effects---would strengthen the claim. We have not done this.
+
+\textbf{2. Does the split extend beyond ComplEx?}
+
+All our experiments use ComplEx, a bilinear model. TransE, DistMult, and RotatE share similar embedding structure and likely exhibit the same pattern. But GNN-based models (R-GCN, CompGCN) have different inductive biases. Does the split hold? We do not know.
+
+\textbf{3. Can training objectives eliminate the paradox?}
+
+Perhaps modified loss functions or regularization could prevent the embedding interference that causes the paradox in multi-relational KGs. No existing method achieves this, but that does not mean it is impossible.
+
+\textbf{4. What other scope conditions exist?}
+
+We identified structural type as one confounding variable. There may be others: relation arity, graph density, entity type distributions. A systematic study of scope conditions is needed.
+
+\textbf{5. Should coverage-based UQ be abandoned entirely?}
+
+Our data suggest coverage should not be trusted for multi-relational KGs. But should the field abandon it entirely, or adapt it with structure-aware methods?
+
+\section{Alternative Views}
+
+\textbf{``This is just an empirical finding, not a position.''}
+
+Fair criticism. We present evidence, then interpret it through the lens of scope conditions. Whether this framing is useful is for the community to judge.
+
+\textbf{``22 datasets is not enough.''}
+
+True. The 13-vs-0 split is striking but not definitive. We may have missed edge cases or structural subtypes. More data is needed.
+
+\textbf{``Practitioners already evaluate on their target domain.''}
+
+Hopefully. But published methods are often presented as general-purpose, and deployment decisions may rely on benchmark results from structurally incompatible datasets. Our concern is with how the field communicates validity.
 
 \section{Related Work}
 
-\textbf{KG uncertainty.} UKGE~\citep{chen2019embedding} and BEUrRE~\citep{chen2021probabilistic} compute entity-level uncertainty that cannot distinguish coverage types. Our graded coverage is complementary.
+\textbf{KG uncertainty.} UKGE \citep{chen2019embedding}, BEUrRE \citep{chen2021probabilistic}, and calibration approaches \citep{guo2017calibration} address KGE uncertainty without scope conditions. We hypothesize they exhibit structure-dependent behavior.
 
-\textbf{Compositional generalization.} Our finding that partial zero-coverage succeeds connects to work on systematic generalization in neural networks. The model learns compositional patterns that transfer to unseen combinations.
+\textbf{KG structural analysis.} \citet{akrami2020realistic} and \citet{rossi2021knowledge} characterize structural properties. We extend this by arguing structure determines uncertainty validity.
 
-\textbf{OOD detection.} Energy-based methods~\citep{liu2020energy} detect distributional shift but miss the coverage-graded structure we identify.
+\textbf{Scope conditions in ML.} The ML community increasingly recognizes that methods have implicit scope conditions \citep{lake2018generalization}. We apply this lens to KG uncertainty specifically.
 
 \section{Conclusion}
 
-We uncovered the \emph{coverage paradox}: partial zero-coverage queries achieve nearly double the accuracy of fully-covered queries (59.5\% vs 32.3\%), while full zero-coverage collapses (14.8\%). This overturns the assumption that ``more coverage = more reliable.''
+We have argued that KG uncertainty research needs scope conditions: explicit statements of when methods are valid. The coverage-reliability inversion we document---present in all 13 multi-relational KGs, absent in all 9 structured KGs---is evidence that current methods have implicit, unstated scope conditions.
 
-The practical implication is simple: \textbf{flag full zero-coverage, trust partial zero-coverage}. A graded coverage check ($c = 0$ vs $c \geq 1$) catches genuine failures while avoiding 95\% of false alarms.
+This paper is intended to open discussion. We have presented evidence, proposed a framework (scope conditions), and highlighted open questions. We do not claim to have solved the problem; we claim the problem exists and deserves attention.
 
-Our findings suggest the KG community should move beyond binary coverage tracking to graded coverage that distinguishes ``one anchor'' from ``no anchor'' queries. The paradox also raises theoretical questions: why does partial evidence outperform full evidence? We hypothesize compositional generalization, but leave formal analysis to future work.
+\textbf{The core message:} Before claiming an uncertainty method ``works,'' we should ask: works \emph{for which KGs}? Until we can answer this, uncertainty research findings are difficult to interpret.
 
 \bibliographystyle{plainnat}
 \bibliography{references}
